@@ -9,6 +9,7 @@ from ocpp.routing import on
 from ocpp.v16 import ChargePoint as cp
 from ocpp.v16.enums import Action, RegistrationStatus
 from ocpp.v16 import call_result, call
+from aioconsole import ainput
 
 
 class CentralSystem:
@@ -28,10 +29,11 @@ class CentralSystem:
 
         return queue
 
+    #This function runs when a connection is established.
     async def start_charger(self, cp, queue):
         """ Start listening for message of charger. """
         try:
-            await cp.start()
+            await cp.start()    #Seems to remain in this function until disconnect.
         except Exception as e:
             print(f"Charger {cp.id} disconnected: {repr(e)}")
         finally:
@@ -44,6 +46,7 @@ class CentralSystem:
  
     async def start_transaction(self, id:str, tag:str):
         cp, _  = self._get_cp(id)
+        print("Start")
         await cp.remote_start_transaction(tag)
 
     def disconnect_charger(self, id: str):

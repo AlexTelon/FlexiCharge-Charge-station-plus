@@ -28,8 +28,9 @@ class ChargePoint(cp):
         Verifies a tag and responds with a status
         """
         print("On authorize")
+
         tag_info =  {
-            "status": AuthorizationStatus.accepted
+           "status": AuthorizationStatus.accepted
         }
         print(f"Charger {self.id}: Authorized with {id_tag}")
 
