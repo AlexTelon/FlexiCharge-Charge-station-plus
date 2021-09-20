@@ -9,7 +9,6 @@ from ocpp.routing import on
 from ocpp.v16 import ChargePoint as cp
 from ocpp.v16.enums import Action, RegistrationStatus
 from ocpp.v16 import call_result, call
-from aioconsole import ainput
 
 
 class CentralSystem:

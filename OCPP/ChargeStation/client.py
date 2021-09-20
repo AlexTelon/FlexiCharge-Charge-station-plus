@@ -1,7 +1,8 @@
 import asyncio
 from typing import Dict
 import websockets
-
+import datetime
+import threading
 from ocpp.v16 import call, ChargePoint as cp
 from ocpp.v16.enums import AuthorizationStatus, RegistrationStatus
 
@@ -29,6 +30,16 @@ class ChargePoint(cp):
         if response.id_tag_info["status"] ==  AuthorizationStatus.accepted:
             print("Authorized.")
 
+    #Sends a heartbeat to Centralstation in the given interval. Would might be a good to run this in a separate task!
+    async def on_heartbeat(self, interval):
+        while 1:
+            request = call.HeartbeatPayload()
+            response = await self.call(request)
+
+            print("Heartbeat: " + str(response))
+            await asyncio.sleep(interval)
+            
+
 
 #This is a coroutine running in paralell with other coroutines
 async def user_input_task(cp):
@@ -38,6 +49,9 @@ async def user_input_task(cp):
             await asyncio.gather(cp.send_boot_notification())
         elif a == "2":
             await asyncio.gather(cp.send_authorization())
+        elif a == "3":
+            await asyncio.gather(cp.on_heartbeat(1))
+    
 
 
 async def main():
