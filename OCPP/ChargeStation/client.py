@@ -1,11 +1,13 @@
 import asyncio
+from time import time
 from typing import Dict
 import websockets
 import datetime
-import threading
+from threading import Thread
 from ocpp.v16 import call, ChargePoint as cp
 from ocpp.v16.enums import AuthorizationStatus, RegistrationStatus
-
+#import _thread
+#import nest_asyncio
 
 class ChargePoint(cp):
     async def send_boot_notification(self):
@@ -30,29 +32,37 @@ class ChargePoint(cp):
         if response.id_tag_info["status"] ==  AuthorizationStatus.accepted:
             print("Authorized.")
 
-    #Sends a heartbeat to Centralstation in the given interval. Would might be a good to run this in a separate task!
-    async def on_heartbeat(self, interval):
+    #Sends a heartbeat to Centralstation, print the result from Centralstation
+    #TODO According to OCPP-documentation, Chargepoint internal clock should be synced with Centralstation's clock (which the heartbeat response contains).
+    #Will add this when correct time is needed for our Chargepoint!
+    async def on_heartbeat(self):
+        request = call.HeartbeatPayload()
+        response = await self.call(request)
+
+        print("Heartbeat: " + str(response))
+
+    #Sends a heartbeat to Centralstation periodically
+    async def generate_periodic_heartbeat(self, interval):
         while 1:
-            request = call.HeartbeatPayload()
-            response = await self.call(request)
-
-            print("Heartbeat: " + str(response))
+            await self.on_heartbeat()
             await asyncio.sleep(interval)
-            
-
 
 #This is a coroutine running in paralell with other coroutines
 async def user_input_task(cp):
+    a = 0
     while 1:
-        a = input(">> ")
-        if a == "1":
+        #a = input(">> ")
+        if a == 0:
+            print("Testing 1")
             await asyncio.gather(cp.send_boot_notification())
-        elif a == "2":
+        elif a == 1:
+            print("Testing 2")
             await asyncio.gather(cp.send_authorization())
-        elif a == "3":
-            await asyncio.gather(cp.on_heartbeat(1))
-    
-
+        elif a == 2:
+            print("Testing 3")
+            await asyncio.gather(cp.on_heartbeat())
+        await asyncio.sleep(5)
+        a = (a + 1) % 3
 
 async def main():
     async with websockets.connect(
@@ -61,9 +71,8 @@ async def main():
     ) as ws:
 
         cp = ChargePoint('CP_1', ws)
-
-        await asyncio.gather(cp.start(), user_input_task(cp))#, cp.send_boot_notification())   #start() will keep program from continuing
-
+        asyncio.gather(cp.generate_periodic_heartbeat(1))
+        await asyncio.gather(cp.start(), user_input_task(cp))   #start() will keep program from continuing
 
 if __name__ == '__main__':
     asyncio.run(main())
