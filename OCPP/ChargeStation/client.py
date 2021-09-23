@@ -3,9 +3,10 @@ from typing import Dict
 import websockets
 from datetime import datetime
 
-from ocpp.v16 import call, ChargePoint as cp
-from ocpp.v16.enums import AuthorizationStatus, RegistrationStatus, ChargePointStatus
-
+from ocpp.routing import on, after
+from ocpp.v16 import ChargePoint as cp
+from ocpp.v16.enums import Action, RegistrationStatus, AuthorizationStatus, DataTransferStatus, ChargePointStatus
+from ocpp.v16 import call_result, call
 
 class ChargePoint(cp):
     def __init__(self, _id, connection):
@@ -35,6 +36,25 @@ class ChargePoint(cp):
         if response.id_tag_info["status"] ==  AuthorizationStatus.accepted:
             print("Authorized.")
 
+    #Sends a heartbeat to Centralstation, print the result from Centralstation
+    #####TODO According to OCPP-documentation, Chargepoint internal clock should be synced with Centralstation's clock (which the heartbeat response contains).
+    #####Will add this when correct time is needed for our Chargepoint!
+    async def on_heartbeat(self):
+        request = call.HeartbeatPayload()
+        response = await self.call(request)
+        print("Heartbeat: " + str(response))
+
+    #Sends a heartbeat to Centralstation periodically
+    async def generate_periodic_heartbeat(self, interval):
+        while 1:
+            await self.on_heartbeat()
+            await asyncio.sleep(interval)
+
+    #Sets status to charging after transaction has been started. Here we would also like to update the screen when such functionality is implemented!
+    @after(Action.StartTransaction)
+    def after_start_transaction(self):
+        self.status = ChargePointStatus.charging
+        print("Transaction status is set to: " + self.status)
 
     async def send_stop_transaction(self, transaction_id:int):
         request =call.StopTransactionPayload
@@ -44,25 +64,31 @@ class ChargePoint(cp):
          
         if response.id_tag_info["status"] == AuthorizationStatus.invalid:
             print("Charger {self.id}: Stopping transaction")
-        
-           
-        
 
 #This is a coroutine running in paralell with other coroutines
 async def user_input_task(cp):
+    #a = 0
     while 1:
-        a = input(">> ")
-        if a == "1":
+        a = int(input(">> "))
+        if a == 0:
+            print("Testing " + str(a))
             await asyncio.gather(cp.send_boot_notification())
-        elif a == "2":
+        elif a == 1:
+            print("Testing " + str(a))
             await asyncio.gather(cp.send_authorization())
-
-
-
-
-
-
-
+        elif a == 2:
+            print("Testing " + str(a))
+            await asyncio.gather(cp.on_heartbeat())
+        elif a == 3:
+            print("Testing " + str(a))
+            cp.after_start_transaction()
+        elif a == 4:
+            print("Testing " + str(a))
+            #await asyncio.gather(cp.send_stop_transaction())
+        
+        #await asyncio.sleep(5)
+        #a = (a + 1) % 5
+    
 async def main():
     async with websockets.connect(
         'ws://localhost:9000/CP_1',
@@ -71,7 +97,8 @@ async def main():
 
         cp = ChargePoint('CP_1', ws)
 
-        await asyncio.gather(cp.start(), user_input_task(cp))#, cp.send_boot_notification())   #start() will keep program from continuing
+        asyncio.gather(cp.generate_periodic_heartbeat(1))
+        await asyncio.gather(cp.start(), user_input_task(cp))   #start() will keep program from continuing
 
 
 if __name__ == '__main__':
