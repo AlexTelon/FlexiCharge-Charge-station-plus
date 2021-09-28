@@ -9,9 +9,11 @@ from ocpp.routing import on
 from ocpp.v16 import ChargePoint as cp
 from ocpp.v16.enums import Action, RegistrationStatus
 from ocpp.v16 import call_result, call
+from aioconsole import ainput
 
 
 class CentralSystem:
+
     def __init__(self):
         self._chargers = {}
 
@@ -24,6 +26,9 @@ class CentralSystem:
 
         # Store a reference to the task so we can cancel it later if needed.
         task = asyncio.create_task(self.start_charger(cp, queue))
+
+        self.charger = task
+
         self._chargers[cp] = task
 
         return queue
@@ -78,6 +83,7 @@ async def on_connect(websocket, path, csms):
     # An `asyncio.Queue` is used for that.
     queue = csms.register_charger(cp)
     await queue.get()
+
 
 
 async def create_websocket_server(csms: CentralSystem):
