@@ -87,6 +87,11 @@ class ChargePoint(cp):
         elif response.id_tag_info["status"] == AuthorizationStatus.blocked:
             print("Blocked. No charge started")
 
+
+
+
+
+
 #Two functions that are not finished or tested
     #NOT TESTED.
     async def send_data_transfer_req(self, vendor_id:str, message_id:str, data:str):
@@ -154,13 +159,15 @@ class ChargePoint(cp):
             print("Charger {self.id}: Stopping transaction")
 
 state = StateHandler()
+lastState = StateHandler()
+chargerId = 123456
 
 def GUI():
     sg.theme('Black')
 
     layout1 =    [
                     [
-                        sg.Text(" ")
+                        sg.Text("hrjhrjrhrhjhj")
                     ],
                     [
                         sg.Image(data=displayStatus.startingUp(), key='IMAGE', size=(480, 800))
@@ -178,50 +185,27 @@ def GUI():
 async def statemachine(ocpp_client):
     window = GUI()
     global state
-
-    response = await ocpp_client.send_boot_notification()
-    chargerID = response.charger_id
-
-    firstNumberOfChargerID = int(chargerID % 10) 
-    secondNumberOfChargerID = int(chargerID/10) % 10 
-    thirdNumberOfChargerID = int(chargerID/100) % 10  
-    fouthNumberOfChargerID = int(chargerID/1000) % 10 
-    fifthNumberOfChargerID = int(chargerID/10000) % 10 
-    sixthNumberOfChargerID = int(chargerID/100000) % 10
-
-    layout = [
-                [   
-                     sg.Text(firstNumberOfChargerID, font=('Tw Cen MT Condensed Extra Bold', 30), key='ID0', justification='center', pad=(15,0)),
-                     sg.Text(secondNumberOfChargerID, font=('Tw Cen MT Condensed Extra Bold', 30), key='ID1', justification='center', pad=(25,0)),
-                     sg.Text(thirdNumberOfChargerID, font=('Tw Cen MT Condensed Extra Bold', 30), key='ID2', justification='center', pad=(20,0)),
-                     sg.Text(fouthNumberOfChargerID, font=('Tw Cen MT Condensed Extra Bold', 30), key='ID3', justification='center', pad=(25,0)),
-                     sg.Text(fifthNumberOfChargerID, font=('Tw Cen MT Condensed Extra Bold', 30), key='ID4', justification='center', pad=(20,0)),
-                     sg.Text(sixthNumberOfChargerID, font=('Tw Cen MT Condensed Extra Bold', 30), key='ID5', justification='center', pad=(25,0))
-                ]
-            ]
-
-    top_window = sg.Window(title="FlexiChargeTopWindow", layout=layout, location=(18,720), keep_on_top=True, grab_anywhere=False, transparent_color=sg.theme_background_color(), no_titlebar=True).finalize()
-    top_window.TKroot["cursor"] = "none"
-    top_window.hide()
+    global lastState
 
     while True:
 
         if state.get_state() == States.S_STARTUP:
-            time.sleep(5)
+            time.sleep(2)
+
             state.set_state(States.S_NOTAVAILABLE)
             window['IMAGE'].update(data=displayStatus.chargeNotAvailable())
             window.refresh()
-            time.sleep(5)
+            time.sleep(2)
 
+            response = await ocpp_client.send_boot_notification()
             if(response.status ==  RegistrationStatus.accepted):
                 state.set_state(States.S_AVAILABLE)
                 window['IMAGE'].update(data=displayStatus.qrCode())
-                top_window.UnHide()
+                sg.Text(str(response.charger_id))
                 window.refresh()
             else:
                 state.set_state(States.S_NOTAVAILABLE)
                 window['IMAGE'].update(data=displayStatus.chargeNotAvailable())
-                top_window.hide()
                 window.refresh()
 
             time.sleep(2)
