@@ -230,7 +230,7 @@ async def main():
     #asyncio.get_event_loop().run_until_complete(statemachine(ocpp_client))
     async with websockets.connect(
         #0'ws://localhost:9000/CP_1',
-        'ws://54.220.194.65:1337/abc123',
+        'ws://54.220.194.65:1337/123abc',
          subprotocols=['ocpp1.6']
     ) as ws:
         ocpp_client = ChargePoint('abc123', ws)
