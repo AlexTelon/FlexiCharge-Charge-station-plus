@@ -65,21 +65,36 @@ class ChargePoint(cp):
         elif response.id_tag_info["status"] == AuthorizationStatus.blocked:
             print("Blocked. No charge started")
 
+    @on(Action.ReserveNow)
+    async def remote_reserve_now(self, conncetorID:int, expiryDate:datetime, idTag:str, paretnIdTag:str, reservatioID:int):
+        print("Reserve now")
+        if self.is_reserved == False:
+            self.is_reserved = True
+            response = call_result.ReserveNowPayload(
+                status = ReservationStatus.accepted
+            )
+        elif self.is_reserved == True:
+            response = call_result.ReserveNowPayload(
+                status = ReservationStatus.rejected
+            )
+        return response
+
+
     async def send_data_transfer_req(self):
         print("Sending data transfer req")
         request = call.DataTransferPayload(
-            vendor_id = self.hardcoded_vendor_id,
-            message_id = "id",
+            vendor_id = "1",
+            message_id = "1",
             data = "1"
         )
         
         response = await self.call(request)
 
-        if response.status == DataTransferStatus.accepted:
-            print("Data sent successfully")
-        elif response.status == DataTransferStatus.rejected:
+        #if response.status == DataTransferStatus.accepted:
+            #print("Data sent successfully")
+        #elif response.status == DataTransferStatus.rejected:
             #Todo: Implement 
-            print("Data declined")
+            #print("Data declined")
 
 
 
