@@ -17,6 +17,8 @@ class ChargePoint(cp):
     hardcoded_connector_id = 123
     hardcoded_meter_start = 10
     hardcoded_reservation_id = 1
+    hardcoded_transaction_id = 1
+    hardcoded_meter_stop = 1631522252
 
     is_reserved = False
     
@@ -98,12 +100,6 @@ class ChargePoint(cp):
             #Todo: Implement 
             #print("Data declined")
 
-
-
-
-
-
-
             
     #NOT FINISHED. ON HOLD.
     @on(Action.RemoteStartTransaction)
@@ -147,13 +143,18 @@ class ChargePoint(cp):
         self.status = ChargePointStatus.charging
         print("Transaction status is set to: " + self.status)
 
-    async def send_stop_transaction(self, transaction_id:int):
-        request =call.StopTransactionPayload
-        transaction_id != self.transaction_id
-            
+    #Sends a notifying to Central system that the transaction has been stopped
+    async def send_stop_transaction(self):
+        request =call.StopTransactionPayload(
+        id_tag = self.hardcoded_id_tag,
+        meter_stop = self.hardcoded_meter_stop,
+        reason=self.other,
+        transaction_id = self.hardcoded_transaction_id,
+        timestamp = datetime.utcnow().isoformat())
+
         response = await self.call(request)
-         
-        if response.id_tag_info["status"] == AuthorizationStatus.invalid:
+
+        if response.id_tag_info["status"] == AuthorizationStatus.blocked:
             print("Charger {self.id}: Stopping transaction")
 
 #This is a coroutine running in paralell with other coroutines
@@ -175,7 +176,7 @@ async def user_input_task(cp):
             cp.after_start_transaction()
         elif a == 4:
             print("Testing " + str(a))
-            #await asyncio.gather(cp.send_stop_transaction())
+            await asyncio.gather(cp.send_stop_transaction())
         elif a == 5:
             print("Testing " + str(a))
             await asyncio.gather(cp.send_start_transaction())
