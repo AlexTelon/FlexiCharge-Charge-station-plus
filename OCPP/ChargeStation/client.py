@@ -17,6 +17,8 @@ class ChargePoint(cp):
     hardcoded_connector_id = 123
     hardcoded_meter_start = 10
     hardcoded_reservation_id = 1
+
+    is_reserved = False
     
     def __init__(self, _id, connection):
         cp.__init__(self,  _id, connection)
