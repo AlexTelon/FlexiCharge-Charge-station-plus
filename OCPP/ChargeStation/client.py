@@ -65,17 +65,12 @@ class ChargePoint(cp):
         elif response.id_tag_info["status"] == AuthorizationStatus.blocked:
             print("Blocked. No charge started")
 
-
-
-
-
-
-#Two functions that are not finished or tested
-    #NOT TESTED.
-    async def send_data_transfer_req(self, vendor_id:str, message_id:str, data:str):
+    async def send_data_transfer_req(self):
         print("Sending data transfer req")
         request = call.DataTransferPayload(
-            vendor_id= self.hardcoded_vendor_id
+            vendor_id = self.hardcoded_vendor_id,
+            message_id = "id",
+            data = "1"
         )
         
         response = await self.call(request)
@@ -85,6 +80,14 @@ class ChargePoint(cp):
         elif response.status == DataTransferStatus.rejected:
             #Todo: Implement 
             print("Data declined")
+
+
+
+
+
+
+
+            
     #NOT FINISHED. ON HOLD.
     @on(Action.RemoteStartTransaction)
     async def remote_start_transaction(self, id_tag:str, connectorID:str="", chargingProfile:str=""):
