@@ -4,8 +4,10 @@
 
 import asyncio
 from enum import Enum
+from time import strptime
 import websockets
 from datetime import datetime
+from dataclasses import dataclass
 
 from ocpp.routing import on, after
 from ocpp.v16 import ChargePoint as cp
@@ -89,6 +91,21 @@ class SampleValueUnit(str, Enum):
     fahrenheit = "Fahrenheit"
     percent = "Percent"
     hertz = "Hertz"
+
+@dataclass
+class SampledValue:
+    value : str
+    context : SampleValueContext
+    format : SampledValueFormat
+    measurand : SampleValueMeasurand
+    phase : SampleValuePhase
+    location : SampleValueLocation
+    unit : SampleValueUnit
+
+@dataclass
+class MeterValues:
+    timestamp : str
+    sampled_value : SampledValue
 
 class ChargePoint(cp):
     hardcoded_id_tag = "MyID"
@@ -271,12 +288,30 @@ class ChargePoint(cp):
         await self.call(request)
         print("Status notification sent!")
         
-    async def send_meter_values(self):
-        
-        request = call.MeterValuesPayload(
-            connector_id=self.hardcoded_connector_id,
+    #Known issue: Can't validate the payload. Probably because JSON expects array, and i don't know how to send an array to JSON? OCPP-library expect list?     
+    async def send_meter_values(self, meter_values : MeterValues):
+        sampled_value_JSON_array = {
+            "value" : meter_values.sampled_value.value,
+            "context" : meter_values.sampled_value.context,
+            "format" : meter_values.sampled_value.format,
+            "measurand" : meter_values.sampled_value.measurand,
+            "phase" : meter_values.sampled_value.phase,
+            "location" : meter_values.sampled_value.location,
+            "unit" : meter_values.sampled_value.unit
+        }
 
+        meter_value_JSON_array = {
+            "timestamp" : meter_values.timestamp,
+            "sampledValue" : sampled_value_JSON_array
+        }
+
+        request = call.MeterValuesPayload(
+            connector_id = self.hardcoded_connector_id,
+            transaction_id = self.transaction_id,
+            meter_value = meter_value_JSON_array
         )
+
+        await self.call(request)
 
 #This is a coroutine running in paralell with other coroutines
 async def user_input_task(cp):
@@ -305,6 +340,23 @@ async def user_input_task(cp):
         elif a == 6:
             print("Testing " + str(a))
             await asyncio.gather(cp.status_notification())
+        elif a == 7:
+            print("Testing " + str(a))
+            
+            my_sampled_values = SampledValue
+            my_sampled_values.value = "Test value"
+            my_sampled_values.context = SampleValueContext.interruption_begin
+            my_sampled_values.format = SampledValueFormat.raw
+            my_sampled_values.measurand = SampleValueMeasurand.energy_active_export_interval
+            my_sampled_values.phase = SampleValuePhase.l1
+            my_sampled_values.location = SampleValueLocation.ev
+            my_sampled_values.unit = SampleValueUnit.kwh
+
+            my_meter_value = MeterValues
+            my_meter_value.timestamp = datetime.now().timestamp()
+            my_meter_value.sampled_value = my_sampled_values
+
+            await asyncio.gather(cp.send_meter_values(my_meter_value))
         elif a == 9:
             #To pass on input. Needed when server is sending information
             await asyncio.sleep(2)
