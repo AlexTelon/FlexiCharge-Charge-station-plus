@@ -1,4 +1,4 @@
-#Todo - Implement authorization cache (Not requirement)
+#TODO - Implement authorization cache (Not requirement)
 #     - Implement authorization list (Might not be priority or required in this project)
 
 
@@ -54,7 +54,7 @@ class ChargePoint(cp):
  
 
     async def send_start_transaction(self):
-        #Todo - Make all values have meaning
+        #TODO - Make all values have meaning
         #     - Update authorization cache
         request = call.StartTransactionPayload(
             connector_id = self.hardcoded_connector_id,
@@ -110,31 +110,38 @@ class ChargePoint(cp):
         #if response.status == DataTransferStatus.accepted:
             #print("Data sent successfully")
         #elif response.status == DataTransferStatus.rejected:
-            #Todo: Implement 
+            #TODO: Implement 
             #print("Data declined")
 
 
 
 
 
-    #NOT FINISHED. ON HOLD.
+    #NOT FINISHED. Since authorize is not implemented and no list of id's, it simply responds with accepted or rejected.
+    #Both functions below are unfinished, but since backend/ocpp is not complete, this is how it has to be for now
     @on(Action.RemoteStartTransaction)
     async def remote_start_transaction(self, id_tag:str, connectorID:str="", chargingProfile:str=""):
         print("Remote start transaction called from central system")
-
+        
         if self.can_start_charge == True:
             self.can_start_charge = False
-
-            response = self.send_authorization()
-            response = await response
-            asyncio.ensure_future(response)
-            await response
-
             result = RemoteStartStopStatus.accepted
         elif self.can_start_charge == False:
-             result = RemoteStartStopStatus.rejected
-        
+            result = RemoteStartStopStatus.rejected
         return call_result.RemoteStartTransactionPayload(
+            status = result
+        )
+
+    @on(Action.RemoteStopTransaction)
+    async def remote_stop_transaction(self, id_tag:str, connectorID:str="", chargingProfile:str=""):
+        print("Remote stop transaction called from central system")
+        if self.can_start_charge == False:  #Charger is charging
+            self.can_start_charge = True
+            result = RemoteStartStopStatus.accepted
+        elif self.can_start_charge == True: #Charger is not charging
+            result = RemoteStartStopStatus.rejected
+        
+        return call_result.RemoteStopTransactionPayload(
             status = result
         )
 
@@ -208,7 +215,7 @@ async def main():
         cp = ChargePoint('chargerplus', ws)
         cp.my_websocket = ws
         #asyncio.gather(cp.generate_periodic_heartbeat(1))
-        await asyncio.gather(cp.start(), user_input_task(cp))   #start() will keep program from continuing
+        await asyncio.gather(cp.start(), user_input_task(cp)) #cp.send_boot_notification())   #start() will keep program from continuing
 
 if __name__ == '__main__':
     asyncio.run(main())
