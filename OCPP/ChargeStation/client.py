@@ -75,6 +75,7 @@ class ChargePoint(cp):
     async def remote_reserve_now(self, connector_id:int, expiry_date:datetime, id_tag:str, reservation_id:int, parent_id_tag:str):
         print("Reserve now")
         if self.is_reserved == False:
+            self.is_reserved = True
             response = call_result.ReserveNowPayload(
                 status = ReservationStatus.accepted
             )
