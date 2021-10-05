@@ -18,8 +18,6 @@ class ChargePoint(cp):
     hardcoded_connector_id = 123
     hardcoded_meter_start = 10
     hardcoded_reservation_id = 1
-    hardcoded_transaction_id = 1
-    hardcoded_meter_stop = 1631522252
 
     is_reserved = False
 
@@ -76,9 +74,14 @@ class ChargePoint(cp):
     @on(Action.ReserveNow)
     async def remote_reserve_now(self, connector_id:int, expiry_date:datetime, id_tag:str, reservation_id:int, parent_id_tag:str):
         print("Reserve now")
-        response = call_result.ReserveNowPayload(
-            status = ReservationStatus.accepted
-        )
+        if self.is_reserved == False:
+            response = call_result.ReserveNowPayload(
+                status = ReservationStatus.accepted
+            )
+        else:
+            response = call_result.ReserveNowPayload(
+                status = ReservationStatus.occupied
+            )
         return response
 
     async def send_data_transfer_req(self):
@@ -108,6 +111,10 @@ class ChargePoint(cp):
         #elif response.status == DataTransferStatus.rejected:
             #Todo: Implement 
             #print("Data declined")
+
+
+
+
 
     #NOT FINISHED. ON HOLD.
     @on(Action.RemoteStartTransaction)
@@ -150,18 +157,13 @@ class ChargePoint(cp):
         self.status = ChargePointStatus.charging
         print("Transaction status is set to: " + self.status)
 
-    #Sends a notifying to Central system that the transaction has been stopped
-    async def send_stop_transaction(self):
-        request =call.StopTransactionPayload(
-        id_tag = self.hardcoded_id_tag,
-        meter_stop = self.hardcoded_meter_stop,
-        reason=self.other,
-        transaction_id = self.hardcoded_transaction_id,
-        timestamp = datetime.utcnow().isoformat())
-
+    async def send_stop_transaction(self, transaction_id:int):
+        request =call.StopTransactionPayload
+        transaction_id != self.transaction_id
+            
         response = await self.call(request)
-
-        if response.id_tag_info["status"] == AuthorizationStatus.blocked:
+         
+        if response.id_tag_info["status"] == AuthorizationStatus.invalid:
             print("Charger {self.id}: Stopping transaction")
 
 #This is a coroutine running in paralell with other coroutines
@@ -184,7 +186,7 @@ async def user_input_task(cp):
             await asyncio.sleep(1)  #Give program time to receive centralsystem initiated ReserveNow call
         elif a == 4:
             print("Testing " + str(a))
-            await asyncio.gather(cp.send_stop_transaction())
+            #await asyncio.gather(cp.send_stop_transaction())
         elif a == 5:
             print("Testing " + str(a))
             await asyncio.gather(cp.send_start_transaction())
