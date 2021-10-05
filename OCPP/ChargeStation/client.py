@@ -8,8 +8,9 @@ from datetime import datetime
 
 from ocpp.routing import on, after
 from ocpp.v16 import ChargePoint as cp
-from ocpp.v16.enums import Action, RegistrationStatus, AuthorizationStatus, DataTransferStatus, ChargePointStatus, RemoteStartStopStatus
+from ocpp.v16.enums import Action, RegistrationStatus, AuthorizationStatus, DataTransferStatus, ChargePointStatus, RemoteStartStopStatus, ReservationStatus
 from ocpp.v16 import call_result, call
+import json
 
 class ChargePoint(cp):
     hardcoded_id_tag = "MyID"
@@ -19,6 +20,8 @@ class ChargePoint(cp):
     hardcoded_reservation_id = 1
 
     is_reserved = False
+
+    my_websocket = None
     
     def __init__(self, _id, connection):
         cp.__init__(self,  _id, connection)
@@ -32,6 +35,7 @@ class ChargePoint(cp):
         )
 
         response = await self.call(request)
+        print(response.charger_id)
 
         if response.status ==  RegistrationStatus.accepted:
             print("Connected to central system.")
@@ -68,29 +72,34 @@ class ChargePoint(cp):
             print("Blocked. No charge started")
 
     @on(Action.ReserveNow)
-    async def remote_reserve_now(self, conncetorID:int, expiryDate:datetime, idTag:str, paretnIdTag:str, reservatioID:int):
+    async def remote_reserve_now(self, connector_id:int, expiry_date:datetime, id_tag:str, reservation_id:int, parent_id_tag:str):
         print("Reserve now")
-        if self.is_reserved == False:
-            self.is_reserved = True
-            response = call_result.ReserveNowPayload(
-                status = ReservationStatus.accepted
-            )
-        elif self.is_reserved == True:
-            response = call_result.ReserveNowPayload(
-                status = ReservationStatus.rejected
-            )
+        response = call_result.ReserveNowPayload(
+            status = ReservationStatus.accepted
+        )
         return response
 
-
     async def send_data_transfer_req(self):
-        print("Sending data transfer req")
-        request = call.DataTransferPayload(
-            vendor_id = "1",
-            message_id = "1",
-            data = "1"
-        )
+        msg = [1]
+        msg_send = json.dumps(msg)
+        await self.my_websocket.send(msg_send)
+
+        #response = await self.my_websocket.recv()
+        #print(json.loads(response))
+
+        #await self._connection.send(msg_send)
+            #print("Here")
+            #res = self._connection.recv()
+            #print(res)
+
+        #print("Sending data transfer req")
+        #request = call.DataTransferPayload(
+            #vendor_id = "000001",
+           # message_id = "166faaa2-8b5e-4d0a-a1bd-f7abaa3950dc",
+            #data = "1"
+        #)
         
-        response = await self.call(request)
+        #response = await self.call(request)
 
         #if response.status == DataTransferStatus.accepted:
             #print("Data sent successfully")
@@ -102,26 +111,22 @@ class ChargePoint(cp):
 
 
 
-
-
-            
     #NOT FINISHED. ON HOLD.
     @on(Action.RemoteStartTransaction)
     async def remote_start_transaction(self, id_tag:str, connectorID:str="", chargingProfile:str=""):
         print("Remote start transaction called from central system")
 
-        if self.authorize_remote_tx_requests == True:
-            if self.can_start_charge == True:
-                self.can_start_charge = False
+        if self.can_start_charge == True:
+            self.can_start_charge = False
 
-                response = self.send_authorization()
-                response = await response
-                asyncio.ensure_future(response)
-                await response
+            response = self.send_authorization()
+            response = await response
+            asyncio.ensure_future(response)
+            await response
 
-                result = RemoteStartStopStatus.accepted
-            elif self.can_start_charge == False:
-                result = RemoteStartStopStatus.rejected
+            result = RemoteStartStopStatus.accepted
+        elif self.can_start_charge == False:
+             result = RemoteStartStopStatus.rejected
         
         return call_result.RemoteStartTransactionPayload(
             status = result
@@ -172,7 +177,8 @@ async def user_input_task(cp):
             await asyncio.gather(cp.on_heartbeat())
         elif a == 3:
             print("Testing " + str(a))
-            cp.after_start_transaction()
+            await cp.send_data_transfer_req()
+            await asyncio.sleep(1)  #Give program time to receive centralsystem initiated ReserveNow call
         elif a == 4:
             print("Testing " + str(a))
             #await asyncio.gather(cp.send_stop_transaction())
@@ -184,17 +190,18 @@ async def user_input_task(cp):
             await asyncio.sleep(2)
         #await asyncio.sleep(5)
         #a = (a + 1) % 5
-    
+
+
+
 async def main():
     async with websockets.connect(
-        'ws://localhost:9000/CP_1',
-        #'ws://54.220.194.65:1337/abc123',
+        #'ws://localhost:9000/CP_1',
+        'ws://54.220.194.65:1337/chargerplus',
          subprotocols=['ocpp1.6']
     ) as ws:
-
-        cp = ChargePoint('abc123', ws)
-
-        asyncio.gather(cp.generate_periodic_heartbeat(1))
+        cp = ChargePoint('chargerplus', ws)
+        cp.my_websocket = ws
+        #asyncio.gather(cp.generate_periodic_heartbeat(1))
         await asyncio.gather(cp.start(), user_input_task(cp))   #start() will keep program from continuing
 
 if __name__ == '__main__':
