@@ -3,25 +3,126 @@
 
 
 import asyncio
+from enum import Enum
+from time import strptime
 import websockets
 from datetime import datetime
+from dataclasses import dataclass
 
 from ocpp.routing import on, after
 from ocpp.v16 import ChargePoint as cp
-from ocpp.v16.enums import Action, RegistrationStatus, AuthorizationStatus, DataTransferStatus, ChargePointStatus, RemoteStartStopStatus, ReservationStatus
+from ocpp.v16.enums import Action, ChargePointErrorCode, RegistrationStatus, AuthorizationStatus, DataTransferStatus, ChargePointStatus, RemoteStartStopStatus, ReservationStatus
 from ocpp.v16 import call_result, call
 import json
+
+class SampleValueContext(str, Enum):
+    interruption_begin = "Interruption.Begin"
+    interruption_end = "Interruption.End"
+    sample_clock = "Sample.Clock"
+    sample_periodic = "Sample.Periodic"
+    transaction_begin = "Transaction.Begin"
+    transaction_end = "Transaction.End"
+    trigger = "Trigger"
+    other = "Other"
+
+class SampledValueFormat(str, Enum):
+    raw = "Raw"
+    signed_date = "SignedData"
+
+class SampleValueMeasurand(str, Enum):
+    energy_active_export_register = "Energy.Active.Export.Register"
+    energy_active_import_register = "Energy.Active.Import.Register"
+    energy_reactive_export_register = "Energy.Reactive.Export.Register"
+    energy_reactive_import_register = "Energy.Reactive.Import.Register"
+    energy_active_export_interval = "Energy.Active.Export.Interval"
+    energy_active_import_interval = "Energy.Active.Import.Interval"
+    energy_reactive_export_interval = "Energy.Reactive.Export.Interval"
+    energy_reactive_import_interval = "Energy.Reactive.Import.Interval"
+    power_active_export = "Power.Active.Export"
+    power_active_import = "Power.Active.Import"
+    power_offered = "Power.Offered"
+    power_reactive_export = "Power.Reactive.Export"
+    power_reactive_import = "Power.Reactive.Import"
+    power_factor = "Power.Factor"
+    current_import = "Current.Import"
+    current_export = "Current.Export"
+    current_offered = "Current.Offered"
+    voltage = "Voltage"
+    frequency = "Frequency"
+    temperature = "Temperature"
+    soc = "SoC"
+    rpm = "RPM"
+
+class SampleValuePhase(str, Enum):
+    l1 = "L1"
+    l2 = "L2"
+    l3 = "L3"
+    n = "N"
+    l1_n = "L1-N"
+    l2_n = "L2-N"
+    l3_n = "L3-N"
+    l1_l2 = "L1-L2"
+    l2_l3 = "L2-L3"
+    l3_l1 = "L3-L1"
+
+class SampleValueLocation(str, Enum):
+    cable = "Cable"
+    ev = "EV"
+    inlet = "Inlet"
+    outlet = "Outlet"
+    body = "Body"
+
+class SampleValueUnit(str, Enum):
+    wh = "Wh"
+    kwh = "kWh"
+    varh = "varh"
+    kvarh = "kvarh"
+    w = "W"
+    kw = "kW"
+    va = "VA"
+    kva = "kVA"
+    var = "var"
+    kvar = "kvar"
+    a = "A"
+    v = "V"
+    k = "K"
+    celcius = "Celcius"
+    celsius = "Celsius"
+    fahrenheit = "Fahrenheit"
+    percent = "Percent"
+    hertz = "Hertz"
+
+@dataclass
+class SampledValue:
+    value : str
+    context : SampleValueContext
+    format : SampledValueFormat
+    measurand : SampleValueMeasurand
+    phase : SampleValuePhase
+    location : SampleValueLocation
+    unit : SampleValueUnit
+
+@dataclass
+class MeterValues:
+    timestamp : str
+    sampled_value : SampledValue
 
 class ChargePoint(cp):
     hardcoded_id_tag = "MyID"
     hardcoded_vendor_id = "vendorID"
-    hardcoded_connector_id = 123
+    #A chargepoint could have more than one connector. Each connector should be numbered in order, starting with number one.
+    #No number can be skipped. 0 is reserved for the entire chargepoint. In our chargeponit, we will simulate having 1 connector.
+    hardcoded_connector_id = 1 #was 123 before
     hardcoded_meter_start = 10
     hardcoded_reservation_id = 1
+    
+    error_code = ChargePointErrorCode.no_error
 
     is_reserved = False
 
     my_websocket = None
+
+    
     
     def __init__(self, _id, connection):
         cp.__init__(self,  _id, connection)
@@ -36,6 +137,7 @@ class ChargePoint(cp):
 
         response = await self.call(request)
         print(response.charger_id)
+        print(response.current_time)
 
         if response.status ==  RegistrationStatus.accepted:
             print("Connected to central system.")
@@ -174,6 +276,50 @@ class ChargePoint(cp):
         if response.id_tag_info["status"] == AuthorizationStatus.invalid:
             print("Charger {self.id}: Stopping transaction")
 
+
+    async def status_notification(self):
+        current_time = datetime.now()
+        timestamp = current_time.timestamp()
+        formated_timestamp = current_time.strftime("%Y-%m-%dT%H:%M:%SZ") #Can be removed if back-end does not want the time-stamp formated
+        
+        request = call.StatusNotificationPayload(
+            connector_id = self.hardcoded_connector_id,
+            error_code = self.error_code.no_error,
+            status = self.status,
+            timestamp = str(timestamp), #Optional according to official OCPP-documentation
+            info = None, #Optional according to official OCPP-documentation
+            vendor_id = self.hardcoded_vendor_id, #Optional according to official OCPP-documentation
+            vendor_error_code = None #Optional according to official OCPP-documentation
+            )
+
+        await self.call(request)
+        print("Status notification sent!")
+        
+    #Known issue: Can't validate the payload. Probably because JSON expects array, and i don't know how to send an array to JSON? OCPP-library expect list?     
+    async def send_meter_values(self, meter_values : MeterValues):
+        sampled_value_JSON_array = {
+            "value" : meter_values.sampled_value.value,
+            "context" : meter_values.sampled_value.context,
+            "format" : meter_values.sampled_value.format,
+            "measurand" : meter_values.sampled_value.measurand,
+            "phase" : meter_values.sampled_value.phase,
+            "location" : meter_values.sampled_value.location,
+            "unit" : meter_values.sampled_value.unit
+        }
+
+        meter_value_JSON_array = {
+            "timestamp" : meter_values.timestamp,
+            "sampledValue" : sampled_value_JSON_array
+        }
+
+        request = call.MeterValuesPayload(
+            connector_id = self.hardcoded_connector_id,
+            transaction_id = self.transaction_id,
+            meter_value = meter_value_JSON_array
+        )
+
+        await self.call(request)
+
 #This is a coroutine running in paralell with other coroutines
 async def user_input_task(cp):
     #a = 0
@@ -198,6 +344,26 @@ async def user_input_task(cp):
         elif a == 5:
             print("Testing " + str(a))
             await asyncio.gather(cp.send_start_transaction())
+        elif a == 6:
+            print("Testing " + str(a))
+            await asyncio.gather(cp.status_notification())
+        elif a == 7:
+            print("Testing " + str(a))
+            
+            my_sampled_values = SampledValue
+            my_sampled_values.value = "Test value"
+            my_sampled_values.context = SampleValueContext.interruption_begin
+            my_sampled_values.format = SampledValueFormat.raw
+            my_sampled_values.measurand = SampleValueMeasurand.energy_active_export_interval
+            my_sampled_values.phase = SampleValuePhase.l1
+            my_sampled_values.location = SampleValueLocation.ev
+            my_sampled_values.unit = SampleValueUnit.kwh
+
+            my_meter_value = MeterValues
+            my_meter_value.timestamp = datetime.now().timestamp()
+            my_meter_value.sampled_value = my_sampled_values
+
+            await asyncio.gather(cp.send_meter_values(my_meter_value))
         elif a == 9:
             #To pass on input. Needed when server is sending information
             await asyncio.sleep(2)
