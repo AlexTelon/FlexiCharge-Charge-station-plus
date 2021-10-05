@@ -3,6 +3,7 @@
 
 
 import asyncio
+from enum import Enum
 import websockets
 from datetime import datetime
 
@@ -11,6 +12,83 @@ from ocpp.v16 import ChargePoint as cp
 from ocpp.v16.enums import Action, ChargePointErrorCode, RegistrationStatus, AuthorizationStatus, DataTransferStatus, ChargePointStatus, RemoteStartStopStatus, ReservationStatus
 from ocpp.v16 import call_result, call
 import json
+
+class SampleValueContext(str, Enum):
+    interruption_begin = "Interruption.Begin"
+    interruption_end = "Interruption.End"
+    sample_clock = "Sample.Clock"
+    sample_periodic = "Sample.Periodic"
+    transaction_begin = "Transaction.Begin"
+    transaction_end = "Transaction.End"
+    trigger = "Trigger"
+    other = "Other"
+
+class SampledValueFormat(str, Enum):
+    raw = "Raw"
+    signed_date = "SignedData"
+
+class SampleValueMeasurand(str, Enum):
+    energy_active_export_register = "Energy.Active.Export.Register"
+    energy_active_import_register = "Energy.Active.Import.Register"
+    energy_reactive_export_register = "Energy.Reactive.Export.Register"
+    energy_reactive_import_register = "Energy.Reactive.Import.Register"
+    energy_active_export_interval = "Energy.Active.Export.Interval"
+    energy_active_import_interval = "Energy.Active.Import.Interval"
+    energy_reactive_export_interval = "Energy.Reactive.Export.Interval"
+    energy_reactive_import_interval = "Energy.Reactive.Import.Interval"
+    power_active_export = "Power.Active.Export"
+    power_active_import = "Power.Active.Import"
+    power_offered = "Power.Offered"
+    power_reactive_export = "Power.Reactive.Export"
+    power_reactive_import = "Power.Reactive.Import"
+    power_factor = "Power.Factor"
+    current_import = "Current.Import"
+    current_export = "Current.Export"
+    current_offered = "Current.Offered"
+    voltage = "Voltage"
+    frequency = "Frequency"
+    temperature = "Temperature"
+    soc = "SoC"
+    rpm = "RPM"
+
+class SampleValuePhase(str, Enum):
+    l1 = "L1"
+    l2 = "L2"
+    l3 = "L3"
+    n = "N"
+    l1_n = "L1-N"
+    l2_n = "L2-N"
+    l3_n = "L3-N"
+    l1_l2 = "L1-L2"
+    l2_l3 = "L2-L3"
+    l3_l1 = "L3-L1"
+
+class SampleValueLocation(str, Enum):
+    cable = "Cable"
+    ev = "EV"
+    inlet = "Inlet"
+    outlet = "Outlet"
+    body = "Body"
+
+class SampleValueUnit(str, Enum):
+    wh = "Wh"
+    kwh = "kWh"
+    varh = "varh"
+    kvarh = "kvarh"
+    w = "W"
+    kw = "kW"
+    va = "VA"
+    kva = "kVA"
+    var = "var"
+    kvar = "kvar"
+    a = "A"
+    v = "V"
+    k = "K"
+    celcius = "Celcius"
+    celsius = "Celsius"
+    fahrenheit = "Fahrenheit"
+    percent = "Percent"
+    hertz = "Hertz"
 
 class ChargePoint(cp):
     hardcoded_id_tag = "MyID"
@@ -26,6 +104,8 @@ class ChargePoint(cp):
     is_reserved = False
 
     my_websocket = None
+
+    
     
     def __init__(self, _id, connection):
         cp.__init__(self,  _id, connection)
@@ -191,8 +271,12 @@ class ChargePoint(cp):
         await self.call(request)
         print("Status notification sent!")
         
+    async def send_meter_values(self):
+        
+        request = call.MeterValuesPayload(
+            connector_id=self.hardcoded_connector_id,
 
-
+        )
 
 #This is a coroutine running in paralell with other coroutines
 async def user_input_task(cp):
