@@ -8,16 +8,20 @@ from datetime import datetime
 
 from ocpp.routing import on, after
 from ocpp.v16 import ChargePoint as cp
-from ocpp.v16.enums import Action, RegistrationStatus, AuthorizationStatus, DataTransferStatus, ChargePointStatus, RemoteStartStopStatus, ReservationStatus
+from ocpp.v16.enums import Action, ChargePointErrorCode, RegistrationStatus, AuthorizationStatus, DataTransferStatus, ChargePointStatus, RemoteStartStopStatus, ReservationStatus
 from ocpp.v16 import call_result, call
 import json
 
 class ChargePoint(cp):
     hardcoded_id_tag = "MyID"
     hardcoded_vendor_id = "vendorID"
-    hardcoded_connector_id = 123
+    #A chargepoint could have more than one connector. Each connector should be numbered in order, starting with number one.
+    #No number can be skipped. 0 is reserved for the entire chargepoint. In our chargeponit, we will simulate having 1 connector.
+    hardcoded_connector_id = 1 #was 123 before
     hardcoded_meter_start = 10
     hardcoded_reservation_id = 1
+    
+    error_code = ChargePointErrorCode.no_error
 
     is_reserved = False
 
@@ -36,6 +40,7 @@ class ChargePoint(cp):
 
         response = await self.call(request)
         print(response.charger_id)
+        print(response.current_time)
 
         if response.status ==  RegistrationStatus.accepted:
             print("Connected to central system.")
@@ -166,6 +171,28 @@ class ChargePoint(cp):
         if response.id_tag_info["status"] == AuthorizationStatus.invalid:
             print("Charger {self.id}: Stopping transaction")
 
+
+    async def status_notification(self):
+        current_time = datetime.now()
+        timestamp = current_time.timestamp()
+        formated_timestamp = current_time.strftime("%Y-%m-%dT%H:%M:%SZ") #Can be removed if back-end does not want the time-stamp formated
+        
+        request = call.StatusNotificationPayload(
+            connector_id = self.hardcoded_connector_id,
+            error_code = self.error_code.no_error,
+            status = self.status,
+            timestamp = str(timestamp), #Optional according to official OCPP-documentation
+            info = None, #Optional according to official OCPP-documentation
+            vendor_id = self.hardcoded_vendor_id, #Optional according to official OCPP-documentation
+            vendor_error_code = None #Optional according to official OCPP-documentation
+            )
+
+        await self.call(request)
+        print("Status notification sent!")
+        
+
+
+
 #This is a coroutine running in paralell with other coroutines
 async def user_input_task(cp):
     #a = 0
@@ -190,6 +217,9 @@ async def user_input_task(cp):
         elif a == 5:
             print("Testing " + str(a))
             await asyncio.gather(cp.send_start_transaction())
+        elif a == 6:
+            print("Testing " + str(a))
+            await asyncio.gather(cp.status_notification())
         elif a == 9:
             #To pass on input. Needed when server is sending information
             await asyncio.sleep(2)
