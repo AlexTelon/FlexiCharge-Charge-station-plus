@@ -13,7 +13,6 @@ class States(Enum):
     S_FLEXICHARGEAPP = auto()
 
 
-
 class StateHandler:
     def __init__(self):
         self.__state = States.S_STARTUP
