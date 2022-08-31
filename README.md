@@ -17,12 +17,15 @@ To connect the white ribbon cable supplied, connect one end to the controller bo
 
 1- The used library is pysimpleGUI so you need to install the following commands on the terminal.
 ------------------------------------------------------------------------------------------------
-pip install websockets
 pip3 install pysimplegui
 
 2- You need to install the following command on the termina to use the qr code generator.
 ----------------------------------------------------------------------------------------
-pip install qrcode 
+pip3 install qrcode 
+
+3- You need to install the following command on the termina to use the websockets
+------------------------------------------------------------------------------------------------
+pip3 install websockets
 
 ### How to run the program:
 To run the program, open PowerShell (for Windows) or Terminal (for Linux) and navigate to FlexiCharge-Charge-station-plus -> ChargeStation and enter python3 state-machine.py
