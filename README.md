@@ -43,5 +43,5 @@ To run the program, open PowerShell (for Windows) or Terminal (for Linux) and na
 "images.py" include all images from zeplin(think about the path of the images if you get error), "StateHandler" include Enum for all the states, and "state-machine" include the main code and state-machine.
 
 ### Development Requirements:
-Python 3.9
+Python 3.9 <br />
 Visual Studio Code
