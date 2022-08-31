@@ -17,7 +17,7 @@ To connect the white ribbon cable supplied, connect one end to the controller bo
 
 1- The used library is pysimpleGUI so you need to install the following commands on the terminal.
 ------------------------------------------------------------------------------------------------
-pip3 install pysimplegui
+pip3 install pysimplegui ---
 pip3 install pillow
 
 2- You need to install the following command on the termina to use the qr code generator.
