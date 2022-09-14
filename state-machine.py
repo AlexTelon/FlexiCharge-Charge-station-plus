@@ -113,7 +113,6 @@ class ChargePoint():
         If the idTag has a reservation, start charging from the reservation, set the state to charging,
         send a response to the central system, start the transaction, set the status to charging, and
         send a status notification to the central system.
-
         :param message: [3, "Unique message id", "RemoteStartTransaction", {"idTag": "12345"}]
         """
         if int(message[3]["idTag"]) == self.reservation_id_tag:  # If the idTag has a reservation
@@ -147,7 +146,6 @@ class ChargePoint():
         """
         If the charging is true and the local transaction id is equal to the transaction id, then print
         "Remote stop charging" and send a message to the server.
-
         :param message: The message received from the server
         """
         local_transaction_id = message[3]["transactionID"]
@@ -252,7 +250,6 @@ class ChargePoint():
     def start_charging(self, connector_id, id_tag):
         """
         It starts a timer that calls the function meter_counter_charging every second
-
         :param connector_id: The connector ID of the connector that is being used for charging
         :param id_tag: The id_tag of the user who is charging
         """
@@ -326,7 +323,6 @@ class ChargePoint():
         """
         If the charging is remote, then the charging has already started in the remote_start_transaction
         function. Notify the server here
-
         :param is_remote: True if the charging was started remotely, False if it was started locally
         """
         current_time = datetime.now()
@@ -364,7 +360,6 @@ class ChargePoint():
     async def stop_transaction(self, is_remote):
         """
         It stops the transaction and sends a message to the server.
-
         :param is_remote: Boolean
         """
         current_time = datetime.now()
@@ -430,7 +425,6 @@ class ChargePoint():
     async def send_status_notification(self, info):
         """
         It sends a message to the back-end with the status of the charging station.
-
         :param info: A string that contains information about the status
         """
         current_time = datetime.now()
@@ -525,7 +519,6 @@ class ChargePoint():
     async def send_data_transfer(self, message_id, message_data):
         """
         I'm trying to send a JSON string to the server, but the server is expecting a JSON object
-
         :param message_id: The message ID of the message you want to send
         :param message_data: This is the data that is being sent to the server
         """
@@ -547,7 +540,6 @@ class ChargePoint():
         It receives a message from the server, checks if the vendorId is correct, if it is, it checks if
         the messageId is correct, if it is, it parses the data and sets the charger_id to the parsed
         data
-
         :param message: The message received from the websocket
         """
         status = "Rejected"
@@ -777,7 +769,6 @@ async def statemachine(chargePoint: ChargePoint):
     """
     The function is a state machine that changes the state of the charge point and displays the relevant
     image on the screen
-
     :param chargePoint: The ChargePoint object that is used to communicate with the OCPP server
     :type chargePoint: ChargePoint
     """
