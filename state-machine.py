@@ -974,7 +974,7 @@ async def main():
     """
     try:
         async with websockets.connect(
-            'ws://18.202.253.30:1337/chargerplus',
+            'ws://18.202.253.30:1337/testnumber13',
             subprotocols=['ocpp1.6']
         ) as ws:
             chargePoint = ChargePoint("chargerplus", ws)
