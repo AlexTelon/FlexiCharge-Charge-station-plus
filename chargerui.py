@@ -19,8 +19,7 @@ import json
 import asyncio
 from threading import Thread
 
-
-class GUI():
+class chargerGUI():
     def GUI():
         """
         It creates a bunch of windows and returns them.
@@ -395,4 +394,6 @@ class GUI():
                 refreshWindows()
                 await asyncio.sleep(5)
                 state.set_state(States.S_AVAILABLE)
+
+
 

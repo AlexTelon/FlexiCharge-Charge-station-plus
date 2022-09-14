@@ -2,7 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="b1eb5a1a-7686-4092-a258-c10d2cd810b4" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/chargerui.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/chargerui.py" beforeDir="false" afterPath="$PROJECT_DIR$/chargerui.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/state-machine.py" beforeDir="false" afterPath="$PROJECT_DIR$/state-machine.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
