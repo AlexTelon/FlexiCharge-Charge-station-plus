@@ -29,19 +29,10 @@ class ChargePoint():
     my_id = ""
     hw = Hardware()
     # Send this to server at start and stop. It will calculate cost. Incremented during charging.
-    # Reservation related variables
-    reserve_now_timer = 0
-    #is_reserved = False
-    reservation_id_tag = None
-    reservation_id = None
-    reserved_connector = None
+    #ReserveConnectorZeroSupported  NEVER USED! why - Kevin and Elin 2022-09-14
     ReserveConnectorZeroSupported = True
 
     # Transaction related variables
-    #is_charging = False
-    charging_id_tag = None
-    charging_connector = None
-    charging_Wh = 0  # I think this is how many Wh have been used to charge
     transaction_id = None
 
     # Define enums for status and error_code (or use the onses in OCPP library)
@@ -115,7 +106,7 @@ class ChargePoint():
         :param message: [3, "Unique message id", "RemoteStartTransaction", {"idTag": "12345"}]
         """
         if int(message[3]["idTag"]) == self.reservation_id_tag:  # If the idTag has a reservation
-            self.start_charging_from_reservation()
+            self.hw.start_charging_from_reservation()
             print("Remote transaction started")
             state.set_state(States.S_CHARGING)
             msg = [3,
@@ -172,59 +163,9 @@ class ChargePoint():
             msg_send = json.dumps(msg)
             await self.my_websocket.send(msg_send)
     
-    # Will count down every second
-    def timer_countdown_reservation(self):
-        """
-        If the timer is 0, then the reservation is canceled, and the status is set to "Available"
-        :return: The timer_countdown_reservation() function is being returned.
-        """
-        if self.reserve_now_timer <= 0:
-            print("Reservation is canceled!")
-            self.hw.hard_reset_reservation()
-            self.status = "Available"
-            # Notify back-end that we are availiable again
-            asyncio.run(self.send_status_notification(None))
-            return
-        self.reserve_now_timer = self.reserve_now_timer - 1
-        # Should only countdown if status us Reserved, otherwise won't be able to start charging
-        if self.status == "Reserved":
-            # Countdown every second
-            threading.Timer(1, self.timer_countdown_reservation).start()
   
 ##########################################################################################################################
- 
 
-    """
-    def hard_reset_reservation(self):
-        
-        It resets the reservation status of a parking spot
-        
-        self.hw.get_is_reserved = False
-        self.reserve_now_timer = 0
-        self.reservation_id_tag = None
-        self.reservation_id = None
-        print("Hard reset reservation")
-
-    def hard_reset_charging(self):
-    
-        It resets the charging status of the car
-        
-        self.hw.set_is_charging = False
-        self.charging_id_tag = None
-        self.charging_connector = None
-        print("Hard reset charging")
-   
-    def start_charging_from_reservation(self):
-       
-        The function starts charging the EV, sets the charging_id_tag to the reservation_id_tag, and
-        sets the charging_connector to the reserved_connector
-        
-        self.hw.set_is_charging = True
-        self.charging_id_tag = self.reservation_id_tag
-        self.charging_connector = self.reserved_connector
-        #threading.Timer(1, self.meter_counter_charging).start()
-        #threading.Timer(2, self.send_periodic_meter_values).start()
- """
     def send_periodic_meter_values(self):
         """
         It sends the current charging percentage to the server every 2 seconds, and if the car is
@@ -235,21 +176,12 @@ class ChargePoint():
         if self.hw.get_current_charging_percentage:
             threading.Timer(2, self.send_periodic_meter_values).start()
 
-    def start_charging(self, connector_id, id_tag):
-        """
-        It starts a timer that calls the function meter_counter_charging every second
-        :param connector_id: The connector ID of the connector that is being used for charging
-        :param id_tag: The id_tag of the user who is charging
-        """
-        self.hw.set_is_charging = True
-        self.charging_id_tag = id_tag
-        self.charging_connector = connector_id
-        threading.Timer(1, self.hw.meter_counter_charging).start()
 
     async def reserve_now(self, message):
         local_reservation_id = message[3]["reservationID"]
         local_connector_id = message[3]["connectorID"]
         if self.reservation_id == None or self.reservation_id == local_reservation_id:
+            #This if is never user ReserveConnectorZeroSupported is ALWAYS True - Kevin and Elin 2022-09-14
             if self.ReserveConnectorZeroSupported == False and local_connector_id == 0:
                 print("Connector zero not allowed")
                 msg = [3,
@@ -266,14 +198,14 @@ class ChargePoint():
             self.status = "Reserved"
             await asyncio.gather(self.send_status_notification(None))
             state.set_state(States.S_FLEXICHARGEAPP)
-            self.reservation_id_tag = int(message[3]["idTag"])
-            self.reservation_id = message[3]["reservationID"]
-            self.reserved_connector = message[3]["connectorID"]
+            self.hw.set_reservation_id_tag = int(message[3]["idTag"])
+            self.hw.set_reservation_id = message[3]["reservationID"]
+            self.hw.set_reserved_connector = message[3]["connectorID"]
             timestamp = message[3]["expiryDate"]  # Given in ms since epoch
             reserved_for_s = int(timestamp - int(time.time()))
             # reserved_for_ms/1000)   #Reservation time in seconds
-            self.reserve_now_timer = int(reserved_for_s)
-            self.timer_countdown_reservation  # Countdown every second
+            self.hw.set_reserve_now_timer = int(reserved_for_s)
+            self.hw.timer_countdown_reservation  # Countdown every second
 
             msg = [3,
                    # Have to use the unique message id received from server
@@ -284,7 +216,7 @@ class ChargePoint():
             msg_send = json.dumps(msg)
             await self.my_websocket.send(msg_send)
 
-        elif self.reserved_connector == local_connector_id:
+        elif self.hw.get_reserved_connector == local_connector_id:
             print("Connector occupied")
             msg = [3,
                    # Have to use the unique message id received from server
@@ -319,9 +251,9 @@ class ChargePoint():
         if is_remote == True:
             # If remote then charging have started in remote_start_transaction. Notify server here.
             msg = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "StartTransaction", {
-                "connectorId": self.charging_connector,
-                "id_tag": self.charging_id_tag,
-                "meterStart": self.meter_value_total,
+                "connectorId": self.hw.get_charging_connector,
+                "id_tag": self.hw.get_charging_id_tag,
+                "meterStart": self.hw.get_meter_value_total,
                 "timestamp": timestamp,
                 "reservationId": self.reservation_id,
             }]
@@ -330,13 +262,13 @@ class ChargePoint():
             msg_send = json.dumps(msg)
             await self.my_websocket.send(msg_send)
         else:  # No reservation
-            self.start_charging(self.hardcoded_connector_id,
+            self.hw.start_charging(self.hardcoded_connector_id,
                                 self.hardcoded_id_tag)
 
             msg = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "StartTransaction", {
                 "connectorId": self.charging_connector,
                 "id_tag": self.charging_id_tag,
-                "meterStart": self.meter_value_total,
+                "meterStart": self.hw.get_meter_value_total,
                 "timestamp": timestamp,
                 "reservationId": None,  # If here, no reservation was made
             }]
@@ -357,7 +289,7 @@ class ChargePoint():
         if is_remote == True:
             msg = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "StopTransaction", {
                 "idTag": self.charging_id_tag,
-                "meterStop": self.meter_value_total,
+                "meterStop": self.hw.get_meter_value_total,
                 "timestamp": timestamp,
                 "transactionId": self.transaction_id,
                 "reason": "Remote",
@@ -374,7 +306,7 @@ class ChargePoint():
         else:
             msg = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "StopTransaction", {
                 "idTag": self.charging_id_tag,
-                "meterStop": self.meter_value_total,
+                "meterStop": self.hw.get_meter_value_total,
                 "timestamp": timestamp,
                 "transactionId": self.transaction_id,
                 "reason": "Remote",

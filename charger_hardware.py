@@ -19,15 +19,15 @@ import json
 import asyncio
 from threading import Thread
 
-
+"""
+Due to async funtions not being active in all cases. 
+Problems may occur in the future with certain functions due to lack of testing capabilities
+Currently working as of 2022-09-14 - Kevin and Elin
+"""
 
 class Hardware():
     """ 
-    # Transaction
-    charging_id_tag = None
-    charging_connector = None
-    charging_Wh = 0  # I think this is how many Wh have been used to charge
-    transaction_id = None 
+  
 
     # Reservation related variables
     
@@ -45,14 +45,39 @@ class Hardware():
 
     # Transaction related variables
     is_charging = False
-   
+    charging_id_tag = None
+    charging_connector = None
+    charging_Wh = 0  # I think this is how many Wh have been used to charge
     
+    #Getter and Setter for charging
+    def get_charging_Wh(self):
+        return self.charging_Wh
+
+    def set_charging_Wh(self, Wh : int):
+        self.charging_Wh = Wh
     
     def get_is_charging(self):
         return self.is_charging
 
     def set_is_charging(self, boolean : bool):
         self.is_charging = boolean
+
+    def get_charging_id_tag(self):
+        return self.charging_id_tag
+        
+    def set_charging_id_tag(self, charging_id_tag):
+        self.charging_id_tag = charging_id_tag
+
+    def get_charging_connector(self):
+        return self.charging_connector
+
+    def set_charging_connector(self, charging_connector):
+        self.charging_connector = charging_connector    
+        
+    def get_current_charging_percentage(self):
+        return self.current_charging_percentage
+
+    #Getter and Setter for reservation
 
     def get_is_reserved(self):
         return self.is_reserved
@@ -63,14 +88,20 @@ class Hardware():
     def get_reservation_id_tag(self):
         return self.reservation_id_tag
 
-    def set_reservation_id(self, reservation_id_tag):
-        self.reservation_id = reservation_id_tag
+    def set_reservation_id_tag(self, reservation_id_tag):
+        self.reservation_id_tag = reservation_id_tag
 
     def get_reservation_id(self):
         return self.reservation_id
 
     def set_reservation_id(self, reservation_id):
         self.reservation_id = reservation_id
+
+    def get_reserved_connector(self):
+        return self.reserved_connector
+    
+    def set_reserved_connector(self, reserved_connector):
+        self.reserved_connector = reserved_connector
         
     def get_reserve_now_timer(self):
         return self.reserve_now_timer
@@ -78,8 +109,10 @@ class Hardware():
     def set_reserve_now_timer(self, time : int):
         self.reserve_now_timer = time
 
-    def get_current_charging_percentage(self):
-        return self.current_charging_percentage
+    #Getter and Setter for misc
+
+    def get_meter_value_total(self):
+        return self.meter_value_total
     
 
 
@@ -111,7 +144,7 @@ class Hardware():
         """
         It resets the charging status of the car
         """
-        self.hw.set_is_charging = False
+        self.set_is_charging = False
         self.charging_id_tag = None
         self.charging_connector = None
         print("Hard reset charging")
@@ -126,13 +159,13 @@ class Hardware():
         self.charging_connector = self.reserved_connector
         #threading.Timer(1, self.meter_counter_charging).start()
         #threading.Timer(2, self.send_periodic_meter_values).start()
-    """
+    
     # Will count down every second
     def timer_countdown_reservation(self):
-        
+        """
         If the timer is 0, then the reservation is canceled, and the status is set to "Available"
         :return: The timer_countdown_reservation() function is being returned.
-        
+        """
         if self.reserve_now_timer <= 0:
             print("Reservation is canceled!")
             self.hw.hard_reset_reservation()
@@ -145,27 +178,14 @@ class Hardware():
         if self.status == "Reserved":
             # Countdown every second
             threading.Timer(1, self.timer_countdown_reservation).start()
-    """
-
-
-
-
-    """   
-    def get_reservation_id_tag(self):
-        return self.reservation_id_tag
-
-    # Reservation related variables
-    reserve_now_timer = 0
-    is_reserved = False
-    reservation_id_tag =
-    reservation_id = None
-    reserved_connector = None
-    ReserveConnectorZeroSupported = True
-
-    # Transaction related variables
-    #is_charging = False
-    charging_id_tag = None
-    charging_connector = None
-    charging_Wh = 0  # I think this is how many Wh have been used to charge
-    transaction_id = Non
-    """
+    
+    def start_charging(self, connector_id, id_tag):
+        """
+        It starts a timer that calls the function meter_counter_charging every second
+        :param connector_id: The connector ID of the connector that is being used for charging
+        :param id_tag: The id_tag of the user who is charging
+        """
+        self.set_is_charging = True
+        self.charging_id_tag = id_tag
+        self.charging_connector = connector_id
+        threading.Timer(1, self.meter_counter_charging).start()
