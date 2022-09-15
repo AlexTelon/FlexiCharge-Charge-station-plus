@@ -39,7 +39,6 @@ class Get():
         return self.current_charging_percentage
 
     # Get for reservation variables
-
     def is_reserved(self):
         return self.is_reserved
 
@@ -56,7 +55,6 @@ class Get():
         return self.reserve_now_timer
 
     # Get for misc variables
-
     def meter_value_total(self):
         return self.meter_value_total
 
@@ -91,6 +89,9 @@ class Set():
 
     def reserved_connector(self, reserved_connector):
         self.reserved_connector = reserved_connector
+
+    def reserve_now_timer(self, reserved_now_timer):
+        self.reserve_now_timer = reserved_now_timer
 
     def decrement_reserve_now_timer_by(self, time: int):
         self.reserve_now_timer -= time
