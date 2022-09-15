@@ -29,6 +29,9 @@ class Get():
     def is_charging(self):
         return self.is_charging
 
+    def charging_id(self):
+        return self.charging_id
+
     def charging_id_tag(self):
         return self.charging_id_tag
 
@@ -66,6 +69,9 @@ class Set():
 
     def is_charging(self, boolean: bool):
         self.is_charging = boolean
+
+    def charging_id(self, charging_id):
+        self.charging_id = charging_id
 
     def charging_id_tag(self, charging_id_tag):
         self.charging_id_tag = charging_id_tag

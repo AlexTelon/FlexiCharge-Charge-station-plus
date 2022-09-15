@@ -20,6 +20,8 @@ import asyncio
 from threading import Thread
 
 from charger_hardware import Hardware
+from get_set_variables import Get
+from get_set_variables import Set
 
 state = StateHandler()
 
@@ -27,7 +29,9 @@ state = StateHandler()
 class ChargePoint():
     my_websocket = None
     my_id = ""
-    hw = Hardware()
+    hardware = Hardware()
+    get = Get()
+    set = Set()
     # Send this to server at start and stop. It will calculate cost. Incremented during charging.
     # ReserveConnectorZeroSupported  NEVER USED! why - Kevin and Elin 2022-09-14
     ReserveConnectorZeroSupported = True
@@ -105,8 +109,8 @@ class ChargePoint():
         send a status notification to the central system.
         :param message: [3, "Unique message id", "RemoteStartTransaction", {"idTag": "12345"}]
         """
-        if int(message[3]["idTag"]) == self.reservation_id_tag:  # If the idTag has a reservation
-            self.hw.start_charging_from_reservation()
+        if int(message[3]["idTag"]) == self.get.reservation_id_tag:  # If the idTag has a reservation
+            self.hardware.start_charging_from_reservation()
             print("Remote transaction started")
             state.set_state(States.S_CHARGING)
             msg = [3,
@@ -140,7 +144,7 @@ class ChargePoint():
         """
         local_transaction_id = message[3]["transactionID"]
         # and int(local_transaction_id) == int(self.transaction_id):
-        if self.hw.get_is_charging == True:
+        if self.get.is_charging == True:
             print("Remote stop charging")
             msg = [3,
                    # Have to use the unique message id received from server
@@ -166,21 +170,20 @@ class ChargePoint():
 
 ##########################################################################################################################
 
-
     def send_periodic_meter_values(self):
         """
         It sends the current charging percentage to the server every 2 seconds, and if the car is
         charging, it starts the function again
         """
         asyncio.run(self.send_data_transfer(
-            1, self.hw.get_current_charging_percentage))
-        if self.hw.get_current_charging_percentage:
+            1, self.get.current_charging_percentage))
+        if self.get.current_charging_percentage:
             threading.Timer(2, self.send_periodic_meter_values).start()
 
     async def reserve_now(self, message):
         local_reservation_id = message[3]["reservationID"]
         local_connector_id = message[3]["connectorID"]
-        if self.reservation_id == None or self.reservation_id == local_reservation_id:
+        if self.get.reservation_id == None or self.get.reservation_id == local_reservation_id:
             # This if is never user ReserveConnectorZeroSupported is ALWAYS True - Kevin and Elin 2022-09-14
             if self.ReserveConnectorZeroSupported == False and local_connector_id == 0:
                 print("Connector zero not allowed")
@@ -193,19 +196,19 @@ class ChargePoint():
                 msg_send = json.dumps(msg)
                 await self.my_websocket.send(msg_send)
                 return
-            self.hw.hard_reset_reservation()
-            self.hw.set_is_reserved = True
+            self.hardware.hard_reset_reservation()
+            self.hardware.set_is_reserved = True
             self.status = "Reserved"
             await asyncio.gather(self.send_status_notification(None))
             state.set_state(States.S_FLEXICHARGEAPP)
-            self.hw.set_reservation_id_tag = int(message[3]["idTag"])
-            self.hw.set_reservation_id = message[3]["reservationID"]
-            self.hw.set_reserved_connector = message[3]["connectorID"]
+            self.set.reservation_id_tag = int(message[3]["idTag"])
+            self.set.reservation_id = message[3]["reservationID"]
+            self.set.reserved_connector = message[3]["connectorID"]
             timestamp = message[3]["expiryDate"]  # Given in ms since epoch
             reserved_for_s = int(timestamp - int(time.time()))
             # reserved_for_ms/1000)   #Reservation time in seconds
-            self.hw.set_reserve_now_timer = int(reserved_for_s)
-            self.hw.timer_countdown_reservation  # Countdown every second
+            self.set.reserve_now_timer = int(reserved_for_s)
+            self.hardware.timer_countdown_reservation  # Countdown every second
 
             msg = [3,
                    # Have to use the unique message id received from server
@@ -216,7 +219,7 @@ class ChargePoint():
             msg_send = json.dumps(msg)
             await self.my_websocket.send(msg_send)
 
-        elif self.hw.get_reserved_connector == local_connector_id:
+        elif self.get.reserved_connector == local_connector_id:
             print("Connector occupied")
             msg = [3,
                    # Have to use the unique message id received from server
@@ -251,24 +254,24 @@ class ChargePoint():
         if is_remote == True:
             # If remote then charging have started in remote_start_transaction. Notify server here.
             msg = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "StartTransaction", {
-                "connectorId": self.hw.get_charging_connector,
-                "id_tag": self.hw.get_charging_id_tag,
-                "meterStart": self.hw.get_meter_value_total,
+                "connectorId": self.get.charging_connector,
+                "id_tag": self.get.charging_id_tag,
+                "meterStart": self.get.meter_value_total,
                 "timestamp": timestamp,
-                "reservationId": self.reservation_id,
+                "reservationId": self.get.reservation_id,
             }]
 
-            self.hw.hard_reset_reservation()
+            self.hardware.hard_reset_reservation()
             msg_send = json.dumps(msg)
             await self.my_websocket.send(msg_send)
         else:  # No reservation
-            self.hw.start_charging(self.hardcoded_connector_id,
-                                   self.hardcoded_id_tag)
+            self.hardware.start_charging(self.hardcoded_connector_id,
+                                         self.hardcoded_id_tag)
 
             msg = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "StartTransaction", {
-                "connectorId": self.charging_connector,
-                "id_tag": self.charging_id_tag,
-                "meterStart": self.hw.get_meter_value_total,
+                "connectorId": self.get.charging_connector,
+                "id_tag": self.get.charging_id_tag,
+                "meterStart": self.get.meter_value_total,
                 "timestamp": timestamp,
                 "reservationId": None,  # If here, no reservation was made
             }]
@@ -288,8 +291,8 @@ class ChargePoint():
         await asyncio.gather(self.send_status_notification(None))
         if is_remote == True:
             msg = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "StopTransaction", {
-                "idTag": self.charging_id_tag,
-                "meterStop": self.hw.get_meter_value_total,
+                "idTag": self.get.charging_id_tag,
+                "meterStop": self.get.meter_value_total,
                 "timestamp": timestamp,
                 "transactionId": self.transaction_id,
                 "reason": "Remote",
@@ -302,11 +305,11 @@ class ChargePoint():
             }]
             msg_send = json.dumps(msg)
             await self.my_websocket.send(msg_send)
-            self.hw.hard_reset_charging()
+            self.hardware.hard_reset_charging()
         else:
             msg = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "StopTransaction", {
-                "idTag": self.charging_id_tag,
-                "meterStop": self.hw.get_meter_value_total,
+                "idTag": self.get.charging_id_tag,
+                "meterStop": self.get.meter_value_total,
                 "timestamp": timestamp,
                 "transactionId": self.transaction_id,
                 "reason": "Remote",
@@ -319,7 +322,7 @@ class ChargePoint():
             }]
             msg_send = json.dumps(msg)
             await self.my_websocket.send(msg_send)
-            self.hw.hard_reset_charging()
+            self.hardware.hard_reset_charging()
 
         response = await self.my_websocket.recv()
         print(json.loads(response))
@@ -467,7 +470,7 @@ class ChargePoint():
             if message[3]["messageId"] == "BootData":
                 parsed_data = json.loads(message[3]["data"])
                 self.charger_id = parsed_data["chargerId"]
-                print("Charger ID is set to: " + str(self.charger_id))
+                print("Charger ID is set to: " + str(self.get.charging_id))
                 status = "Accepted"
             else:
                 status = "UnknownMessageId"
