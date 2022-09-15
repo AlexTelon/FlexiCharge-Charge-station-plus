@@ -1,4 +1,5 @@
 from platform import machine
+from sre_parse import State
 import PySimpleGUI as sg
 import asyncio
 import time
@@ -19,8 +20,30 @@ import json
 import asyncio
 from threading import Thread
 
-class chargerGUI():
-    def GUI(state: States):
+class ChargerGUI():
+    current_state : State = None
+    last_price = 50
+    charger_id = 000000
+    percent = 0
+    num_of_secs = 100
+    
+    def __init__(self, state: State,):
+        self.current_state = state
+
+    def change_state(self,state: States):
+        self.current_state = state
+        self.run_state()
+    def set_charger_id(self,id):
+        self.charger_id = id
+    def set_last_price(self, last_price):
+        self.last_price = last_price
+    def set_charge_precentage(self,percentage):
+        self.percent = percentage
+    def set_num_of_secs(self,num_of_secs):
+        self.num_of_secs = num_of_secs
+
+    
+    def GUI():
         """
         It creates a bunch of windows and returns them.
         :return: the windows that are created in the function.
@@ -117,7 +140,6 @@ class chargerGUI():
 
             ]
         ]
-
         Power_window = sg.Window(title="FlexiChargeChargingTimeWindow", layout=powerLayout, location=(
             162, 645), grab_anywhere=False, no_titlebar=True, background_color='black', margins=(0, 0)).finalize()
         Power_window.TKroot["cursor"] = "none"
@@ -183,23 +205,141 @@ class chargerGUI():
 
     # update all the windows
 
-    def refreshWindows():
+    def refreshWindows(self):
         """
         It refreshes all the windows
         """
-        global window_back, window_chargingTime, window_chargingPercent, window_chargingPrecentMark, window_chargingPrice, window_qrCode, window_time, window_chargingLastPrice, window_UsedKWH, window_power
-        window_back.refresh()
-        window_chargingTime.refresh()
-        window_chargingPercent.refresh()
-        window_chargingPercentMark.refresh()
-        window_chargingPrice.refresh()
-        window_qrCode.refresh()
-        window_time.refresh()
-        window_chargingLastPrice.refresh()
-        window_UsedKWH.refresh()
-        window_power.refresh()
+        #global window_back, window_chargingTime, window_chargingPercent, window_chargingPrecentMark, window_chargingPrice, window_qrCode, window_time, window_chargingLastPrice, window_UsedKWH, window_power
+        
+        self.window_chargingTime.refresh()
+        self.window_chargingPercent.refresh()
+        self.window_chargingPercent.refresh()
+        self.window_chargingPrice.refresh()
+        self.window_qrCode.refresh()
+        self.window_time.refresh()
+        self.window_chargingLastPrice.refresh()
+        self.window_UsedKWH.refresh()
+        self.window_power.refresh()
 
-    
+
+    def hide_all_windows(self):
+        self.window_qrCode.hide()
+        self.window_chargingPercent.hide()
+        self.window_chargingPercentMark.hide()
+        self.window_chargingTime.hide()
+        self.window_power.hide()
+        self.window_time.hide()
+        self.window_chargingLastPrice.un_hide()
+        self.window_UsedKWH.un_hide()
+
+        
+    def generate_qr_code(chargerID):
+        """
+        It takes a string and generates a QR code image from it.
+        
+        :param chargerID: The ID of the charger
+        """
+        qr = qrcode.QRCode(
+                version=8,
+                error_correction=qrcode.constants.ERROR_CORRECT_L,
+                box_size=5,
+                border=4,
+            )
+        qr.add_data(chargerID)
+        qr.make(fit=True)
+        img_qrCodeGenerated = qr.make_image(
+            fill_color="black", back_color="white")
+        type(img_qrCodeGenerated)
+        img_qrCodeGenerated.save("charger_images/qrCode.png")
+
+    def update_charging(self):
+        m, s = divmod(self.num_of_secs, 60)
+        self.window_time['ID0'].update(str(m))
+        self.window_time['ID2'].update(str(s))
+         # update in precents how full the battery currently is
+         # window_chargingPower['TAMER'].update(str(power))
+        self.window_chargingPercent['PERCENT'].update(str(self.percent))
+        self.window_power['POWERTEST'].update(str(self.percent))
+
+    def run_state(self):
+        if self.current_state == States.S_NOTAVAILABLE:
+            self.window_back['IMAGE'].update(
+                data=displayStatus.chargeNotAvailable())
+            # update the window
+            self.refreshWindows()
+        elif self.current_state == States.S_STARTUP:
+            #It should probably do something here later but i need to find out what
+            do_something = None
+            
+        elif self.current_state == States.S_AVAILABLE:
+            #Starts by generating a new qr code depending on the charger ID
+            
+            self.generate_qr_code(self.chargerID)
+
+            self.window_chargingPercent.hide()
+            self.window_chargingPercentMark.hide()
+            self.window_chargingTime.hide()
+            self.window_power.hide()
+            self.window_time.hide()
+            self.window_chargingLastPrice.hide()
+            self.window_UsedKWH.hide()
+
+            # Display Charing id
+            self.window_back['IMAGE'].update(data=displayStatus.chargingID())
+
+            # Show QR code image on screen
+            self.window_qrCode.UnHide()
+            # Show Charger id on screen with QR code image
+            self.chargerID_window.UnHide()
+            # update the window
+            self.refreshWindows()
+        
+        elif self.current_state == States.S_FLEXICHARGEAPP:
+            self.window_back['IMAGE'].update(data=displayStatus.flexiChargeApp())
+            # Hide the charge id on this state
+            self.chargerID_window.Hide()
+            self.window_qrCode.Hide()
+            self.refreshWindows()
+        elif self.current_state == States.S_PLUGINCABLE:
+            self.window_qrCode.hide()
+            self.window_back['IMAGE'].update(data=displayStatus.plugCable())
+            self.window_chargingPrice.un_hide()
+            # Hide the charge id on this state
+            self.chargerID_window.Hide()
+            self.refreshWindows()
+        elif self.current_state == States.S_CONNECTING:
+            self.window_back['IMAGE'].update(data=displayStatus.connectingToCar())
+            self.window_chargingPrice.hide()
+            self.refreshWindows()
+        
+        elif self.change_state == States.S_CHARGING:
+            self.window_back['IMAGE'].update(data=displayStatus.charging())
+
+            # Display all the windows below during charging image shown on screen
+            self.window_chargingPercent.un_hide()
+            self.window_chargingPercentMark.un_hide()
+            self.window_chargingTime.un_hide()
+            self.window_time.un_hide()
+            self.window_power.un_hide()
+            self.window_chargingPercent['PERCENT'].update(str(self.percent))
+            self.window_chargingPercent.move(140, 245)
+
+            if self.percent >= 10:
+                # move charging percent on screen when percent >= 10
+                self.window_chargingPercent.move(60, 245)
+                # move the charging mark (%) on screen
+                self.window_chargingPercentMark.move(330, 350)
+            self.refreshWindows()
+            self.update_charging()
+
+        elif self.current_state == States.S_BATTERYFULL:
+            # hide all the windows below during barttery full image shown on screen
+            self.hide_all_windows()
+            self.window_chargingLastPrice['LASTPRICE'].update(str(self.last_price))
+            self.window_back['IMAGE'].update(data=displayStatus.batteryFull())
+            self.refreshWindows()
+
+            
 
 
 

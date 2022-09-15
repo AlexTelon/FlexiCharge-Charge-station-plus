@@ -1,4 +1,4 @@
-from chargerui import chargerGUI
+from chargerui import ChargerGUI
 import asyncio
 import json
 import threading
@@ -14,7 +14,7 @@ from StateHandler import States
 from images import displayStatus
 
 state = StateHandler()
-
+chargerGUI = ChargerGUI(state)
 
 class ChargePoint():
     my_websocket = None
@@ -963,30 +963,31 @@ async def statemachine(chargePoint: ChargePoint):
 
 
 async def main():
+
+    chargerUI = ChargerGUI(States.S_PLUGINCABLE)
+    chargerUI.change_state(States.S_BATTERYFULL)
     """
     It connects to a websocket server, sends a boot notification, and then runs a state machine
     """
+    
     try:
         async with websockets.connect(
             'ws://54.220.194.65:1337/chargerplus',
             subprotocols=['ocpp1.6']
         ) as ws:
-            chargePoint = ChargePoint("chargerplus", ws)
 
-            await chargePoint.send_boot_notification()
+            chargePoint = ChargePoint("chargerplus", ws)
+            chargeGUI = ChargerGUI(state)
+
+            # await chargePoint.send_boot_notification()
             # await chargePoint.send_heartbeat()
             asyncio.get_event_loop().run_until_complete(await statemachine(chargePoint))
     except:
         print("Websocket error: Could not connect to server!")
         # Ugly? Yes! Works? Yes! (Should might use the statemachine but that will generate problems due to the websocket not working, due to the lack of time i won't fix that now)
         while True:
-            state.set_state(States.S_NOTAVAILABLE)
-            global window_back
-            # Display QR code image
-            window_back['IMAGE'].update(
-                data=displayStatus.chargeNotAvailable())
-            # update the window
-            refreshWindows()
-
+            chargeGUI = ChargerGUI(States.S_STARTUP)
+            chargeGUI.change_state(States.S_NOTAVAILABLE)
+       
 if __name__ == '__main__':
     asyncio.run(main())
