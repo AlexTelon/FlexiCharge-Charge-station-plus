@@ -1,21 +1,9 @@
-import PySimpleGUI as sg
-import asyncio
-import time
-
-from StateHandler import States
-from StateHandler import StateHandler
-from images import displayStatus
-
-import qrcode
-
 import asyncio
 from asyncio.events import get_event_loop
 from asyncio.tasks import gather
 import threading
-import websockets
 from datetime import datetime
 import time
-import json
 import asyncio
 from threading import Thread
 
@@ -25,12 +13,11 @@ Problems may occur in the future with certain functions due to lack of testing c
 Currently working as of 2022-09-14 - Kevin and Elin
 """
 
+
 class Hardware():
     """ 
-  
-
     # Reservation related variables
-    
+
     ReserveConnectorZeroSupported = True
     """
 
@@ -48,23 +35,23 @@ class Hardware():
     charging_id_tag = None
     charging_connector = None
     charging_Wh = 0  # I think this is how many Wh have been used to charge
-    
-    #Getter and Setter for charging
+
+    # Getter and Setter for charging
     def get_charging_Wh(self):
         return self.charging_Wh
 
-    def set_charging_Wh(self, Wh : int):
+    def set_charging_Wh(self, Wh: int):
         self.charging_Wh = Wh
-    
+
     def get_is_charging(self):
         return self.is_charging
 
-    def set_is_charging(self, boolean : bool):
+    def set_is_charging(self, boolean: bool):
         self.is_charging = boolean
 
     def get_charging_id_tag(self):
         return self.charging_id_tag
-        
+
     def set_charging_id_tag(self, charging_id_tag):
         self.charging_id_tag = charging_id_tag
 
@@ -72,19 +59,19 @@ class Hardware():
         return self.charging_connector
 
     def set_charging_connector(self, charging_connector):
-        self.charging_connector = charging_connector    
-        
+        self.charging_connector = charging_connector
+
     def get_current_charging_percentage(self):
         return self.current_charging_percentage
 
-    #Getter and Setter for reservation
+    # Getter and Setter for reservation
 
     def get_is_reserved(self):
         return self.is_reserved
 
-    def set_is_reserved(self, boolean : bool):
+    def set_is_reserved(self, boolean: bool):
         self.is_reserved = boolean
-    
+
     def get_reservation_id_tag(self):
         return self.reservation_id_tag
 
@@ -99,36 +86,34 @@ class Hardware():
 
     def get_reserved_connector(self):
         return self.reserved_connector
-    
+
     def set_reserved_connector(self, reserved_connector):
         self.reserved_connector = reserved_connector
-        
+
     def get_reserve_now_timer(self):
         return self.reserve_now_timer
 
-    def set_reserve_now_timer(self, time : int):
+    def set_reserve_now_timer(self, time: int):
         self.reserve_now_timer = time
 
-    #Getter and Setter for misc
+    # Getter and Setter for misc
 
     def get_meter_value_total(self):
         return self.meter_value_total
-    
-
 
     def meter_counter_charging(self):
-       """
-       If the car is charging, add 1 to the meter value and the current charging percentage, then send
-       the data to the server, and start the function again.
-       """
-       if self.is_charging == True:
-           self.meter_value_total = self.meter_value_total + 1
-           self.current_charging_percentage = self.current_charging_percentage + 1
-           asyncio.run(self.send_data_transfer(
-               1, self.current_charging_percentage))
-           threading.Timer(3, self.meter_counter_charging).start()
-       else:
-           print("{}{}".format("Total charge: ", self.meter_value_total))
+        """
+        If the car is charging, add 1 to the meter value and the current charging percentage, then send
+        the data to the server, and start the function again.
+        """
+        if self.is_charging == True:
+            self.meter_value_total = self.meter_value_total + 1
+            self.current_charging_percentage = self.current_charging_percentage + 1
+            asyncio.run(self.send_data_transfer(
+                1, self.current_charging_percentage))
+            threading.Timer(3, self.meter_counter_charging).start()
+        else:
+            print("{}{}".format("Total charge: ", self.meter_value_total))
 
     def hard_reset_reservation(self):
         """
@@ -159,7 +144,7 @@ class Hardware():
         self.charging_connector = self.reserved_connector
         #threading.Timer(1, self.meter_counter_charging).start()
         #threading.Timer(2, self.send_periodic_meter_values).start()
-    
+
     # Will count down every second
     def timer_countdown_reservation(self):
         """
@@ -178,7 +163,7 @@ class Hardware():
         if self.status == "Reserved":
             # Countdown every second
             threading.Timer(1, self.timer_countdown_reservation).start()
-    
+
     def start_charging(self, connector_id, id_tag):
         """
         It starts a timer that calls the function meter_counter_charging every second

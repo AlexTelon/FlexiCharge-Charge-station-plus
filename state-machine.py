@@ -29,7 +29,7 @@ class ChargePoint():
     my_id = ""
     hw = Hardware()
     # Send this to server at start and stop. It will calculate cost. Incremented during charging.
-    #ReserveConnectorZeroSupported  NEVER USED! why - Kevin and Elin 2022-09-14
+    # ReserveConnectorZeroSupported  NEVER USED! why - Kevin and Elin 2022-09-14
     ReserveConnectorZeroSupported = True
 
     # Transaction related variables
@@ -162,9 +162,10 @@ class ChargePoint():
                    ]
             msg_send = json.dumps(msg)
             await self.my_websocket.send(msg_send)
-    
-  
+
+
 ##########################################################################################################################
+
 
     def send_periodic_meter_values(self):
         """
@@ -176,12 +177,11 @@ class ChargePoint():
         if self.hw.get_current_charging_percentage:
             threading.Timer(2, self.send_periodic_meter_values).start()
 
-
     async def reserve_now(self, message):
         local_reservation_id = message[3]["reservationID"]
         local_connector_id = message[3]["connectorID"]
         if self.reservation_id == None or self.reservation_id == local_reservation_id:
-            #This if is never user ReserveConnectorZeroSupported is ALWAYS True - Kevin and Elin 2022-09-14
+            # This if is never user ReserveConnectorZeroSupported is ALWAYS True - Kevin and Elin 2022-09-14
             if self.ReserveConnectorZeroSupported == False and local_connector_id == 0:
                 print("Connector zero not allowed")
                 msg = [3,
@@ -263,7 +263,7 @@ class ChargePoint():
             await self.my_websocket.send(msg_send)
         else:  # No reservation
             self.hw.start_charging(self.hardcoded_connector_id,
-                                self.hardcoded_id_tag)
+                                   self.hardcoded_id_tag)
 
             msg = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "StartTransaction", {
                 "connectorId": self.charging_connector,
