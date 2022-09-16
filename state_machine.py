@@ -674,7 +674,7 @@ async def statemachine(chargePoint: ChargePoint):
             num_of_secs = 100
             percent = 0
             timestamp_at_last_transfer = 0
-            chargerGUI.change_state(state)
+            chargerGUI.change_state(state.get_state())
             while True:
                 await asyncio.gather(chargePoint.get_message())
 

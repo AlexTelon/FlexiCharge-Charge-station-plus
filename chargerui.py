@@ -1,18 +1,12 @@
 from sre_parse import State
 import PySimpleGUI as sg
 from StateHandler import States
-<<<<<<< HEAD
 from images import DisplayStatus
 import qrcode
 
-=======
-from images import displayStatus
-import qrcode
 
 
 
-
->>>>>>> 67ac7dfab08858e0c31f4be881fcdd7963315172
 
 class ChargerGUI():
     current_state : State = None
