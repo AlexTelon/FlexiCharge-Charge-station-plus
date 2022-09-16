@@ -11,7 +11,7 @@ import websockets
 
 from StateHandler import StateHandler
 from StateHandler import States
-from images import displayStatus
+
 
 state = StateHandler()
 chargerGUI = ChargerGUI(States.S_STARTUP)
@@ -598,14 +598,13 @@ async def statemachine(chargePoint: ChargePoint):
     :param chargePoint: The ChargePoint object that is used to communicate with the OCPP server
     :type chargePoint: ChargePoint
     """
-
-    global window_back, window_qrCode
+    # -- Variable not used : global window_back, window_qrCode
 
     # instead of chargerID = 128321 you have to write the follwoing two rows(your ocpp code) to get
     # the charge id from back-end and display it on screen
 
     # response = await ocpp_client.send_boot_notification()
-    #chargerID = response.charger_id
+    # chargerID = response.charger_id
 
     for i in range(20):
         await asyncio.gather(chargePoint.get_message())
@@ -622,12 +621,12 @@ async def statemachine(chargePoint: ChargePoint):
 
     chargerID = chargePoint.charger_id
 
-    firstNumberOfChargerID = int(chargerID % 10)
+    firstNumberOfChargerID  = int(chargerID % 10)
     secondNumberOfChargerID = int(chargerID/10) % 10
-    thirdNumberOfChargerID = int(chargerID/100) % 10
-    fouthNumberOfChargerID = int(chargerID/1000) % 10
-    fifthNumberOfChargerID = int(chargerID/10000) % 10
-    sixthNumberOfChargerID = int(chargerID/100000) % 10
+    thirdNumberOfChargerID  = int(chargerID/100) % 10
+    fouthNumberOfChargerID  = int(chargerID/1000) % 10
+    fifthNumberOfChargerID  = int(chargerID/10000) % 10
+    sixthNumberOfChargerID  = int(chargerID/100000) % 10
 
     chargerIdLayout = [
         [
@@ -708,11 +707,9 @@ async def statemachine(chargePoint: ChargePoint):
 
 
 async def main():
-
     """
     It connects to a websocket server, sends a boot notification, and then runs a state machine
     """
-    
     try:
         async with websockets.connect(
             'ws://18.202.253.30:1337/testnumber13',
@@ -722,14 +719,14 @@ async def main():
             chargePoint = ChargePoint("chargerplus", ws)
             await chargePoint.send_boot_notification()
             await chargePoint.send_heartbeat()
-            asyncio.get_event_loop().run_until_complete(await statemachine(chargePoint))
+        asyncio.get_event_loop().run_until_complete(await statemachine(chargePoint))
     except:
         print("Websocket error: Could not connect to server!")
         # Ugly? Yes! Works? Yes! (Should might use the statemachine but that will generate problems due to the websocket not working, due to the lack of time i won't fix that now)
         chargeGUI = ChargerGUI(States.S_STARTUP)
         chargeGUI.change_state(States.S_NOTAVAILABLE)
         while True:
-            wii = 2
+           dummy_variable = 0
        
 if __name__ == '__main__':
     asyncio.run(main())
