@@ -3,9 +3,9 @@ import PySimpleGUI as sg
 from StateHandler import States
 from images import displayStatus
 import qrcode
-import asyncio
-import time
-import asyncio
+
+
+
 
 
 class ChargerGUI():
@@ -16,12 +16,6 @@ class ChargerGUI():
     num_of_secs = 100
     
     def __init__(self, state: State,):
-        """
-        A constructor for the class.
-        
-        :param state: State
-        :type state: State
-        """
         self.current_state = state
 
     def change_state(self,state: States):
