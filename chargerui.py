@@ -1,9 +1,18 @@
 from sre_parse import State
 import PySimpleGUI as sg
 from StateHandler import States
+<<<<<<< HEAD
 from images import DisplayStatus
 import qrcode
 
+=======
+from images import displayStatus
+import qrcode
+
+
+
+
+>>>>>>> 67ac7dfab08858e0c31f4be881fcdd7963315172
 
 class ChargerGUI():
     current_state : State = None
@@ -16,17 +25,49 @@ class ChargerGUI():
         self.current_state = state
 
     def change_state(self,state: States):
+        """
+        It changes the state of the object to the state passed in as a parameter, and then runs the
+        state
+        
+        :param state: States = States.START
+        :type state: States
+        """
         if state != self.current_state:
             self.current_state = state
             self.run_state()
+
     def set_charger_id(self,id):
+        """
+        This function sets the charger_id attribute of the object to the value of the id parameter
+        
+        :param id: The ID of the charger
+        """
         self.charger_id = id
+
     def set_last_price(self, last_price):
+        """
+        It sets the last price of the charging
+        
+        :param last_price: The last price of the stock
+        """
         self.last_price = last_price
+
     def set_charge_precentage(self,percentage):
+        """
+        It sets the charge percentage of the battery to the given percentage and then updates the
+        charging status
+        
+        :param percentage: The percentage of the battery that is charged
+        """
         self.percent = percentage
         self.update_charging()
+
     def set_num_of_secs(self,num_of_secs):
+        """
+        It sets the number of seconds to charge the battery.
+        
+        :param num_of_secs: The number of seconds the battery has been charging for
+        """
         self.num_of_secs = num_of_secs
         self.update_charging()
     
@@ -208,6 +249,9 @@ class ChargerGUI():
 
 
     def hide_all_windows(self):
+        """
+        Hide_all_windows() hides all the windows in the program
+        """
         self.window_qrCode.hide()
         self.window_chargingPercent.hide()
         self.window_chargingPercentMark.hide()
@@ -217,7 +261,7 @@ class ChargerGUI():
         self.window_chargingLastPrice.un_hide()
         self.window_UsedKWH.un_hide()
 
-        
+    
     def generate_qr_code(chargerID):
         """
         It takes a string and generates a QR code image from it.
@@ -237,6 +281,10 @@ class ChargerGUI():
         type(img_qrCodeGenerated)
         img_qrCodeGenerated.save("charger_images/qrCode.png")
 
+    """
+    This function updates the charging screen to match the current charged precent and time
+    left.
+    """
     def update_charging(self):
         m, s = divmod(self.num_of_secs, 60)
         self.window_time['ID0'].update(str(m))
@@ -247,6 +295,13 @@ class ChargerGUI():
         self.window_power['POWERTEST'].update(str(self.percent))
 
     def run_state(self):
+        """
+        This function listens to which state the statemachine is currently in and
+        Sets up the UI accordingly.
+        It runs every time the change state is called and the state has changed from what it
+        was before
+        """
+        
         if self.current_state == States.S_NOTAVAILABLE:
             self.window_back['IMAGE'].update(
                 data=DisplayStatus.charge_not_available())
