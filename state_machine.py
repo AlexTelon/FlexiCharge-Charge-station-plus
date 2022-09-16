@@ -14,7 +14,7 @@ from StateHandler import States
 from images import displayStatus
 
 state = StateHandler()
-chargerGUI = ChargerGUI(state)
+chargerGUI = ChargerGUI(States.S_STARTUP)
 
 class ChargePoint():
     my_websocket = None
@@ -590,183 +590,6 @@ class ChargePoint():
         msg_send = json.dumps(msg)
         await self.my_websocket.send(msg_send)
 
-
-def GUI():
-    """
-    It creates a bunch of windows and returns them.
-    :return: the windows that are created in the function.
-    """
-    sg.theme('black')
-
-    startingUpLayout = [
-        [
-            sg.Image(data=displayStatus.startingUp(), key='IMAGE',
-                     pad=((0, 0), (0, 0)), size=(480, 800))
-        ]
-    ]
-
-    chargingPercentLayout = [
-        [
-            sg.Text("0", font=('ITC Avant Garde Std Md', 160),
-                    key='PERCENT', text_color='Yellow')
-        ]
-    ]
-
-    chargingPercentMarkLayout = [
-        [
-            sg.Text("%", font=('ITC Avant Garde Std Md', 55),
-                    key='PERCENTMARK', text_color='Yellow')
-        ]
-    ]
-    qrCodeLayout = [
-        [
-            sg.Image(data=displayStatus.qrCode(),
-                     key='QRCODE', size=(285, 285))
-        ]
-    ]
-
-    """ chargingPowerLayout =   [
-                                [  
-                                    sg.Text("0", font=('Lato', 20), key='TAMER', justification='center', text_color='white'),
-                                    sg.Text("% kW", font=('Lato', 20), key='POWERKW', justification='center', text_color='white')
-                                ]
-                            ] """
-
-    chargingTimeLayout = [
-        [
-            sg.Text("0", font=(
-                'ITC Avant Garde Std Md', 160), key='PERCENT', text_color='Yellow')
-        ]
-    ]
-    chargingPriceLayout = [
-        [
-            sg.Text("", font=('Lato', 20), key='PRICE',
-                    justification='center', text_color='white'),
-            sg.Text("SEK per KWH", font=(
-                'Lato', 20), key='PRICECURRENCY', justification='center', text_color='white')
-        ]
-    ]
-    timeLayout = [
-        [
-            sg.Text("0", font=('ITC Avant Garde Std Md', 20),
-                    key='ID0', text_color='White'),
-            sg.Text("minutes", font=('ITC Avant Garde Std Md', 12),
-                    key='ID10', text_color='White'),
-            sg.Text("0", font=('ITC Avant Garde Std Md', 20),
-                    key='ID2', text_color='White'),
-            sg.Text("seconds until full", font=(
-                'ITC Avant Garde Std Md', 12), key='ID3', text_color='White')
-
-        ]
-    ]
-    lastPriceLayout = [
-        [
-            sg.Text("Total Price:", font=('Lato', 20), key='LASTPRICETEXT',
-                    justification='center', text_color='white'),
-            sg.Text("", font=('Lato', 20), key='LASTPRICE',
-                    justification='center', text_color='white'),
-            sg.Text("SEK", font=('Lato', 20), key='LASTPRICECURRENCY',
-                    justification='center', text_color='white')
-
-        ]
-    ]
-
-    usedKWHLayout = [
-        [
-            sg.Text("100 kWh", font=('Lato', 20), key='KWH',
-                    justification='center', text_color='white')
-
-        ]
-    ]
-
-    powerLayout = [
-        [
-            sg.Text("", font=('Lato', 20), key='POWERTEST',
-                    justification='center', text_color='white'),
-            sg.Text(" kWh", font=('Lato', 20), key='CHARGERPOWERKW',
-                    justification='center', text_color='white')
-
-        ]
-    ]
-
-    Power_window = sg.Window(title="FlexiChargeChargingTimeWindow", layout=powerLayout, location=(
-        162, 645), grab_anywhere=False, no_titlebar=True, background_color='black', margins=(0, 0)).finalize()
-    Power_window.TKroot["cursor"] = "none"
-    Power_window.hide()
-
-    UsedKWH_window = sg.Window(title="FlexiChargeChargingTimeWindow", layout=usedKWHLayout, location=(
-        162, 645), grab_anywhere=False, no_titlebar=True, background_color='black', margins=(0, 0)).finalize()
-    UsedKWH_window.TKroot["cursor"] = "none"
-    UsedKWH_window.hide()
-
-    chargingLastPrice_window = sg.Window(title="FlexiChargeChargingTimeWindow", layout=lastPriceLayout, location=(
-        125, 525), grab_anywhere=False, no_titlebar=True, background_color='black', margins=(0, 0)).finalize()
-    chargingLastPrice_window.TKroot["cursor"] = "none"
-    chargingLastPrice_window.hide()
-
-    time_window = sg.Window(title="FlexiChargeTopWindow", layout=timeLayout, location=(
-        162, 685), keep_on_top=True, grab_anywhere=False, transparent_color=sg.theme_background_color(), no_titlebar=True).finalize()
-    time_window.TKroot["cursor"] = "none"
-    time_window.hide()
-
-    background_Window = sg.Window(title="FlexiCharge", layout=startingUpLayout, no_titlebar=True, location=(
-        0, 0), size=(480, 800), keep_on_top=False).Finalize()
-    background_Window.TKroot["cursor"] = "none"
-
-    qrCode_window = sg.Window(title="FlexiChargeQrWindow", layout=qrCodeLayout, location=(95, 165), grab_anywhere=False, no_titlebar=True, size=(
-        285, 285), background_color='white', margins=(0, 0)).finalize()  # location=(95, 165) bildstorlek 285x285 från början
-    qrCode_window.TKroot["cursor"] = "none"
-    qrCode_window.hide()
-
-    chargingPercent_window = sg.Window(title="FlexiChargeChargingPercentWindow", layout=chargingPercentLayout, location=(
-        140, 245), grab_anywhere=False, no_titlebar=True, background_color='black', margins=(0, 0)).finalize()
-    chargingPercent_window.TKroot["cursor"] = "none"
-    chargingPercent_window.hide()
-
-    chargingPercentMark_window = sg.Window(title="FlexiChargeChargingPercentWindow", layout=chargingPercentMarkLayout, location=(
-        276, 350), grab_anywhere=False, no_titlebar=True, background_color='black', margins=(0, 0)).finalize()
-    chargingPercentMark_window.TKroot["cursor"] = "none"
-    chargingPercentMark_window.hide()
-
-    """ chargingPower_window = sg.Window(title="FlexiChargeChargingPowerWindow", layout=chargingPowerLayout, location=(162, 645), grab_anywhere=False, no_titlebar=True, background_color='black', margins=(0,0)).finalize()
-    chargingPower_window.TKroot["cursor"] = "none"
-    chargingPower_window.hide()
- """
-    chargingTime_window = sg.Window(title="FlexiChargeChargingTimeWindow", layout=chargingTimeLayout, location=(
-        162, 694), grab_anywhere=False, no_titlebar=True, background_color='black', margins=(0, 0)).finalize()
-    chargingTime_window.TKroot["cursor"] = "none"
-    chargingTime_window.hide()
-
-    chargingPrice_window = sg.Window(title="FlexiChargeChargingTimeWindow", layout=chargingPriceLayout, location=(
-        125, 525), grab_anywhere=False, no_titlebar=True, background_color='black', margins=(0, 0)).finalize()
-    chargingPrice_window.TKroot["cursor"] = "none"
-    chargingPrice_window.hide()
-
-    return background_Window, chargingPercent_window, chargingPercentMark_window, chargingTime_window, chargingPrice_window, qrCode_window, time_window, chargingLastPrice_window, UsedKWH_window, Power_window
-
-
-window_back, window_chargingPercent, window_chargingPercentMark, window_chargingTime, window_chargingPrice, window_qrCode, window_time, window_chargingLastPrice, window_UsedKWH, window_power = GUI()
-
-# update all the windows
-
-
-def refreshWindows():
-    """
-    It refreshes all the windows
-    """
-    global window_back, window_chargingTime, window_chargingPercent, window_chargingPrice, window_qrCode, window_time, window_chargingLastPrice, window_UsedKWH, window_power
-    window_back.refresh()
-    window_chargingTime.refresh()
-    window_chargingPercent.refresh()
-    window_chargingPercentMark.refresh()
-    window_chargingPrice.refresh()
-    window_qrCode.refresh()
-    window_time.refresh()
-    window_chargingLastPrice.refresh()
-    window_UsedKWH.refresh()
-    window_power.refresh()
-
-
 async def statemachine(chargePoint: ChargePoint):
     """
     The function is a state machine that changes the state of the charge point and displays the relevant
@@ -791,13 +614,11 @@ async def statemachine(chargePoint: ChargePoint):
 
     if chargePoint.charger_id == 000000:
         state.set_state(States.S_NOTAVAILABLE)
+        chargerGUI.change_state(state.get_state())
         while True:
             state.set_state(States.S_NOTAVAILABLE)
             # Display QR code image
-            window_back['IMAGE'].update(
-                data=displayStatus.chargeNotAvailable())
-            # update the window
-            refreshWindows()
+            chargerGUI.change_state(state.get_state())
 
     chargerID = chargePoint.charger_id
 
@@ -833,161 +654,82 @@ async def statemachine(chargePoint: ChargePoint):
     while True:
         await asyncio.gather(chargePoint.get_message())
         if state.get_state() == States.S_STARTUP:
+            chargerGUI.change_state(state.get_state())
             continue
 
         elif state.get_state() == States.S_AVAILABLE:
 
-            # Display QR code
-            qr = qrcode.QRCode(
-                version=8,
-                error_correction=qrcode.constants.ERROR_CORRECT_L,
-                box_size=5,
-                border=4,
-            )
-            qr.add_data(chargerID)
-            qr.make(fit=True)
-            img_qrCodeGenerated = qr.make_image(
-                fill_color="black", back_color="white")
-            type(img_qrCodeGenerated)
-            img_qrCodeGenerated.save("charger_images/qrCode.png")
-
-            window_chargingPercent.hide()
-            window_chargingPercentMark.hide()
-            window_chargingTime.hide()
-            window_power.hide()
-            window_time.hide()
-            window_chargingLastPrice.hide()
-            window_UsedKWH.hide()
-
-            # Display Charing id
-            window_back['IMAGE'].update(data=displayStatus.chargingID())
-
-            # Show QR code image on screen
-            window_qrCode.UnHide()
-            # Show Charger id on screen with QR code image
-            chargerID_window.UnHide()
-            # update the window
-            refreshWindows()
+            chargerGUI.set_charger_id(chargerID)
+            chargerGUI.change_state(state.get_state())
 
         elif state.get_state() == States.S_FLEXICHARGEAPP:
-            window_back['IMAGE'].update(data=displayStatus.flexiChargeApp())
-            # Hide the charge id on this state
-            chargerID_window.Hide()
-            window_qrCode.Hide()
-            refreshWindows()
+            chargerGUI.change_state(state.get_state())
 
         elif state.get_state() == States.S_PLUGINCABLE:
-
-            window_qrCode.hide()
-            window_back['IMAGE'].update(data=displayStatus.plugCable())
-            window_chargingPrice.un_hide()
-            #price = (ocpp)
-            # window_chargingPrice['PRICE'].update(str(price))
-            # Hide the charge id on this state
-            chargerID_window.Hide()
-            refreshWindows()
+            chargerGUI.change_state(state.get_state())
 
         elif state.get_state() == States.S_CONNECTING:
-            window_back['IMAGE'].update(data=displayStatus.connectingToCar())
-            window_chargingPrice.hide()
-            refreshWindows()
+            chargerGUI.change_state(state.get_state())
 
         elif state.get_state() == States.S_CHARGING:
             num_of_secs = 100
             percent = 0
-
-            window_back['IMAGE'].update(data=displayStatus.charging())
-
-            # Display all the windows below during charging image shown on screen
-            window_chargingPercent.un_hide()
-            window_chargingPercentMark.un_hide()
-            window_chargingTime.un_hide()
-            # window_chargingPower.un_hide()
-            window_time.un_hide()
-            window_power.un_hide()
-
             timestamp_at_last_transfer = 0
-            window_chargingPercent['PERCENT'].update(str(percent))
-            window_chargingPercent.move(140, 245)
+            chargerGUI.change_state(state)
             while True:
                 await asyncio.gather(chargePoint.get_message())
 
                 if chargePoint.status != "Charging":
                     state.set_state(States.S_AVAILABLE)
+                    chargerGUI.change_state(state.get_state())
                     break
 
                 if (time.time() - timestamp_at_last_transfer) >= 1:
                     timestamp_at_last_transfer = time.time()
                     await asyncio.gather(chargePoint.send_data_transfer(1, percent))
-
-                m, s = divmod(num_of_secs, 60)
-
-                if percent >= 10:
-                    # move charging percent on screen when percent >= 10
-                    window_chargingPercent.move(60, 245)
-                    # move the charging mark (%) on screen
-                    window_chargingPercentMark.move(330, 350)
                 if percent == 100:
                     await asyncio.gather(chargePoint.stop_transaction(False))
                     state.set_state(States.S_BATTERYFULL)
                     break
 
-                refreshWindows()
                 time.sleep(1)
                 percent = percent + 1
                 num_of_secs = num_of_secs - 1
-                window_time['ID0'].update(str(m))
-                window_time['ID2'].update(str(s))
-                # update in precents how full the battery currently is
-                # window_chargingPower['TAMER'].update(str(power))
-                window_chargingPercent['PERCENT'].update(str(percent))
-                window_power['POWERTEST'].update(str(percent))
+                chargerGUI.set_charge_precentage(percent)
+                chargerGUI.num_of_secs(num_of_secs)
 
-        elif state.get_state() == States.S_BATTERYFULL:
-
-            # hide all the windows below during barttery full image shown on screen
-            window_qrCode.hide()
-            window_chargingPercent.hide()
-            window_chargingPercentMark.hide()
-            window_chargingTime.hide()
-            window_power.hide()
-            window_time.hide()
-            window_chargingLastPrice.un_hide()
-            window_UsedKWH.un_hide()
+        elif state.get_state() == States.S_BATTERYFULL: 
             lastPrice = 50
-            window_chargingLastPrice['LASTPRICE'].update(str(lastPrice))
-            window_back['IMAGE'].update(data=displayStatus.batteryFull())
-            refreshWindows()
+            chargerGUI.last_price(lastPrice)
+            chargerGUI.change_state(state.get_state())
             await asyncio.sleep(5)
             state.set_state(States.S_AVAILABLE)
+            chargerGUI.change_state(state.get_state())
 
 
 async def main():
 
-    chargerUI = ChargerGUI(States.S_PLUGINCABLE)
-    chargerUI.change_state(States.S_BATTERYFULL)
     """
     It connects to a websocket server, sends a boot notification, and then runs a state machine
     """
     
     try:
         async with websockets.connect(
-            'ws://54.220.194.65:1337/chargerplus',
+            'ws://18.202.253.30:1337/testnumber13',
             subprotocols=['ocpp1.6']
         ) as ws:
 
             chargePoint = ChargePoint("chargerplus", ws)
-            chargeGUI = ChargerGUI(state)
-
-            # await chargePoint.send_boot_notification()
-            # await chargePoint.send_heartbeat()
+            await chargePoint.send_boot_notification()
+            await chargePoint.send_heartbeat()
             asyncio.get_event_loop().run_until_complete(await statemachine(chargePoint))
     except:
         print("Websocket error: Could not connect to server!")
         # Ugly? Yes! Works? Yes! (Should might use the statemachine but that will generate problems due to the websocket not working, due to the lack of time i won't fix that now)
+        chargeGUI = ChargerGUI(States.S_STARTUP)
+        chargeGUI.change_state(States.S_NOTAVAILABLE)
         while True:
-            chargeGUI = ChargerGUI(States.S_STARTUP)
-            chargeGUI.change_state(States.S_NOTAVAILABLE)
+            wii = 2
        
 if __name__ == '__main__':
     asyncio.run(main())

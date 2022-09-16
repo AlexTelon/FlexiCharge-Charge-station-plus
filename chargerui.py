@@ -31,17 +31,19 @@ class ChargerGUI():
         self.current_state = state
 
     def change_state(self,state: States):
-        self.current_state = state
-        self.run_state()
+        if state != self.current_state:
+            self.current_state = state
+            self.run_state()
     def set_charger_id(self,id):
         self.charger_id = id
     def set_last_price(self, last_price):
         self.last_price = last_price
     def set_charge_precentage(self,percentage):
         self.percent = percentage
+        self.update_charging()
     def set_num_of_secs(self,num_of_secs):
         self.num_of_secs = num_of_secs
-
+        self.update_charging()
     
     def GUI():
         """
