@@ -1,24 +1,12 @@
-from platform import machine
 from sre_parse import State
 import PySimpleGUI as sg
-import asyncio
-import time
-
 from StateHandler import States
-from StateHandler import StateHandler
 from images import displayStatus
-
 import qrcode
 import asyncio
-from asyncio.events import get_event_loop
-from asyncio.tasks import gather
-import threading
-import websockets
-from datetime import datetime
 import time
-import json
 import asyncio
-from threading import Thread
+
 
 class ChargerGUI():
     current_state : State = None
