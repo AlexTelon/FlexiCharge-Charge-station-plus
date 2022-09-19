@@ -5,7 +5,7 @@ import time
 from StateHandler import States
 from StateHandler import StateHandler
 from images import displayStatus
-from webSocketReader import WebSocketReader
+#from webSocketReader import WebSocketReader
 
 import qrcode
 
@@ -974,7 +974,7 @@ async def main():
     It connects to a websocket server, sends a boot notification, and then runs a state machine
     """
     try:
-        WebSocketReader().testSendReceive
+        #WebSocketReader().testSendReceive
         async with websockets.connect(
             'ws://18.202.253.30:1337/testnumber13',
             subprotocols=['ocpp1.6']
