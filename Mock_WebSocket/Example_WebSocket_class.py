@@ -6,6 +6,45 @@ import asyncio
 from config import Configurations
 
 class WebSocket():
+#FUNCTIONS AND VARIABLES ARE RELEVANT TO WEB SOCKETS. THIS FILE IS TO EVALUATE HOW WEBSOCKET
+#IS TO BE USED 
+    my_websocket = None
+    my_id = ""
+
+    # Send this to server at start and stop. It will calculate cost. Incremented during charging.
+    meter_value_total = 0
+    current_charging_percentage = 0
+
+    # Reservation related variables
+    reserve_now_timer = 0
+    is_reserved = False
+    reservation_id_tag = None
+    reservation_id = None
+    reserved_connector = None
+    ReserveConnectorZeroSupported = True
+
+    # Transaction related variables
+    is_charging = False
+    charging_id_tag = None
+    charging_connector = None
+    charging_Wh = 0  # I think this is how many Wh have been used to charge
+    transaction_id = None
+
+    # Define enums for status and error_code (or use the onses in OCPP library)
+    status = "Available"
+    error_code = "NoError"
+
+    hardcoded_connector_id = 1
+    hardcoded_vendor_id = "com.flexicharge"
+
+    hardcoded_id_tag = 1
+
+    charger_id = 00000
+
+    timestamp_at_last_heartbeat: float = time.perf_counter()
+    # In seconds (heartbeat should be sent once every 24h)
+    time_between_heartbeats = 60 * 60 * 24
+
 
     def __init__(self, id, connection):
         self.my_websocket = connection
