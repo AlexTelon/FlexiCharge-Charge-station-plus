@@ -2,7 +2,6 @@ from platform import machine
 import websockets
 import asyncio
 from config import Configurations
-from state_machine import Chargepoint
 import json
 
 
