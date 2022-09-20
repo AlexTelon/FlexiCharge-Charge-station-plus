@@ -519,18 +519,44 @@ async def statemachine(chargePoint: ChargePoint):
     # response = await ocpp_client.send_boot_notification()
     # chargerID = response.charger_id
 
-    for i in range(20):
+    """  for i in range(20):
         await asyncio.gather(chargePoint.get_message())
         if chargePoint.charger_id != 000000:
-            break
+            break """
 
     if chargePoint.charger_id == 000000:
+        state.set_state(States.S_STARTUP)
+        chargerGUI.change_state(state.get_state())
+        time.sleep(3)
+        state.set_state(States.S_AUTHORIZING)
+        chargerGUI.change_state(state.get_state())
+        time.sleep(3)
+        state.set_state(States.S_CONNECTING)
+        chargerGUI.change_state(state.get_state())
+        time.sleep(3)
+        state.set_state(States.S_PLUGINCABLE)
+        chargerGUI.change_state(state.get_state())
+        time.sleep(3)
+        state.set_state(States.S_CHARGING)
+        chargerGUI.change_state(state.get_state())
+        time.sleep(3)
+        state.set_state(States.S_BATTERYFULL)
+        chargerGUI.change_state(state.get_state())
+        time.sleep(3)
+        state.set_state(States.S_DISCONNECT)
+        chargerGUI.change_state(state.get_state())
+        time.sleep(3)
         state.set_state(States.S_NOTAVAILABLE)
         chargerGUI.change_state(state.get_state())
-        while True:
-            state.set_state(States.S_NOTAVAILABLE)
-            # Display QR code image
-            chargerGUI.change_state(state.get_state())
+        time.sleep(3)
+        state.set_state(States.S_FLEXICHARGEAPP)
+        chargerGUI.change_state(state.get_state())
+        time.sleep(3)
+      
+
+        print("Finished")
+
+        #chargerGUI.change_state(state.get_state())
 
     chargerID = chargePoint.charger_id
 
@@ -570,7 +596,6 @@ async def statemachine(chargePoint: ChargePoint):
             continue
 
         elif state.get_state() == States.S_AVAILABLE:
-
             chargerGUI.set_charger_id(chargerID)
             chargerGUI.change_state(state.get_state())
 
@@ -623,23 +648,23 @@ async def main():
     """
     It connects to a websocket server, sends a boot notification, and then runs a state machine
     """
-    try:
-        async with websockets.connect(
+    #try:
+    """ async with websockets.connect(
             'ws://18.202.253.30:1337/testnumber13',
             subprotocols=['ocpp1.6']
-        ) as ws:
+        ) as ws: """
 
-            chargePoint = ChargePoint("chargerplus", ws)
-            await chargePoint.send_boot_notification()
-            await chargePoint.send_heartbeat()
-        asyncio.get_event_loop().run_until_complete(await statemachine(chargePoint))
-    except:
-        print("Websocket error: Could not connect to server!")
+    chargePoint = ChargerGUI(States.S_STARTUP)
+    """await chargePoint.send_boot_notification()
+        await chargePoint.send_heartbeat() """
+    asyncio.get_event_loop().run_until_complete(await statemachine(chargePoint))
+    #except:
+        #print("Websocket error: Could not connect to server!")
         # Ugly? Yes! Works? Yes! (Should might use the statemachine but that will generate problems due to the websocket not working, due to the lack of time i won't fix that now)
-        chargeGUI = ChargerGUI(States.S_STARTUP)
-        chargeGUI.change_state(States.S_NOTAVAILABLE)
-        while True:
-           dummy_variable = 0
+    """chargeGUI = ChargerGUI(States.S_STARTUP)
+    chargeGUI.change_state(States.S_NOTAVAILABLE)
+    while True:
+       dummy_variable = 0 """
        
 if __name__ == '__main__':
     asyncio.run(main())

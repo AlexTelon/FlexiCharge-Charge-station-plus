@@ -331,7 +331,7 @@ class ChargerGUI():
         elif self.current_state == States.S_FLEXICHARGEAPP:
             self.window_back['IMAGE'].update(data=DisplayStatus.flexi_charge_app())
             # Hide the charge id on this state
-            self.chargerID_window.Hide()
+            #self.chargerID_window.Hide()
             self.window_qrCode.Hide()
             self.refresh_windows()
 
@@ -340,7 +340,7 @@ class ChargerGUI():
             self.window_back['IMAGE'].update(data=DisplayStatus.plug_cable())
             self.window_chargingPrice.un_hide()
             # Hide the charge id on this state
-            self.chargerID_window.Hide()
+            #self.chargerID_window.Hide()
             self.refresh_windows()
 
         elif self.current_state == States.S_CONNECTING:
