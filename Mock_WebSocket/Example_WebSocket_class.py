@@ -1,6 +1,8 @@
+import datetime
 from importlib.resources import is_resource
 import json
 import threading
+import time
 import websockets
 import asyncio
 from config import Configurations
@@ -413,7 +415,7 @@ class WebSocket():
         msg_send = json.dumps(msg)
         await self.my_websocket.send(msg_send)
 
-     async def recive_data_transfer(self, message):
+    async def recive_data_transfer(self, message):
         """
         It receives a message from the server, checks if the vendorId is correct, if it is, it checks if
         the messageId is correct, if it is, it parses the data and sets the charger_id to the parsed
