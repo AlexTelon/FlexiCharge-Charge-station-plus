@@ -14,21 +14,22 @@ from StateHandler import States
 
 from charger_hardware import Hardware
 
-from charger_variables import Charger
-from reservation_variables import Reservation
-from misc_variables import Misc
+from variables.charger_variables import Charger
+from variables.reservation_variables import Reservation
+from variables.misc_variables import Misc
 
 state = StateHandler()
 chargerGUI = ChargerGUI(States.S_STARTUP)
 
 
+
 class ChargePoint():
     my_websocket = None
     my_id = ""
-    hardware = Hardware()
     charger = Charger()
-    reservation = Reservation()
     misc = Misc()
+    reservation = Reservation()
+    hardware = Hardware()
 
     # Send this to server at start and stop. It will calculate cost. Incremented during charging.
     # ReserveConnectorZeroSupported  NEVER USED! why - Kevin and Elin 2022-09-14

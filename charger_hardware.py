@@ -6,9 +6,9 @@ from datetime import datetime
 import time
 import asyncio
 from threading import Thread
-from charger_variables import Charger
-from reservation_variables import Reservation
-from misc_variables import Misc
+from variables.charger_variables import Charger
+from variables.reservation_variables import Reservation
+from variables.misc_variables import Misc
 """
 Due to async funtions not being active in all cases.
 Problems may occur in the future with certain functions due to lack of testing capabilities
@@ -19,7 +19,7 @@ Currently working as of 2022-09-14 - Kevin and Elin
 class Hardware():
 
     charger = Charger()
-    misc = Misc()
+    #misc = Misc()
     reservation = Reservation()
 
     def meter_counter_charging(self):
