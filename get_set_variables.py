@@ -5,32 +5,34 @@
      ReserveConnectorZeroSupported = True
      """
 
-reserved_connector = None
-reserve_now_timer = 0
-is_reserved = False
-reservation_id_tag = None
-reservation_id = None
-
-meter_value_total = 0
-current_charging_percentage = 0
-
-# Transaction related variables
-is_charging = False
-charging_id_tag = None
-charging_connector = None
-charging_Wh = 0  # I think this is how many Wh have been used to charge
-
 
 class Get():
+    def __init__(self):
+        self.reserved_connector = None
+        self.reserve_now_timer = 0
+        self.is_reserved = False
+        self.reservation_id_tag = None
+        self.reservation_id = None
+
+        self.meter_value_total = 0
+        self.current_charging_percentage = 0
+
+        # Charger variables
+        self.is_charging = False
+        self.charging_id_tag = None
+        self.charging_connector = None
+        self.charger_id = 000000
+        self.charging_Wh = 0  # I think this is how many Wh have been used to charge
+
+        # UI variables
+
     # Get for charging variables
+
     def charging_Wh(self):
         return self.charging_Wh
 
     def is_charging(self):
         return self.is_charging
-
-    def charging_id(self):
-        return self.charging_id
 
     def charging_id_tag(self):
         return self.charging_id_tag
@@ -40,6 +42,9 @@ class Get():
 
     def current_charging_percentage(self):
         return self.current_charging_percentage
+
+    def charger_id(self):
+        return self.charger_id
 
     # Get for reservation variables
     def is_reserved(self):
@@ -61,6 +66,8 @@ class Get():
     def meter_value_total(self):
         return self.meter_value_total
 
+    # Get UI variables
+
 
 class Set():
     # Set for charging variables
@@ -70,8 +77,8 @@ class Set():
     def is_charging(self, boolean: bool):
         self.is_charging = boolean
 
-    def charging_id(self, charging_id):
-        self.charging_id = charging_id
+    def charger_id(self, id):
+        self.charger_id = id
 
     def charging_id_tag(self, charging_id_tag):
         self.charging_id_tag = charging_id_tag
@@ -106,3 +113,5 @@ class Set():
 
     def increment_meter_value_total_by(self, value: int):  # increment variable
         self.meter_value_total += value
+
+    # Set UI variables
