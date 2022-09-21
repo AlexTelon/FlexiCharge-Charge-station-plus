@@ -164,6 +164,7 @@ async def statemachine(chargePoint: ChargePoint):
         elif state.get_state() == States.S_AVAILABLE:
 
             chargerGUI.set_charger_id(chargerID)
+            chargePoint.status, chargePoint.charger_id = chargePoint.webSocket.update_charger_data()
             chargerGUI.change_state(state.get_state())
 
         elif state.get_state() == States.S_FLEXICHARGEAPP:
@@ -227,6 +228,7 @@ async def main():
             chargePoint = ChargePoint(webSocket)
             await webSocket.send_boot_notification()
             await webSocket.send_heartbeat()
+            #MIGHT BE PROBLEMS HERE
         asyncio.get_event_loop().run_until_complete(await statemachine(chargePoint))
     except:
         print("Websocket error: Could not connect to server!")

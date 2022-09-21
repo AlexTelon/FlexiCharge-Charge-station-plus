@@ -93,6 +93,8 @@ class WebSocket():
                 elif message[2] == "StartTransaction":
                     # self.transaction_id = message[3]["transactionId"]    #Store transaction id from server
                     self.transaction_id = 347
+                elif message[2] == "NotImplemented":
+                    print(message[3])
             except:
                 pass
 
@@ -467,7 +469,7 @@ class WebSocket():
                     message[1],
                     "DataTransfer",
                     {"status": status}]
-
+        #MIGHT BE PROBLEMS HERE
         conf_send = json.dumps(conf_msg)
         print("Sending confirmation: " + conf_send)
         await self.my_websocket.send(conf_send)
