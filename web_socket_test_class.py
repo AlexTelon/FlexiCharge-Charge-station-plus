@@ -85,11 +85,11 @@ class WebSocket():
                         #state.set_state(States.S_NOTAVAILABLE)
                         return States.S_NOTAVAILABLE
                 elif message[2] == "RemoteStartTransaction":
-                    await asyncio.gather(self.remote_start_transaction(message))
+                    return await asyncio.gather(self.remote_start_transaction(message))
                 elif message[2] == "RemoteStopTransaction":
-                    await asyncio.gather(self.remote_stop_transaction(message))
+                    return await asyncio.gather(self.remote_stop_transaction(message))
                 elif message[2] == "DataTransfer":
-                    await asyncio.gather(self.recive_data_transfer(message))
+                    return await asyncio.gather(self.recive_data_transfer(message))
                 elif message[2] == "StartTransaction":
                     # self.transaction_id = message[3]["transactionId"]    #Store transaction id from server
                     self.transaction_id = 347
@@ -185,7 +185,9 @@ class WebSocket():
                 msg_send = json.dumps(msg)
                 await self.my_websocket.send(msg_send)
 
-    
+    def get_reservation_info(self):
+        return self.is_reserved, self.status, self.reservation_id_tag, self.reservation_id, self.reserved_connector, self.reserve_now_timer
+
     async def reserve_now(self, message):
         local_reservation_id = message[3]["reservationID"]
         local_connector_id = message[3]["connectorID"]
@@ -368,16 +370,15 @@ class WebSocket():
         """
         It sends a heartbeat message to the websocket server
         """
-        """
+
         msg = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "Heartbeat", {}]
         msg_send = json.dumps(msg)
         await self.my_websocket.send(msg_send)
         print(await self.my_websocket.recv())
         await asyncio.sleep(1)
         self.timestamp_at_last_heartbeat = time.perf_counter()
-        """
-        pong_waiter = await self.my_websocket.ping()
-        await pong_waiter
+    
+        
 
     
     #Depricated in back-end
@@ -470,6 +471,9 @@ class WebSocket():
         conf_send = json.dumps(conf_msg)
         print("Sending confirmation: " + conf_send)
         await self.my_websocket.send(conf_send)
+
+    def update_charger_data(self):
+        return self.status, self.charger_id
 
     async def send_data_reserve(self):
         """

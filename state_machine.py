@@ -1,3 +1,4 @@
+from hashlib import new
 from chargerui import ChargerGUI
 import asyncio
 import json
@@ -19,7 +20,6 @@ from get_set_variables import Set
 
 state = StateHandler()
 chargerGUI = ChargerGUI(States.S_STARTUP)
-webSocket = None
 
 class ChargePoint():
     hardware = Hardware()
@@ -28,7 +28,7 @@ class ChargePoint():
     # Send this to server at start and stop. It will calculate cost. Incremented during charging.
     # ReserveConnectorZeroSupported  NEVER USED! why - Kevin and Elin 2022-09-14
     ReserveConnectorZeroSupported = True
-
+    webSocket : WebSocket = None
     # Transaction related variables
     transaction_id = None
 
@@ -43,12 +43,19 @@ class ChargePoint():
 
     charger_id = 000000
 
+    reserve_now_timer = 0
+    is_reserved = False
+    reservation_id_tag = None
+    reservation_id = None
+    reserved_connector = None
+    ReserveConnectorZeroSupported = True
+
     timestamp_at_last_heartbeat: float = time.perf_counter()
     # In seconds (heartbeat should be sent once every 24h)
     time_between_heartbeats = 60 * 60 * 24
 
     def __init__(self, _webSocket: WebSocket):
-        webSocket = _webSocket
+        self.webSocket = _webSocket
     def send_periodic_meter_values(self):
         """
         It sends the current charging percentage to the server every 2 seconds, and if the car is
@@ -93,9 +100,10 @@ async def statemachine(chargePoint: ChargePoint):
     # response = await ocpp_client.send_boot_notification()
     # chargerID = response.charger_id
 
-    for i in range(20):
-        new_state, message = await asyncio.gather(webSocket.get_message())
+    for _ in range(20):
+        new_state = await asyncio.gather(chargePoint.webSocket.get_message())
         state.set_state(new_state)
+        chargePoint.status, chargePoint.charger_id = chargePoint.webSocket.update_charger_data()
         if chargePoint.charger_id != 000000:
             break
 
@@ -139,7 +147,15 @@ async def statemachine(chargePoint: ChargePoint):
     chargerID_window.hide()
 
     while True:
-        #state.set_state() = await asyncio.gather(webSocket.get_message())
+        new_state  = await asyncio.gather(chargePoint.webSocket.get_message())
+        state.set_state(new_state)
+        chargePoint.status, chargePoint.charger_id = chargePoint.webSocket.update_charger_data()
+        if chargePoint.status == "ReserveNow":
+          chargePoint.is_reserved, chargePoint.status, 
+          chargePoint.reservation_id_tag, 
+          chargePoint.reservation_id, 
+          chargePoint.reserved_connector, 
+          chargePoint.reserve_now_timer = chargePoint.webSocket.get_reservation_info()
 
         if state.get_state() == States.S_STARTUP:
             chargerGUI.change_state(state.get_state())
@@ -165,7 +181,7 @@ async def statemachine(chargePoint: ChargePoint):
             timestamp_at_last_transfer = 0
             chargerGUI.change_state(state.get_state())
             while True:
-                await asyncio.gather(webSocket.get_message())
+                await asyncio.gather(chargePoint.webSocket.get_message())
 
                 if chargePoint.status != "Charging":
                     state.set_state(States.S_AVAILABLE)
@@ -174,9 +190,9 @@ async def statemachine(chargePoint: ChargePoint):
 
                 if (time.time() - timestamp_at_last_transfer) >= 1:
                     timestamp_at_last_transfer = time.time()
-                    await asyncio.gather(webSocket.send_data_transfer(1, percent))
+                    await asyncio.gather(chargePoint.webSocket.send_data_transfer(1, percent))
                 if percent == 100:
-                    await asyncio.gather(webSocket.stop_transaction(False))
+                    await asyncio.gather(chargePoint.webSocket.stop_transaction(False))
                     state.set_state(States.S_BATTERYFULL)
                     break
 
@@ -203,7 +219,7 @@ async def main():
         async with websockets.connect(
             'ws://18.202.253.30:1337/testnumber13',
             subprotocols=['ocpp1.6'],
-            ping_interval=20,
+            ping_interval=5,
             timeout = None
         ) as ws:
 
