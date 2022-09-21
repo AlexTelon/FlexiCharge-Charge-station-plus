@@ -41,7 +41,7 @@ class ChargePoint():
 
     hardcoded_id_tag = 1
 
-    charger_id = 00000
+    charger_id = 000000
 
     timestamp_at_last_heartbeat: float = time.perf_counter()
     # In seconds (heartbeat should be sent once every 24h)
@@ -94,7 +94,8 @@ async def statemachine(chargePoint: ChargePoint):
     # chargerID = response.charger_id
 
     for i in range(20):
-        await asyncio.gather(webSocket.get_message())
+        new_state, message = await asyncio.gather(webSocket.get_message())
+        state.set_state(new_state)
         if chargePoint.charger_id != 000000:
             break
 
@@ -138,7 +139,7 @@ async def statemachine(chargePoint: ChargePoint):
     chargerID_window.hide()
 
     while True:
-        state.set_state() = await asyncio.gather(webSocket.get_message())
+        #state.set_state() = await asyncio.gather(webSocket.get_message())
 
         if state.get_state() == States.S_STARTUP:
             chargerGUI.change_state(state.get_state())
@@ -201,13 +202,16 @@ async def main():
     try:
         async with websockets.connect(
             'ws://18.202.253.30:1337/testnumber13',
-            subprotocols=['ocpp1.6']
+            subprotocols=['ocpp1.6'],
+            ping_interval=20,
+            timeout = None
         ) as ws:
+
             webSocket = WebSocket("chargerplus", ws)
             chargePoint = ChargePoint(webSocket)
             await webSocket.send_boot_notification()
             await webSocket.send_heartbeat()
-        asyncio.get_event_loop().run_unntil_complete(await statemachine(chargePoint))
+        asyncio.get_event_loop().run_until_complete(await statemachine(chargePoint))
     except:
         print("Websocket error: Could not connect to server!")
         # Ugly? Yes! Works? Yes! (Should might use the statemachine but that will generate problems due to the websocket not working, due to the lack of time i won't fix that now)
