@@ -1,3 +1,4 @@
+from sre_parse import State
 from chargerui import ChargerGUI
 import asyncio
 import json
@@ -17,7 +18,8 @@ from get_set_variables import Get
 from get_set_variables import Set
 
 state = StateHandler()
-chargerGUI = ChargerGUI(States.S_STARTUP)
+#chargerGUI = ChargerGUI(States.S_STARTUP)
+chargerGUI = ChargerGUI(None)
 
 class ChargePoint():
     my_websocket = None
@@ -504,6 +506,14 @@ class ChargePoint():
         msg_send = json.dumps(msg)
         await self.my_websocket.send(msg_send)
 
+    
+    
+async def choose_state(choosen_state: StateHandler):  
+    while True:
+        chargerGUI.change_state(choosen_state)
+
+
+
 async def statemachine(chargePoint: ChargePoint):
     """
     The function is a state machine that changes the state of the charge point and displays the relevant
@@ -523,38 +533,7 @@ async def statemachine(chargePoint: ChargePoint):
         await asyncio.gather(chargePoint.get_message())
         if chargePoint.charger_id != 000000:
             break """
-
-    if chargePoint.charger_id == 000000:
-        state.set_state(States.S_STARTUP)
-        chargerGUI.change_state(state.get_state())
-        time.sleep(3)
-        state.set_state(States.S_AUTHORIZING)
-        chargerGUI.change_state(state.get_state())
-        time.sleep(3)
-        state.set_state(States.S_CONNECTING)
-        chargerGUI.change_state(state.get_state())
-        time.sleep(3)
-        state.set_state(States.S_PLUGINCABLE)
-        chargerGUI.change_state(state.get_state())
-        time.sleep(3)
-        state.set_state(States.S_CHARGING)
-        chargerGUI.change_state(state.get_state())
-        time.sleep(3)
-        state.set_state(States.S_BATTERYFULL)
-        chargerGUI.change_state(state.get_state())
-        time.sleep(3)
-        state.set_state(States.S_DISCONNECT)
-        chargerGUI.change_state(state.get_state())
-        time.sleep(3)
-        state.set_state(States.S_NOTAVAILABLE)
-        chargerGUI.change_state(state.get_state())
-        time.sleep(3)
-        state.set_state(States.S_FLEXICHARGEAPP)
-        chargerGUI.change_state(state.get_state())
-        time.sleep(3)
-      
-
-        print("Finished")
+     
 
         #chargerGUI.change_state(state.get_state())
 
@@ -590,7 +569,7 @@ async def statemachine(chargePoint: ChargePoint):
     chargerID_window.hide()
 
     while True:
-        await asyncio.gather(chargePoint.get_message())
+       # await asyncio.gather(chargePoint.get_message())
         if state.get_state() == States.S_STARTUP:
             chargerGUI.change_state(state.get_state())
             continue
@@ -654,10 +633,11 @@ async def main():
             subprotocols=['ocpp1.6']
         ) as ws: """
 
-    chargePoint = ChargerGUI(States.S_STARTUP)
+    chargePoint = ChargerGUI(States.S_CHARGING)
     """await chargePoint.send_boot_notification()
         await chargePoint.send_heartbeat() """
-    asyncio.get_event_loop().run_until_complete(await statemachine(chargePoint))
+    #asyncio.get_event_loop().run_until_complete(await loop_statemachine())
+    asyncio.get_event_loop().run_until_complete(await choose_state(States.S_CHARGING))
     #except:
         #print("Websocket error: Could not connect to server!")
         # Ugly? Yes! Works? Yes! (Should might use the statemachine but that will generate problems due to the websocket not working, due to the lack of time i won't fix that now)

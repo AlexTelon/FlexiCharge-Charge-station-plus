@@ -1,7 +1,11 @@
 from sre_parse import State
+
 import PySimpleGUI as sg
+
 from StateHandler import States
+
 from images import DisplayStatus
+
 import qrcode
 
 
@@ -18,7 +22,7 @@ class ChargerGUI():
     def __init__(self, state: State,):
         self.current_state = state
 
-    def change_state(self,state: States):
+    def change_state(self, state: States):
         """
         It changes the state of the object to the state passed in as a parameter, and then runs the
         state
@@ -308,8 +312,9 @@ class ChargerGUI():
         elif self.current_state == States.S_AVAILABLE:
             #Starts by generating a new qr code depending on the charger ID
             
-            self.generate_qr_code(self.chargerID)
-
+            #TODO
+            #Prompts bugg because of name convention
+            #self.generate_qr_code(self.charger_id)
             self.window_chargingPercent.hide()
             self.window_chargingPercentMark.hide()
             self.window_chargingTime.hide()
@@ -324,7 +329,7 @@ class ChargerGUI():
             # Show QR code image on screen
             self.window_qrCode.UnHide()
             # Show Charger id on screen with QR code image
-            self.chargerID_window.UnHide()
+            #self.chargerID_window.UnHide()#
             # update the window
             self.refresh_windows()
         
