@@ -353,7 +353,7 @@ class ChargerGUI():
             self.window_chargingPrice.hide()
             self.refresh_windows()
         
-        elif self.change_state == States.S_CHARGING:
+        elif self.current_state == States.S_CHARGING:
             self.window_back['IMAGE'].update(data=DisplayStatus.charging())
             # Display all the windows below during charging image shown on screen
             self.window_chargingPercent.un_hide()
