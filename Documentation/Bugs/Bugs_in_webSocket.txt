@@ -1,3 +1,10 @@
 datetime bug:
     In the send_status_notification, the program gets stuck on the line 'current_time = datetime.now()'
     We have tried to add a print directly after but the terminal does not get any printout.
+
+WebSocket bug:
+    in the get_message() function, "BootNotification" the program get to await asyncio.gather(self.send_status_notification())
+    and then throws an exception instead of stepping into send_status_notification. The return States.S_AVAILABLE gets ignored.
+    It fails when you have (None) or ("") as parameters. 
+
+State Machine bug:
