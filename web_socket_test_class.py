@@ -77,11 +77,11 @@ class WebSocket():
                         #state.set_state(States.S_AVAILABLE)
                         #return States,S_AVIl
                         # Status notification should be sent after a boot
-                        await asyncio.gather(self.send_status_notification(None))
+                        await asyncio.gather(self.send_status_notification())
                         return States.S_AVAILABLE
                     else:
                         self.status = "Faulted"
-                        await asyncio.gather(self.send_status_notification(None))
+                        await asyncio.gather(self.send_status_notification())
                         #state.set_state(States.S_NOTAVAILABLE)
                         return States.S_NOTAVAILABLE
                 elif message[2] == "RemoteStartTransaction":
@@ -338,13 +338,14 @@ class WebSocket():
 
     
     # Gets no response, is this an error in back-end? Seems to be the case
-    async def send_status_notification(self, info):
+    async def send_status_notification(self):
         """
         It sends a message to the back-end with the status of the charging station.
 
         :param info: A string that contains information about the status
         """
         current_time = datetime.now()
+        print(current_time)
         # Can be removed if back-end does want the time-stamp formated
         timestamp = current_time.timestamp()
         # Can be removed if back-end does not want the time-stamp formated
@@ -353,7 +354,7 @@ class WebSocket():
         msg = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "StatusNotification", {
             "connectorId": self.hardcoded_connector_id,
             "errorCode": self.error_code,
-            "info": info,  # Optional according to official OCPP-documentation
+            "info"#: info,  # Optional according to official OCPP-documentation
             "status": self.status,
             "timestamp": timestamp,  # Optional according to official OCPP-documentation
             # Optional according to official OCPP-documentation
@@ -362,9 +363,9 @@ class WebSocket():
         }]
 
         msg_send = json.dumps(msg)
-        await self.my_websocket.send(msg_send)
         print("Status notification sent with message: ")
         print(msg)
+        await self.my_websocket.send(msg_send)
         self.timestamp_at_last_status_notification = time.perf_counter()
 
         #Depricated in back-end
@@ -376,7 +377,7 @@ class WebSocket():
         msg = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "Heartbeat", {}]
         msg_send = json.dumps(msg)
         await self.my_websocket.send(msg_send)
-        print(await self.my_websocket.recv())
+        print(self.send_heartbeat.__name__)
         await asyncio.sleep(1)
         self.timestamp_at_last_heartbeat = time.perf_counter()
     

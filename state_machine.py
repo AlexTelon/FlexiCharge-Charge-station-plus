@@ -227,7 +227,7 @@ async def main():
             webSocket = WebSocket("chargerplus", ws)
             chargePoint = ChargePoint(webSocket)
             await webSocket.send_boot_notification()
-            await webSocket.send_heartbeat()
+            #await webSocket.send_heartbeat()
             #MIGHT BE PROBLEMS HERE
         asyncio.get_event_loop().run_until_complete(await statemachine(chargePoint))
     except:
