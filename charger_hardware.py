@@ -19,7 +19,7 @@ Currently working as of 2022-09-14 - Kevin and Elin
 class Hardware():
 
     charger = Charger()
-    #misc = Misc()
+    misc = Misc()
     reservation = Reservation()
 
     def meter_counter_charging(self):
