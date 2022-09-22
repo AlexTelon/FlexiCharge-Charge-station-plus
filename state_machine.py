@@ -1,5 +1,5 @@
 from sre_parse import State
-from chargerui import ChargerGUI
+from charger_ui import UI
 import asyncio
 import json
 import threading
@@ -19,7 +19,7 @@ from get_set_variables import Set
 
 state = StateHandler()
 #chargerGUI = ChargerGUI(States.S_STARTUP)
-chargerGUI = ChargerGUI(None)
+charger_gui = UI(None)
 
 class ChargePoint():
     my_websocket = None
@@ -29,7 +29,7 @@ class ChargePoint():
     set = Set()
     # Send this to server at start and stop. It will calculate cost. Incremented during charging.
     # ReserveConnectorZeroSupported  NEVER USED! why - Kevin and Elin 2022-09-14
-    ReserveConnectorZeroSupported = True
+    reserve_connector_zero_supported = True
 
     # Transaction related variables
     transaction_id = None
@@ -180,7 +180,7 @@ class ChargePoint():
         local_connector_id = message[3]["connectorID"]
         if self.get.reservation_id == None or self.get.reservation_id == local_reservation_id:
             # This if is never user ReserveConnectorZeroSupported is ALWAYS True - Kevin and Elin 2022-09-14
-            if self.ReserveConnectorZeroSupported == False and local_connector_id == 0:
+            if self.reserve_connector_zero_supported == False and local_connector_id == 0:
                 print("Connector zero not allowed")
                 msg = [3,
                        # Have to use the unique message id received from server
@@ -510,11 +510,11 @@ class ChargePoint():
     
 async def choose_state(choosen_state: StateHandler):  
     while True:
-        chargerGUI.change_state(choosen_state)
+        charger_gui.change_state(choosen_state)
 
 
 
-async def statemachine(chargePoint: ChargePoint):
+async def statemachine(charge_point: ChargePoint):
     """
     The function is a state machine that changes the state of the charge point and displays the relevant
     image on the screen
@@ -537,90 +537,90 @@ async def statemachine(chargePoint: ChargePoint):
 
         #chargerGUI.change_state(state.get_state())
 
-    chargerID = chargePoint.charger_id
+    charger_id = charge_point.charger_id
 
-    firstNumberOfChargerID  = int(chargerID % 10)
-    secondNumberOfChargerID = int(chargerID/10) % 10
-    thirdNumberOfChargerID  = int(chargerID/100) % 10
-    fouthNumberOfChargerID  = int(chargerID/1000) % 10
-    fifthNumberOfChargerID  = int(chargerID/10000) % 10
-    sixthNumberOfChargerID  = int(chargerID/100000) % 10
+    first_number_of_charger_id  = int(charger_id % 10)
+    second_number_of_charger_id = int(charger_id/10) % 10
+    third_number_of_charger_id  = int(charger_id/100) % 10
+    fouth_number_of_charger_id  = int(charger_id/1000) % 10
+    fifth_number_of_charger_id  = int(charger_id/10000) % 10
+    sixth_number_of_charger_id  = int(charger_id/100000) % 10
 
-    chargerIdLayout = [
+    charger_id_layout = [
         [
-            sg.Text(sixthNumberOfChargerID, font=(
+            sg.Text(sixth_number_of_charger_id, font=(
                 'Tw Cen MT Condensed Extra Bold', 30), key='ID5', justification='center', pad=(25, 0)),
-            sg.Text(fifthNumberOfChargerID, font=(
+            sg.Text(fifth_number_of_charger_id, font=(
                 'Tw Cen MT Condensed Extra Bold', 30), key='ID4', justification='center', pad=(20, 0)),
-            sg.Text(fouthNumberOfChargerID, font=(
+            sg.Text(fouth_number_of_charger_id, font=(
                 'Tw Cen MT Condensed Extra Bold', 30), key='ID3', justification='center', pad=(25, 0)),
-            sg.Text(thirdNumberOfChargerID, font=(
+            sg.Text(third_number_of_charger_id, font=(
                 'Tw Cen MT Condensed Extra Bold', 30), key='ID2', justification='center', pad=(20, 0)),
-            sg.Text(secondNumberOfChargerID, font=(
+            sg.Text(second_number_of_charger_id, font=(
                 'Tw Cen MT Condensed Extra Bold', 30), key='ID1', justification='center', pad=(25, 0)),
-            sg.Text(firstNumberOfChargerID, font=(
+            sg.Text(first_number_of_charger_id, font=(
                 'Tw Cen MT Condensed Extra Bold', 30), key='ID0', justification='center', pad=(20, 0))
         ]
     ]
 
-    chargerID_window = sg.Window(title="FlexiChargeTopWindow", layout=chargerIdLayout, location=(15, 735), keep_on_top=True,
+    charger_id_window = sg.Window(title="FlexiChargeTopWindow", layout=charger_id_layout, location=(15, 735), keep_on_top=True,
                                  grab_anywhere=False, transparent_color='white', background_color='white', size=(470, 75), no_titlebar=True).finalize()
-    chargerID_window.TKroot["cursor"] = "none"
-    chargerID_window.hide()
+    charger_id_window.TKroot["cursor"] = "none"
+    charger_id_window.hide()
 
     while True:
        # await asyncio.gather(chargePoint.get_message())
         if state.get_state() == States.S_STARTUP:
-            chargerGUI.change_state(state.get_state())
+            charger_gui.change_state(state.get_state())
             continue
 
         elif state.get_state() == States.S_AVAILABLE:
-            chargerGUI.set_charger_id(chargerID)
-            chargerGUI.change_state(state.get_state())
+            charger_gui.set_charger_id(charger_id)
+            charger_gui.change_state(state.get_state())
 
         elif state.get_state() == States.S_FLEXICHARGEAPP:
-            chargerGUI.change_state(state.get_state())
+            charger_gui.change_state(state.get_state())
 
         elif state.get_state() == States.S_PLUGINCABLE:
-            chargerGUI.change_state(state.get_state())
+            charger_gui.change_state(state.get_state())
 
         elif state.get_state() == States.S_CONNECTING:
-            chargerGUI.change_state(state.get_state())
+            charger_gui.change_state(state.get_state())
 
         elif state.get_state() == States.S_CHARGING:
             num_of_secs = 100
             percent = 0
             timestamp_at_last_transfer = 0
-            chargerGUI.change_state(state.get_state())
+            charger_gui.change_state(state.get_state())
             while True:
-                await asyncio.gather(chargePoint.get_message())
+                await asyncio.gather(charge_point.get_message())
 
-                if chargePoint.status != "Charging":
+                if charge_point.status != "Charging":
                     state.set_state(States.S_AVAILABLE)
-                    chargerGUI.change_state(state.get_state())
+                    charger_gui.change_state(state.get_state())
                     break
 
                 if (time.time() - timestamp_at_last_transfer) >= 1:
                     timestamp_at_last_transfer = time.time()
-                    await asyncio.gather(chargePoint.send_data_transfer(1, percent))
+                    await asyncio.gather(charge_point.send_data_transfer(1, percent))
                 if percent == 100:
-                    await asyncio.gather(chargePoint.stop_transaction(False))
+                    await asyncio.gather(charge_point.stop_transaction(False))
                     state.set_state(States.S_BATTERYFULL)
                     break
 
                 time.sleep(1)
                 percent = percent + 1
                 num_of_secs = num_of_secs - 1
-                chargerGUI.set_charge_precentage(percent)
-                chargerGUI.num_of_secs(num_of_secs)
+                charger_gui.set_charge_precentage(percent)
+                charger_gui.num_of_secs(num_of_secs)
 
         elif state.get_state() == States.S_BATTERYFULL: 
             lastPrice = 50
-            chargerGUI.last_price(lastPrice)
-            chargerGUI.change_state(state.get_state())
+            charger_gui.last_price(lastPrice)
+            charger_gui.change_state(state.get_state())
             await asyncio.sleep(5)
             state.set_state(States.S_AVAILABLE)
-            chargerGUI.change_state(state.get_state())
+            charger_gui.change_state(state.get_state())
 
 
 async def main():
@@ -633,7 +633,7 @@ async def main():
             subprotocols=['ocpp1.6']
         ) as ws: """
 
-    chargePoint = ChargerGUI(States.S_CHARGING)
+    charge_point = UI(States.S_CHARGING)
     """await chargePoint.send_boot_notification()
         await chargePoint.send_heartbeat() """
     #asyncio.get_event_loop().run_until_complete(await loop_statemachine())
