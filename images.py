@@ -9,7 +9,7 @@ def get_img_data(f, maxsize=(480, 800)):
     del img
     return bio.getvalue()
 
-class DisplayStatus:
+class Display:
     def charge_not_available():
         img_charge_not_available = get_img_data('charger_images/chargeNotAvailable.png')
         return img_charge_not_available
