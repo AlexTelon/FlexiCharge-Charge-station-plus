@@ -631,16 +631,22 @@ async def main():
     """
     It connects to a websocket server, sends a boot notification, and then runs a state machine
     """
-    # try:
-    """ async with websockets.connect(
-            'ws://18.202.253.30:1337/testnumber13',
-            subprotocols=['ocpp1.6']
-        ) as ws: """
+     #try:
+    async with websockets.connect(
+            'ws://127.0.0.1:60003',
+            subprotocols=['ocpp1.6'],
+            ping_interval=5,
+            timeout = None
+        ) as ws:
+    
 
-    charge_point = UI(States.S_CHARGING)
-    """await chargePoint.send_boot_notification()
+    #charge_point = UI(States.S_CHARGING)
+        """await chargePoint.send_boot_notification()
         await chargePoint.send_heartbeat() """
     # asyncio.get_event_loop().run_until_complete(await loop_statemachine())
+
+    #async with websockets.connect("ws://127.0.0.1:60003") as ws:
+
     asyncio.get_event_loop().run_until_complete(await choose_state(States.S_CHARGING))
     # except:
     #print("Websocket error: Could not connect to server!")
