@@ -1,3 +1,4 @@
+#from curses import window
 from sre_parse import State
 from charger_ui import UI
 import asyncio
@@ -509,9 +510,9 @@ class ChargePoint():
     
     
 async def choose_state(choosen_state: StateHandler):  
-    while True:
+    while True:          
         charger_gui.change_state(choosen_state)
-
+    
 
 
 async def statemachine(charge_point: ChargePoint):

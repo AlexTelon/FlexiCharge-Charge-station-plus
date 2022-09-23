@@ -1,14 +1,8 @@
 from sre_parse import State
-
 import PySimpleGUI as sg
-
 from StateHandler import States
-
 from images import Display
-
 import qrcode
-
-
 
 
 
