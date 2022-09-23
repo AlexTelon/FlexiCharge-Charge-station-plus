@@ -26,7 +26,7 @@ charger_gui = UI(None)
 
 
 class ChargePoint():
-    my_websocket = None
+    my_websocket = "127.0.0.1:60003"
     my_id = ""
     charger = Charger()
     misc = Misc()
@@ -632,22 +632,22 @@ async def main():
     It connects to a websocket server, sends a boot notification, and then runs a state machine
     """
      #try:
-    async with websockets.connect(
+    """async with websockets.connect(
             'ws://127.0.0.1:60003',
             subprotocols=['ocpp1.6'],
             ping_interval=5,
             timeout = None
         ) as ws:
-    
+    """
 
     #charge_point = UI(States.S_CHARGING)
-        """await chargePoint.send_boot_notification()
-        await chargePoint.send_heartbeat() """
+    
+    #    await chargePoint.send_heartbeat() """
     # asyncio.get_event_loop().run_until_complete(await loop_statemachine())
-
-    #async with websockets.connect("ws://127.0.0.1:60003") as ws:
-
-    asyncio.get_event_loop().run_until_complete(await choose_state(States.S_CHARGING))
+    
+    async with websockets.connect("ws://127.0.0.1:60003") as ws:
+     await charge_point.send_boot_notification()
+     asyncio.get_event_loop().run_until_complete(await choose_state(States.S_STARTUP))
     # except:
     #print("Websocket error: Could not connect to server!")
     # Ugly? Yes! Works? Yes! (Should might use the statemachine but that will generate problems due to the websocket not working, due to the lack of time i won't fix that now)
