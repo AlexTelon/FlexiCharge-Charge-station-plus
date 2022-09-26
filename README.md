@@ -44,7 +44,6 @@ To run the program, open PowerShell (for Windows) or Terminal (for Linux) and na
 
 To start the OCPP-mock server launch a new terminal on you PC and go into the flexicharge-charge-plus REPO then execute the python file.
 Example: python3 .\ocpp_mock_server.py.
-
 After this, when you start the state machine and connect to the "server" the terminal should print the boot message request and boot message response.
 
 ### Development Requirements:
