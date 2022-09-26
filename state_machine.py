@@ -573,7 +573,7 @@ async def statemachine(charge_point: ChargePoint):
     charger_id_window.hide()
 
     while True:
-       # await asyncio.gather(chargePoint.get_message())
+        await asyncio.gather(charge_point.get_message())
         if state.get_state() == States.S_STARTUP:
             charger_gui.change_state(state.get_state())
             continue
@@ -581,9 +581,11 @@ async def statemachine(charge_point: ChargePoint):
         elif state.get_state() == States.S_AVAILABLE:
             charger_gui.set_charger_id(charger_id)
             charger_gui.change_state(state.get_state())
+            
 
         elif state.get_state() == States.S_FLEXICHARGEAPP:
             charger_gui.change_state(state.get_state())
+            print("flexichargeapp")
 
         elif state.get_state() == States.S_PLUGINCABLE:
             charger_gui.change_state(state.get_state())
@@ -645,9 +647,16 @@ async def main():
     #    await chargePoint.send_heartbeat() """
     # asyncio.get_event_loop().run_until_complete(await loop_statemachine())
     
-    async with websockets.connect("ws://127.0.0.1:60003") as ws:
+    async with websockets.connect(
+            'ws://127.0.0.1:60003',
+            subprotocols=['ocpp1.6'],
+            ping_interval=5,
+            timeout = None
+        ) as ws:
+     charge_point = ChargePoint('0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v', ws)
      await charge_point.send_boot_notification()
-     asyncio.get_event_loop().run_until_complete(await choose_state(States.S_STARTUP))
+     #asyncio.get_event_loop().run_until_complete(await statemachine(charge_point))
+     asyncio.get_event_loop().run_until_complete(await choose_state(States.S_FLEXICHARGEAPP))
     # except:
     #print("Websocket error: Could not connect to server!")
     # Ugly? Yes! Works? Yes! (Should might use the statemachine but that will generate problems due to the websocket not working, due to the lack of time i won't fix that now)
