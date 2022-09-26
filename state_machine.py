@@ -515,8 +515,18 @@ class ChargePoint():
 
 
 async def choose_state(choosen_state: StateHandler):
+    charger_gui.percent = 95
     while True:
-        charger_gui.change_state(choosen_state)
+        if charger_gui.current_state != choosen_state:
+            charger_gui.change_state(choosen_state)
+        else:
+            charger_gui.run_state()
+
+        time.sleep(0.5)
+        charger_gui.percent +=1
+        charger_gui.update_charging()
+          
+        
 
 
 async def statemachine(charge_point: ChargePoint):
@@ -609,7 +619,7 @@ async def statemachine(charge_point: ChargePoint):
                 if (time.time() - timestamp_at_last_transfer) >= 1:
                     timestamp_at_last_transfer = time.time()
                     await asyncio.gather(charge_point.send_data_transfer(1, percent))
-                if percent == 100:
+                if percent >= 100:
                     await asyncio.gather(charge_point.stop_transaction(False))
                     state.set_state(States.S_BATTERYFULL)
                     break
@@ -647,16 +657,16 @@ async def main():
     #    await chargePoint.send_heartbeat() """
     # asyncio.get_event_loop().run_until_complete(await loop_statemachine())
     
-    async with websockets.connect(
+    """   async with websockets.connect(
             'ws://127.0.0.1:60003',
             subprotocols=['ocpp1.6'],
             ping_interval=5,
             timeout = None
         ) as ws:
-     charge_point = ChargePoint('0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v', ws)
-     await charge_point.send_boot_notification()
+        charge_point = ChargePoint('0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v', ws)
+         await charge_point.send_boot_notification() """
      #asyncio.get_event_loop().run_until_complete(await statemachine(charge_point))
-     asyncio.get_event_loop().run_until_complete(await choose_state(States.S_FLEXICHARGEAPP))
+    asyncio.get_event_loop().run_until_complete(await choose_state(States.S_CHARGING))
     # except:
     #print("Websocket error: Could not connect to server!")
     # Ugly? Yes! Works? Yes! (Should might use the statemachine but that will generate problems due to the websocket not working, due to the lack of time i won't fix that now)
