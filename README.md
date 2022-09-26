@@ -42,6 +42,9 @@ To run the program, open PowerShell (for Windows) or Terminal (for Linux) and na
 ### Good to know: 
 "images.py" include all images from zeplin(think about the path of the images if you get error), "StateHandler" include Enum for all the states, and "state-machine" include the main code and state-machine.
 
+To start the OCPP-mock server launch a new terminal on you PC and go into the flexicharge-charge-plus REPO then execute the python file.                         Example: python3 .\ocpp_mock_server.py
+After this, when you start the state machine and connect to the "server" the terminal should print the boot message request and boot message response.
+
 ### Development Requirements:
 Python 3.9 <br />
 Visual Studio Code
