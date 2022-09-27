@@ -21,6 +21,8 @@ class WebSocket():
             print("fail")
             print(str(e))
 
+    async def send_message(self, json_formatted_message):
+        await self.websocket.send(json_formatted_message)
 
     async def send_boot_notification(self):
         """
