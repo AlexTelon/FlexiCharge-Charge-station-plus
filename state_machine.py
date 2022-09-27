@@ -1,3 +1,4 @@
+from errno import WSAENOBUFS
 from hashlib import new
 from chargerui import ChargerGUI
 import asyncio
@@ -215,7 +216,15 @@ async def main():
     """
     It connects to a websocket server, sends a boot notification, and then runs a state machine
     """
-    WebSocket().connect()
+    try:
+        ws = WebSocket()
+        if(await ws.connect()):
+            print("Hurray!!")
+
+    except Exception as e:
+        print(e)
+        print("Could not connect to WebSocket")
+    
        
 if __name__ == '__main__':
     asyncio.run(main())
