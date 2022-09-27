@@ -44,7 +44,7 @@ class WebSocket():
         I'm trying to send a message to the server, but I'm getting an error
         """
         print("IM BOOT")
-        msg = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "BootNotification", {
+        msg = [2, "", "BootNotification", {
             "chargePointVendor": "AVT-Company",
             "chargePointModel": "AVT-Express",
             "chargePointSerialNumber": "avt.001.13.1",
