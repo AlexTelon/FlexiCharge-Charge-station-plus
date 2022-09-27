@@ -4,6 +4,8 @@ from multiprocessing.connection import wait
 import websockets as ws
 import json
 
+from ocpp_messages import OCPPMessages
+
 
 
 class WebSocket():
@@ -43,19 +45,10 @@ class WebSocket():
         """
         I'm trying to send a message to the server, but I'm getting an error
         """
-        print("IM BOOT")
-        msg = [2, "", "BootNotification", {
-            "chargePointVendor": "AVT-Company",
-            "chargePointModel": "AVT-Express",
-            "chargePointSerialNumber": "avt.001.13.1",
-            "chargeBoxSerialNumber": "avt.001.13.1.01",
-            "firmwareVersion": "0.9.87",
-            "iccid": "",
-            "imsi": "",
-            "meterType": "AVT NQC-ACDC",
-            "meterSerialNumber": "avt.001.13.1.01"}]
-        msg_send = json.dumps(msg)
-        await self.webSocket.send(msg_send)
+        print("Send boot notificaition: ")
+        json_msg = json.dumps(OCPPMessages.boot_notification_conf)
+        print(str(json_msg))
+        await self.webSocket.send(json_msg)
 
     async def listen_for_response(self):
         try:
