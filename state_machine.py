@@ -21,7 +21,6 @@ from variables.reservation_variables import Reservation
 from variables.misc_variables import Misc
 
 state = StateHandler()
-#chargerGUI = ChargerGUI(States.S_STARTUP)
 charger_gui = UI(None)
 
 
@@ -515,16 +514,16 @@ class ChargePoint():
 
 
 async def choose_state(choosen_state: StateHandler):
-    charger_gui.percent = 80
+    percent = 97
+    charger_gui.set_charge_precentage(percent)
     while True:
         if charger_gui.current_state != choosen_state:
             charger_gui.change_state(choosen_state)
-        else:
-            charger_gui.run_state()
 
-        time.sleep(0.5)
-        charger_gui.percent +=1
+        time.sleep(1)
+        charger_gui.set_charge_precentage(percent)
         charger_gui.update_charging()
+        percent +=1
           
         
 
