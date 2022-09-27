@@ -42,7 +42,7 @@ class WebSocket():
 
     hardcoded_id_tag = 1
 
-    charger_id = 00000
+    charger_id = 000000
 
     timestamp_at_last_heartbeat: float = time.perf_counter()
     # In seconds (heartbeat should be sent once every 24h)
@@ -62,7 +62,7 @@ class WebSocket():
         while c < 3:
             c = c + 1
             try:
-                json_formatted_message = await asyncio.wait_for(self.my_websocket.recv(), 0.1)
+                json_formatted_message = await asyncio.wait_for(self.my_websocket.recv(), 5)
                 # async for msg in self.my_websocket: #Takes latest message
                 print("Check for message")
                 message = json.loads(json_formatted_message)
@@ -73,11 +73,12 @@ class WebSocket():
                 elif message[2] == "BootNotification":
                     message_str = str(message[3]["status"])
                     if message_str == "Accepted":
-                        self.status = "Available"
+                        await self.recive_data_transfer(message)
+                        #self.status = "Available"
                         #state.set_state(States.S_AVAILABLE)
                         #return States,S_AVIl
                         # Status notification should be sent after a boot
-                        await asyncio.gather(self.send_status_notification())
+                        #await asyncio.gather(self.send_status_notification())
                         return States.S_AVAILABLE
                     else:
                         self.status = "Faulted"
@@ -102,6 +103,7 @@ class WebSocket():
         """
         I'm trying to send a message to the server, but I'm getting an error
         """
+        print("IM BOOT")
         msg = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "BootNotification", {
             "chargePointVendor": "AVT-Company",
             "chargePointModel": "AVT-Express",
@@ -463,8 +465,7 @@ class WebSocket():
             else:
                 status = "UnknownMessageId"
         else:
-            status = "UnknownVenorId"
-
+            status = "UnknownVendorId"
         # Send a conf
         conf_msg = [3,
                     message[1],

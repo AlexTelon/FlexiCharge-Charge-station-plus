@@ -12,7 +12,7 @@ import websockets
 
 from StateHandler import StateHandler
 from StateHandler import States
-from web_socket_test_class import WebSocket
+from websocket_communication import WebSocket
 
 from charger_hardware import Hardware
 from get_set_variables import Get
@@ -100,12 +100,12 @@ async def statemachine(chargePoint: ChargePoint):
     # response = await ocpp_client.send_boot_notification()
     # chargerID = response.charger_id
 
-    for _ in range(20):
-        new_state = await asyncio.gather(chargePoint.webSocket.get_message())
-        state.set_state(new_state)
-        chargePoint.status, chargePoint.charger_id = chargePoint.webSocket.update_charger_data()
-        if chargePoint.charger_id != 000000:
-            break
+    new_state = await asyncio.gather(chargePoint.webSocket.get_message())
+    state.set_state(new_state)
+    chargePoint.status, chargePoint.charger_id = chargePoint.webSocket.update_charger_data()
+    if chargePoint.status == "Available":
+            while chargePoint.charger_id == 000000:
+                print("poop")
 
     if chargePoint.charger_id == 000000:
         state.set_state(States.S_NOTAVAILABLE)
@@ -156,7 +156,6 @@ async def statemachine(chargePoint: ChargePoint):
           chargePoint.reservation_id, 
           chargePoint.reserved_connector, 
           chargePoint.reserve_now_timer = chargePoint.webSocket.get_reservation_info()
-
         if state.get_state() == States.S_STARTUP:
             chargerGUI.change_state(state.get_state())
             continue
@@ -216,25 +215,7 @@ async def main():
     """
     It connects to a websocket server, sends a boot notification, and then runs a state machine
     """
-    try:
-        async with websockets.connect(
-            'ws://18.202.253.30:1337/testnumber13',
-            subprotocols=['ocpp1.6'],
-            ping_interval=5,
-            timeout = None
-        ) as ws:
-
-            webSocket = WebSocket("chargerplus", ws)
-            chargePoint = ChargePoint(webSocket)
-            await webSocket.send_boot_notification()
-            #await webSocket.send_heartbeat()
-            #MIGHT BE PROBLEMS HERE
-        asyncio.get_event_loop().run_until_complete(await statemachine(chargePoint))
-    except:
-        print("Websocket error: Could not connect to server!")
-        # Ugly? Yes! Works? Yes! (Should might use the statemachine but that will generate problems due to the websocket not working, due to the lack of time i won't fix that now)
-        chargeGUI = ChargerGUI(States.S_STARTUP)
-        chargeGUI.change_state(States.S_NOTAVAILABLE)
+    WebSocket().connect()
        
 if __name__ == '__main__':
     asyncio.run(main())
