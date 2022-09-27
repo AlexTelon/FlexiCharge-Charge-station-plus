@@ -13,11 +13,17 @@ import websockets
 
 from StateHandler import StateHandler
 from StateHandler import States
+import variables
 from websocket_communication import WebSocket
 
 from charger_hardware import Hardware
 from get_set_variables import Get
 from get_set_variables import Set
+
+from variables import charger_variables 
+from variables import reservation_variables
+from variables import misc_variables
+
 
 state = StateHandler()
 chargerGUI = ChargerGUI(States.S_STARTUP)
@@ -83,10 +89,10 @@ class ChargePoint():
             return False
 
     #Depricated in back-end
-
+ 
 ###########################################################################################################
 
-async def statemachine(chargePoint: ChargePoint):
+async def statemachine(webSocket: WebSocket):
     """
     The function is a state machine that changes the state of the charge point and displays the relevant
     image on the screen
@@ -101,14 +107,18 @@ async def statemachine(chargePoint: ChargePoint):
     # response = await ocpp_client.send_boot_notification()
     # chargerID = response.charger_id
 
-    new_state = await asyncio.gather(chargePoint.webSocket.get_message())
+    variables_charger = charger_variables.Charger()
+    variables_misc = misc_variables.Misc()
+    variables_reservation = reservation_variables.Reservation()
+
+    new_state = await asyncio.gather(webSocket.get_message())
     state.set_state(new_state)
-    chargePoint.status, chargePoint.charger_id = chargePoint.webSocket.update_charger_data()
-    if chargePoint.status == "Available":
-            while chargePoint.charger_id == 000000:
+    variables_misc.status, variables_charger.charger_id = webSocket.update_charger_data()
+    if variables_misc.status == "Available":
+            while variables_charger.charger_id == 000000:
                 print("poop")
 
-    if chargePoint.charger_id == 000000:
+    if variables_charger.charger_id == 000000:
         state.set_state(States.S_NOTAVAILABLE)
         chargerGUI.change_state(state.get_state())
         while True:
@@ -116,7 +126,7 @@ async def statemachine(chargePoint: ChargePoint):
             # Display QR code image
             chargerGUI.change_state(state.get_state())
 
-    chargerID = chargePoint.charger_id
+    chargerID = variables_charger.charger_id
 
     firstNumberOfChargerID  = int(chargerID % 10)
     secondNumberOfChargerID = int(chargerID/10) % 10
@@ -148,15 +158,15 @@ async def statemachine(chargePoint: ChargePoint):
     chargerID_window.hide()
 
     while True:
-        new_state  = await asyncio.gather(chargePoint.webSocket.get_message())
+        new_state  = await asyncio.gather(webSocket.get_message())
         state.set_state(new_state)
-        chargePoint.status, chargePoint.charger_id = chargePoint.webSocket.update_charger_data()
-        if chargePoint.status == "ReserveNow":
-          chargePoint.is_reserved, chargePoint.status,
-          chargePoint.reservation_id_tag,
-          chargePoint.reservation_id,
-          chargePoint.reserved_connector,
-          chargePoint.reserve_now_timer = chargePoint.webSocket.get_reservation_info()
+        variables_misc.status, variables_charger.charger_id = webSocket.update_charger_data()
+        if variables_charger.status == "ReserveNow":
+          variables_reservation.is_reserved, misc_variables.status, 
+          variables_reservation.reservation_id_tag, 
+          variables_reservation.reservation_id, 
+          variables_reservation.reserved_connector, 
+          variables_reservation.reserve_now_timer = webSocket.get_reservation_info()
         if state.get_state() == States.S_STARTUP:
             chargerGUI.change_state(state.get_state())
             continue
@@ -164,7 +174,7 @@ async def statemachine(chargePoint: ChargePoint):
         elif state.get_state() == States.S_AVAILABLE:
 
             chargerGUI.set_charger_id(chargerID)
-            chargePoint.status, chargePoint.charger_id = chargePoint.webSocket.update_charger_data()
+            variables_misc.status, variables_charger.charger_id = webSocket.update_charger_data()
             chargerGUI.change_state(state.get_state())
 
         elif state.get_state() == States.S_FLEXICHARGEAPP:
@@ -182,18 +192,18 @@ async def statemachine(chargePoint: ChargePoint):
             timestamp_at_last_transfer = 0
             chargerGUI.change_state(state.get_state())
             while True:
-                await asyncio.gather(chargePoint.webSocket.get_message())
+                await asyncio.gather(webSocket.get_message())
 
-                if chargePoint.status != "Charging":
+                if variables_misc.status != "Charging":
                     state.set_state(States.S_AVAILABLE)
                     chargerGUI.change_state(state.get_state())
                     break
 
                 if (time.time() - timestamp_at_last_transfer) >= 1:
                     timestamp_at_last_transfer = time.time()
-                    await asyncio.gather(chargePoint.webSocket.send_data_transfer(1, percent))
+                    await asyncio.gather(webSocket.send_data_transfer(1, percent))
                 if percent == 100:
-                    await asyncio.gather(chargePoint.webSocket.stop_transaction(False))
+                    await asyncio.gather(webSocket.stop_transaction(False))
                     state.set_state(States.S_BATTERYFULL)
                     break
 
@@ -203,7 +213,7 @@ async def statemachine(chargePoint: ChargePoint):
                 chargerGUI.set_charge_precentage(percent)
                 chargerGUI.num_of_secs(num_of_secs)
 
-        elif state.get_state() == States.S_BATTERYFULL:
+        elif state.get_state() == States.S_BATTERYFULL: 
             lastPrice = 50
             chargerGUI.last_price(lastPrice)
             chargerGUI.change_state(state.get_state())
@@ -219,12 +229,12 @@ async def main():
     try:
         ws = WebSocket()
         if(await ws.connect()):
-            print("Hurray!!")
+            asyncio.get_event_loop().run_until_complete(await statemachine(ws))
 
     except Exception as e:
         print(e)
         print("Could not connect to WebSocket")
-
-
+    
+       
 if __name__ == '__main__':
     asyncio.run(main())
