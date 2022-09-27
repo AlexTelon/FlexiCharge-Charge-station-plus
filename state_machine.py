@@ -215,7 +215,7 @@ async def main():
     """
     It connects to a websocket server, sends a boot notification, and then runs a state machine
     """
-    WebSocket().connect()
+    webSocket = WebSocket()
        
 if __name__ == '__main__':
     asyncio.run(main())
