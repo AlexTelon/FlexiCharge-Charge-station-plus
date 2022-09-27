@@ -515,7 +515,7 @@ class ChargePoint():
 
 
 async def choose_state(choosen_state: StateHandler):
-    charger_gui.percent = 95
+    charger_gui.percent = 80
     while True:
         if charger_gui.current_state != choosen_state:
             charger_gui.change_state(choosen_state)

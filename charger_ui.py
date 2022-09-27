@@ -103,12 +103,12 @@ class UI():
                                     ]
                                 ] """
 
-        charging_time_layout = [
+        """ charging_time_layout = [
             [
                 sg.Text("0", font=(
-                    'ITC Avant Garde Std Md', 160), key='PERCENT', text_color='Yellow')
+                    'ITC Avant Garde Std Md', 160), key='PERCENT', text_color='Blue')
             ]
-        ]
+        ] """
         charging_price_layout = [
             [
                 sg.Text("", font=('Lato', 20), key='PRICE',
@@ -209,19 +209,19 @@ class UI():
         chargingPower_window.TKroot["cursor"] = "none"
         chargingPower_window.hide()
      """
-        charging_time_window = sg.Window(title="FlexiChargeChargingTimeWindow", layout=charging_time_layout, location=(
+        """ charging_time_window = sg.Window(title="FlexiChargeChargingTimeWindow", layout=charging_time_layout, location=(
             162, 694), grab_anywhere=False, no_titlebar=True, background_color='black', margins=(0, 0)).finalize()
         charging_time_window.TKroot["cursor"] = "none"
-        charging_time_window.hide()
+        charging_time_window.hide() """
 
         charging_price_window = sg.Window(title="FlexiChargeChargingTimeWindow", layout=charging_price_layout, location=(
             125, 525), grab_anywhere=False, no_titlebar=True, background_color='black', margins=(0, 0)).finalize()
         charging_price_window.TKroot["cursor"] = "none"
         charging_price_window.hide()
 
-        return background_window, charging_percent_window, charging_percent_mark_window, charging_time_window, charging_price_window, qr_code_window, time_window, charging_last_price_window, usedkwh_window, power_window
+        return background_window, charging_percent_window, charging_percent_mark_window,  charging_price_window, qr_code_window, time_window, charging_last_price_window, usedkwh_window, power_window
 
-    window_back, window_charging_percent, window_charging_percent_mark, window_charging_time, window_charging_price, window_qr_code, window_time, window_charging_last_price, window_used_kwh, window_power = GUI()
+    window_back, window_charging_percent, window_charging_percent_mark,  window_charging_price, window_qr_code, window_time, window_charging_last_price, window_used_kwh, window_power = GUI()
 
     # update all the windows
 
@@ -229,7 +229,6 @@ class UI():
         """
         It refreshes all the windows
         """
-        self.window_charging_time.refresh()
         self.window_charging_percent.refresh()
         self.window_charging_percent.refresh()
         self.window_charging_price.refresh()
@@ -246,7 +245,6 @@ class UI():
         self.window_qr_code.hide()
         self.window_charging_percent.hide()
         self.window_charging_percent_mark.hide()
-        self.window_charging_time.hide()
         self.window_power.hide()
         self.window_time.hide()
         self.window_charging_last_price.un_hide()
@@ -312,7 +310,6 @@ class UI():
             # self.generate_qr_code(self.charger_id)
             self.window_charging_percent.hide()
             self.window_charging_percent_mark.hide()
-            self.window_charging_time.hide()
             self.window_power.hide()
             self.window_time.hide()
             self.window_charging_last_price.hide()
@@ -358,7 +355,6 @@ class UI():
                 # Display all the windows below during charging image shown on screen
                 self.window_charging_percent.un_hide()
                 self.window_charging_percent_mark.un_hide()
-                self.window_charging_time.un_hide()
                 self.window_time.un_hide()
                 self.window_power.un_hide()
                 self.window_charging_percent['PERCENT'].update(str(self.percent))
