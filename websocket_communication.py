@@ -6,7 +6,16 @@ import json
 
 from ocpp_messages import OCPPMessages
 
+"""
+We have tried to rewrite and fix the websockets but we were left with a burning carwreck.
+It does not work and probably wont ever work.
+Increase this timer for every hour spent trying to fix it and make it work.
+And write your name below to we can remember our fallen comrades
+Hours spent in this shithole: 9 (9 too many)
 
+Albin Samefors was here
+Axel Björkman was here
+"""
 
 class WebSocket():
 
@@ -59,3 +68,19 @@ class WebSocket():
             print(message)
         except Exception as e:
             print(str(e))
+
+    async def get_message(self):
+        pass
+
+    async def get_reservation_info(self):
+        pass
+
+    async def update_charger_data(self):
+        pass
+
+    async def send_data_transfer(self):
+        pass
+
+    async def stop_transaction(self):
+        pass
+

@@ -28,3 +28,18 @@ class OCPPMessages:
                     "DataTransfer",
                     {"status": "Accepted"}]
         return boot_notification_conf
+    
+    def send_start_transaction(connector_id, id_tag):
+        #The first empty "" is supposed to be uniqueID
+        start_transaction_message = [ 2,
+                "",
+                "StartTransaction",
+                { 
+                    "connectorId": connector_id,
+                    "idTag": id_tag,
+                    "meterStart": 1,
+                    "reservationId": 1,
+                    "timestamp":1234512345124123
+
+                    } ]
+        return start_transaction_message
