@@ -25,6 +25,7 @@ class UI():
         """
         if state != self.current_state:
             self.current_state = state
+            self.hide_all_windows()
             self.run_state()
 
     def set_charger_id(self, id):
