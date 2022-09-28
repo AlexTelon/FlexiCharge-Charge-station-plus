@@ -13,7 +13,6 @@ from variables.reservation_variables import Reservation
 from ocpp_messages import OCPPMessages
 
 
-
 class WebSocket():
     # Get variables
     charger = Charger()
@@ -30,15 +29,14 @@ class WebSocket():
             print("ws_init_failed")
             print(str(e))
 
-
     async def connect(self):
         try:
             async with ws.connect(
-            'ws://18.202.253.30:1337/testnumber13',
-            subprotocols=['ocpp1.6'],
-            ping_interval=5,
-            timeout = None
-        ) as webSocketConnection:
+                'ws://18.202.253.30:1337/testnumber13',
+                subprotocols=['ocpp1.6'],
+                ping_interval=5,
+                timeout=None
+            ) as webSocketConnection:
                 self.webSocket = webSocketConnection
                 print("Successfully connected to WebSocket")
                 await self.send_boot_notification()
@@ -70,7 +68,6 @@ class WebSocket():
         except Exception as e:
             print(str(e))
 
-
     async def get_message(self):
         """
         It checks for a message from the server, if it gets one, it checks the message type and calls
@@ -78,7 +75,7 @@ class WebSocket():
         """
         for i in range(3):
             try:
-                websocket_timeout = 0.5 #Timeout in seconds
+                websocket_timeout = 0.5  # Timeout in seconds
                 json_formatted_message = await asyncio.wait_for(self.webSocket.recv(), websocket_timeout)
                 # async for msg in self.my_websocket: #Takes latest message
                 print("Check for message")
@@ -91,16 +88,16 @@ class WebSocket():
                     message_str = str(message[3]["status"])
                     if message_str == "Accepted":
                         await self.recive_data_transfer(message)
-                        #self.status = "Available"
-                        #state.set_state(States.S_AVAILABLE)
-                        #return States,S_AVIl
+                        # self.status = "Available"
+                        # state.set_state(States.S_AVAILABLE)
+                        # return States,S_AVIl
                         # Status notification should be sent after a boot
-                        #await asyncio.gather(self.send_status_notification())
+                        # await asyncio.gather(self.send_status_notification())
                         return States.S_AVAILABLE
                     else:
                         self.status = "Faulted"
                         await asyncio.gather(self.send_status_notification())
-                        #state.set_state(States.S_NOTAVAILABLE)
+                        # state.set_state(States.S_NOTAVAILABLE)
                         return States.S_NOTAVAILABLE
                 elif message[2] == "RemoteStartTransaction":
                     return await asyncio.gather(self.remote_start_transaction(message))
@@ -120,26 +117,53 @@ class WebSocket():
         return self.misc.status, self.charger.charger_id
 
     async def get_reservation_info(self):
-        return self.reservation.is_reserved, self.misc.status, self.resevation.reservation_id_tag, self.resevation.reservation_id, self.resevation.reserved_connector, self.resevation.reserve_now_timer 
+        return self.reservation.is_reserved, self.misc.status, self.resevation.reservation_id_tag, self.resevation.reservation_id, self.resevation.reserved_connector, self.resevation.reserve_now_timer
 
     async def data_transfer_request(self, message_id, message_data):
-        s: str = "{}{}{}{}{}{}{}".format("{\"transactionID\":", self.transaction_id, ",\"latestMeterValue\":", message_data, ",\"CurrentChargePercentage\":", message_data, "}")
+        """
+        The function takes in a message_id and message_data, and then sends a message to the websocket
+
+        :param message_id: The message id of the message you want to respond to
+        :param message_data: This is the data that you want to send to the EVSE
+        """
+        s: str = "{}{}{}{}{}{}{}".format("{\"transactionID\":", self.transaction_id,
+                                         ",\"latestMeterValue\":", message_data, ",\"CurrentChargePercentage\":", message_data, "}")
         print(s)
 
         msg = [2, "<unique msg id>", "DataTransfer", {
-            "vendorId" : self.hardcoded_vendor_id,
-            "messageId": "ChargeLevelUpdate",
+            "vendorId": "<Put VendorId here>",
+            "messageId": message_id,
             "data": s
         }]
         msg_send = json.dumps(msg)
         await self.my_websocket.send(msg_send)
 
     async def data_transfer_response(self):
-        pass
+               status = "Rejected"
+        if message[3]["vendorId"] == self.hardcoded_vendor_id:
+            if message[3]["messageId"] == "BootData":
+                parsed_data = json.loads(message[3]["data"])
+                self.charger_id = parsed_data["chargerId"]
+                print("Charger ID is set to: " + str(self.charger_id))
+                status = "Accepted"
+            else:
+                status = "UnknownMessageId"
+        else:
+            status = "UnknownVendorId"
+        # Send a conf
+        conf_msg = [3,
+                    message[1],
+                    "DataTransfer",
+                    {"status": status}]
+        # MIGHT BE PROBLEMS HERE
+        conf_send = json.dumps(conf_msg)
+        print("Sending confirmation: " + conf_send)
+        await self.my_websocket.send(conf_send)
 
 
 ####################Start/Stop Transaction####################
 #                 Page 39 in the OCPP Manual                 #
+
 
     async def start_transaction(self):
         """
@@ -179,7 +203,7 @@ class WebSocket():
             msg_send = json.dumps(msg)
             await self.webSocket.send(msg_send)
         pass
-    
+
     async def stop_transaction(self):
         pass
 
@@ -197,12 +221,12 @@ class WebSocket():
         if int(message[3]["idTag"]) == self.reservation_id_tag:  # If the idTag has a reservation
             self.start_charging_from_reservation()
             print("Remote transaction started")
-            #state.set_state(States.S_CHARGING)
+            # state.set_state(States.S_CHARGING)
             msg = [3,
-                message[1],  # Unique message id
-                "RemoteStartTransaction",
-                {"status": "Accepted"}
-                ]
+                   message[1],  # Unique message id
+                   "RemoteStartTransaction",
+                   {"status": "Accepted"}
+                   ]
             response = json.dumps(msg)
             await self.webSocket.send(response)
 
@@ -215,23 +239,21 @@ class WebSocket():
         else:  # A non reserved tag tries to use the connector
             print("This tag does not have a reservation")
             msg = [3,
-                message[1],  # Unique message id
-                "RemoteStartTransaction",
-                {"status": "Rejected"}
-                ]
+                   message[1],  # Unique message id
+                   "RemoteStartTransaction",
+                   {"status": "Rejected"}
+                   ]
             response = json.dumps(msg)
             await self.webSocket.send(response)
 
-   
+
 ##############################################################
-   
-   
+
     async def reserve_now(self):
         pass
 
     async def send_boot_notification(self):
         pass
-
 
     async def start_charging_from_reservation(self):
         pass
