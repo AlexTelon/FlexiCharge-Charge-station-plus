@@ -107,7 +107,8 @@ async def statemachine(webSocket: WebSocket):
     # response = await ocpp_client.send_boot_notification()
     # chargerID = response.charger_id
 
-    variables_charger = charger_variables.Charger()
+    #These should probably not be here. Move to correct classes.
+    variables_charger = charger_variables.Charger() 
     variables_misc = misc_variables.Misc()
     variables_reservation = reservation_variables.Reservation()
 
