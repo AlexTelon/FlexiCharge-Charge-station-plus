@@ -20,7 +20,7 @@ from charger_hardware import Hardware
 from get_set_variables import Get
 from get_set_variables import Set
 
-from variables import charger_variables 
+from variables import charger_variables
 from variables import reservation_variables
 from variables import misc_variables
 
@@ -89,7 +89,7 @@ class ChargePoint():
             return False
 
     #Depricated in back-end
- 
+
 ###########################################################################################################
 
 async def statemachine(webSocket: WebSocket):
@@ -164,10 +164,10 @@ async def statemachine(webSocket: WebSocket):
         variables_misc.status, variables_charger.charger_id = webSocket.update_charger_data()
         if variables_misc.status == "ReserveNow":
 
-          variables_reservation.is_reserved, variables_misc.status, 
-          variables_reservation.reservation_id_tag, 
-          variables_reservation.reservation_id, 
-          variables_reservation.reserved_connector, 
+          variables_reservation.is_reserved, variables_misc.status,
+          variables_reservation.reservation_id_tag,
+          variables_reservation.reservation_id,
+          variables_reservation.reserved_connector,
           variables_reservation.reserve_now_timer = webSocket.get_reservation_info()
 
         if STATE.get_state() == States.S_STARTUP:
@@ -216,7 +216,7 @@ async def statemachine(webSocket: WebSocket):
                 CHARGER_GUI.set_charge_precentage(percent)
                 CHARGER_GUI.num_of_secs(num_of_secs)
 
-        elif STATE.get_state() == States.S_BATTERYFULL: 
+        elif STATE.get_state() == States.S_BATTERYFULL:
             lastPrice = 50
             CHARGER_GUI.last_price(lastPrice)
             CHARGER_GUI.change_state(STATE.get_state())
@@ -237,7 +237,7 @@ async def main():
     except Exception as e:
         print(e)
         print("Could not connect to WebSocket")
-    
-       
+
+
 if __name__ == '__main__':
     asyncio.run(main())
