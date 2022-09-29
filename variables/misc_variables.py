@@ -2,6 +2,7 @@
 class Misc():
     def __init__(self):
         self._meter_value_total = 0
+        self.status = "Available"
 
     # Get for misc variables
     @property

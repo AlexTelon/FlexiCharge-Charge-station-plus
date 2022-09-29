@@ -20,13 +20,13 @@ from charger_hardware import Hardware
 from get_set_variables import Get
 from get_set_variables import Set
 
-from variables import charger_variables 
+from variables import charger_variables
 from variables import reservation_variables
 from variables import misc_variables
 
 
 STATE = StateHandler()
-chargerGUI = ChargerGUI(States.S_STARTUP)
+CHARGER_GUI = ChargerGUI(States.S_STARTUP)
 
 class ChargePoint():
     hardware = Hardware()
@@ -89,7 +89,7 @@ class ChargePoint():
             return False
 
     #Depricated in back-end
- 
+
 ###########################################################################################################
 
 async def statemachine(webSocket: WebSocket):
@@ -120,11 +120,11 @@ async def statemachine(webSocket: WebSocket):
 
     if variables_charger.charger_id == 000000:
         STATE.set_state(States.S_NOTAVAILABLE)
-        chargerGUI.change_state(STATE.get_state())
+        CHARGER_GUI.change_state(STATE.get_state())
         while True:
             STATE.set_state(States.S_NOTAVAILABLE)
             # Display QR code image
-            chargerGUI.change_state(STATE.get_state())
+            CHARGER_GUI.change_state(STATE.get_state())
 
     chargerID = variables_charger.charger_id
 
@@ -161,42 +161,44 @@ async def statemachine(webSocket: WebSocket):
         new_state  = await asyncio.gather(webSocket.get_message())
         STATE.set_state(new_state)
         variables_misc.status, variables_charger.charger_id = webSocket.update_charger_data()
-        if variables_charger.status == "ReserveNow":
-          variables_reservation.is_reserved, misc_variables.status, 
-          variables_reservation.reservation_id_tag, 
-          variables_reservation.reservation_id, 
-          variables_reservation.reserved_connector, 
+        if variables_misc.status == "ReserveNow":
+
+          variables_reservation.is_reserved, variables_misc.status,
+          variables_reservation.reservation_id_tag,
+          variables_reservation.reservation_id,
+          variables_reservation.reserved_connector,
           variables_reservation.reserve_now_timer = webSocket.get_reservation_info()
+
         if STATE.get_state() == States.S_STARTUP:
-            chargerGUI.change_state(STATE.get_state())
+            CHARGER_GUI.change_state(STATE.get_state())
             continue
 
         elif STATE.get_state() == States.S_AVAILABLE:
 
-            chargerGUI.set_charger_id(chargerID)
+            CHARGER_GUI.set_charger_id(chargerID)
             variables_misc.status, variables_charger.charger_id = webSocket.update_charger_data()
-            chargerGUI.change_state(STATE.get_state())
+            CHARGER_GUI.change_state(STATE.get_state())
 
         elif STATE.get_state() == States.S_FLEXICHARGEAPP:
-            chargerGUI.change_state(STATE.get_state())
+            CHARGER_GUI.change_state(STATE.get_state())
 
         elif STATE.get_state() == States.S_PLUGINCABLE:
-            chargerGUI.change_state(STATE.get_state())
+            CHARGER_GUI.change_state(STATE.get_state())
 
         elif STATE.get_state() == States.S_CONNECTING:
-            chargerGUI.change_state(STATE.get_state())
+            CHARGER_GUI.change_state(STATE.get_state())
 
         elif STATE.get_state() == States.S_CHARGING:
             num_of_secs = 100
             percent = 0
             timestamp_at_last_transfer = 0
-            chargerGUI.change_state(STATE.get_state())
+            CHARGER_GUI.change_state(STATE.get_state())
             while True:
                 await asyncio.gather(webSocket.get_message())
 
                 if variables_misc.status != "Charging":
                     STATE.set_state(States.S_AVAILABLE)
-                    chargerGUI.change_state(STATE.get_state())
+                    CHARGER_GUI.change_state(STATE.get_state())
                     break
 
                 if (time.time() - timestamp_at_last_transfer) >= 1:
@@ -208,18 +210,18 @@ async def statemachine(webSocket: WebSocket):
                     break
 
                 time.sleep(1)
-                percent = percent + 1
-                num_of_secs = num_of_secs - 1
-                chargerGUI.set_charge_precentage(percent)
-                chargerGUI.num_of_secs(num_of_secs)
+                percent += 1
+                num_of_secs -= 1
+                CHARGER_GUI.set_charge_precentage(percent)
+                CHARGER_GUI.num_of_secs(num_of_secs)
 
-        elif STATE.get_state() == States.S_BATTERYFULL: 
+        elif STATE.get_state() == States.S_BATTERYFULL:
             lastPrice = 50
-            chargerGUI.last_price(lastPrice)
-            chargerGUI.change_state(STATE.get_state())
+            CHARGER_GUI.last_price(lastPrice)
+            CHARGER_GUI.change_state(STATE.get_state())
             await asyncio.sleep(5)
             STATE.set_state(States.S_AVAILABLE)
-            chargerGUI.change_state(STATE.get_state())
+            CHARGER_GUI.change_state(STATE.get_state())
 
 
 async def main():
@@ -234,7 +236,7 @@ async def main():
     except Exception as e:
         print(e)
         print("Could not connect to WebSocket")
-    
-       
+
+
 if __name__ == '__main__':
     asyncio.run(main())
