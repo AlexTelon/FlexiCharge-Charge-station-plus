@@ -114,7 +114,7 @@ async def statemachine(webSocket: WebSocket):
 
     new_state = await asyncio.gather(webSocket.get_message())
     STATE.set_state(new_state)
-    variables_misc.status, variables_charger.charger_id = webSocket.update_charger_data()
+    variables_misc.status, variables_charger.charger_id = await webSocket.update_charger_data()
     if variables_misc.status == "Available":
             while variables_charger.charger_id == 000000:
                 print("poop")
@@ -168,7 +168,7 @@ async def statemachine(webSocket: WebSocket):
           variables_reservation.reservation_id_tag,
           variables_reservation.reservation_id,
           variables_reservation.reserved_connector,
-          variables_reservation.reserve_now_timer = webSocket.get_reservation_info()
+          variables_reservation.reserve_now_timer = await webSocket.get_reservation_info()
 
         if STATE.get_state() == States.S_STARTUP:
             CHARGER_GUI.change_state(STATE.get_state())
@@ -177,7 +177,7 @@ async def statemachine(webSocket: WebSocket):
         elif STATE.get_state() == States.S_AVAILABLE:
 
             CHARGER_GUI.set_charger_id(chargerID)
-            variables_misc.status, variables_charger.charger_id = webSocket.update_charger_data()
+            variables_misc.status, variables_charger.charger_id = await webSocket.update_charger_data()
             CHARGER_GUI.change_state(STATE.get_state())
 
         elif STATE.get_state() == States.S_FLEXICHARGEAPP:
@@ -231,8 +231,8 @@ async def main():
     """
     try:
         ws = WebSocket()
-        if(await ws.connect()):
-            asyncio.get_event_loop().run_until_complete(await statemachine(ws))
+        await ws.connect()
+        asyncio.get_event_loop().run_until_complete(await statemachine(ws))
 
     except Exception as e:
         print(e)
