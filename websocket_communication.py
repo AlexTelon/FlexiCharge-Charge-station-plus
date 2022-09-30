@@ -25,6 +25,7 @@ Axel Björkman was here
 Felix Sundman was here
 """
 
+
 class WebSocket():
     # Get variables
     charger = Charger()
@@ -85,7 +86,7 @@ class WebSocket():
         It checks for a message from the server, if it gets one, it checks the message type and calls
         the appropriate function.
         """
-        #for i in range(3):
+        # for i in range(3):
         while True:
             try:
                 websocket_timeout = 0.5  # Timeout in seconds
@@ -143,7 +144,7 @@ class WebSocket():
         s: str = "{}{}{}{}{}{}{}".format("{\"transactionID\":", self.transaction_id,
                                          ",\"latestMeterValue\":", message_data, ",\"CurrentChargePercentage\":", message_data, "}")
         print(s)
-        #msg_id = self.charger_id + "DataTransfer" + 
+        # msg_id = self.charger_id + "DataTransfer" +
 
         msg = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "DataTransfer", {
             "vendorId": "<Put VendorId here>",
@@ -153,12 +154,13 @@ class WebSocket():
         msg_send = json.dumps(msg)
         await self.send_message(msg_send)
 
+    # Does not work as of now
     async def data_transfer_response(self, message):
         status = "Rejected"
         if message[3]["vendorId"] == self.hardcoded_vendor_id:
             if message[3]["messageId"] == "BootData":
                 parsed_data = json.loads(message[3]["data"])
-                self.charger_id = parsed_data["chargerId"]
+                self.charger.charger_id = parsed_data["chargerId"]
                 print("Charger ID is set to: " + str(self.charger.charger_id))
                 status = "Accepted"
             else:
@@ -268,36 +270,36 @@ class WebSocket():
         print(json.loads(response))
 
     async def remote_stop_transaction(self, message):
-            """
-            If the charging is true and the local transaction id is equal to the transaction id, then print
-            "Remote stop charging" and send a message to the server.
+        """
+        If the charging is true and the local transaction id is equal to the transaction id, then print
+        "Remote stop charging" and send a message to the server.
 
-            :param message: The message received from the server
-            """
-            local_transaction_id = message[3]["transactionID"]
-            # and int(local_transaction_id) == int(self.transaction_id):
-            if self.charger.is_charging == True:
-                print("Remote stop charging")
-                msg = [3,
-                    # Have to use the unique message id received from server
-                    message[1],
-                    "RemoteStopTransaction",
-                    {"status": "Accepted"}
-                    ]
-                msg_send = json.dumps(msg)
-                await self.send_message(msg_send)
-                # Stop transaction and inform server
-                await self.stop_transaction(is_remote=True)
-            else:
-                print("Charging cannot be stopped")
-                msg = [3,
-                    # Have to use the unique message id received from server
-                    message[1],
-                    "RemoteStopTransaction",
-                    {"status": "Rejected"}
-                    ]
-                msg_send = json.dumps(msg)
-                await self.send_message(msg_send)
+        :param message: The message received from the server
+        """
+        local_transaction_id = message[3]["transactionID"]
+        # and int(local_transaction_id) == int(self.transaction_id):
+        if self.charger.is_charging == True:
+            print("Remote stop charging")
+            msg = [3,
+                   # Have to use the unique message id received from server
+                   message[1],
+                   "RemoteStopTransaction",
+                   {"status": "Accepted"}
+                   ]
+            msg_send = json.dumps(msg)
+            await self.send_message(msg_send)
+            # Stop transaction and inform server
+            await self.stop_transaction(is_remote=True)
+        else:
+            print("Charging cannot be stopped")
+            msg = [3,
+                   # Have to use the unique message id received from server
+                   message[1],
+                   "RemoteStopTransaction",
+                   {"status": "Rejected"}
+                   ]
+            msg_send = json.dumps(msg)
+            await self.send_message(msg_send)
 
     async def remote_start_transaction(self, message):
         """
@@ -357,7 +359,7 @@ class WebSocket():
             self.resevation.is_reserved = True
             self.misc.status = "Reserved"
             await asyncio.gather(self.send_status_notification(None))
-            #state.set_state(States.S_FLEXICHARGEAPP)
+            # state.set_state(States.S_FLEXICHARGEAPP)
             self.resevation.reservation_id_tag = int(message[3]["idTag"])
             self.resevation.reservation_id = message[3]["reservationID"]
             self.resevation.reserved_connector = message[3]["connectorID"]
@@ -411,7 +413,7 @@ class WebSocket():
         msg_send = json.dumps(msg)
         await self.send_message(msg_send)
 
-    async def send_boot_notification_conf(self,message):
+    async def send_boot_notification_conf(self, message):
         conf_msg = [3,
                     message[1],
                     "DataTransfer",
@@ -427,5 +429,5 @@ class WebSocket():
     async def start_charging_from_reservation(self):
         pass
 
-    async def hard_reset_reservation(self):
+    async def hard_reset_charging(self):
         pass
