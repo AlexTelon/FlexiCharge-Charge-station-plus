@@ -112,12 +112,13 @@ async def statemachine(webSocket: WebSocket):
     variables_misc = misc_variables.Misc()
     variables_reservation = reservation_variables.Reservation()
 
-    new_state = await asyncio.gather(webSocket.get_message())
+    new_state = await asyncio.gather(webSocket.get_message(variables_charger,variables_misc,variables_reservation))
     STATE.set_state(new_state)
     variables_misc.status, variables_charger.charger_id = await webSocket.update_charger_data()
     if variables_misc.status == "Available":
             while variables_charger.charger_id == 000000:
-                print("poop")
+                #print("poop")
+                pass
 
     if variables_charger.charger_id == 000000:
         STATE.set_state(States.S_NOTAVAILABLE)
@@ -159,7 +160,7 @@ async def statemachine(webSocket: WebSocket):
     chargerID_window.hide()
 
     while True:
-        new_state  = await asyncio.gather(webSocket.get_message())
+        new_state  = await asyncio.gather(webSocket.get_message(variables_charger,variables_misc,variables_reservation))
         STATE.set_state(new_state)
         variables_misc.status, variables_charger.charger_id = webSocket.update_charger_data()
         if variables_misc.status == "ReserveNow":
@@ -195,7 +196,7 @@ async def statemachine(webSocket: WebSocket):
             timestamp_at_last_transfer = 0
             CHARGER_GUI.change_state(STATE.get_state())
             while True:
-                await asyncio.gather(webSocket.get_message())
+                await asyncio.gather(webSocket.get_message(variables_charger,variables_misc,variables_reservation))
 
                 if variables_misc.status != "Charging":
                     STATE.set_state(States.S_AVAILABLE)

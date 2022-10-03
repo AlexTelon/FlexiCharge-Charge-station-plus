@@ -18,7 +18,7 @@ We have tried to rewrite and fix the websockets but we were left with a burning 
 It does not work and probably wont ever work.
 Increase this timer for every hour spent trying to fix it and make it work.
 And write your name below to we can remember our fallen comrades
-Hours spent in this shithole: 18 (18 too many)
+Hours spent in this shithole: 20 (20 too many)
 
 Albin Samefors was here
 Axel Björkman was here
@@ -28,9 +28,9 @@ Felix Sundman was here
 
 class WebSocket():
     # Get variables
-    charger = Charger()
-    misc = Misc()
-    resevation = Reservation()
+    charger = None
+    misc = None
+    reservation = None
 
     def __init__(self):
         try:
@@ -93,7 +93,7 @@ class WebSocket():
         except Exception as e:
             print(str(e))
 
-    async def get_message(self):
+    async def get_message(self,charger_variables,misc_variables,reservation_variables):
         """
         It checks for a message from the server, if it gets one, it checks the message type and calls
         the appropriate function.
@@ -101,6 +101,9 @@ class WebSocket():
         # for i in range(3):
         while True:
             try:
+                self.charger = charger_variables
+                self.misc = misc_variables
+                self.reservation = reservation_variables
                 websocket_timeout = 0.5  # Timeout in seconds
                 json_formatted_message = await asyncio.wait_for(self.webSocket.recv(), websocket_timeout)
                 # async for msg in self.my_websocket: #Takes latest message
@@ -113,13 +116,10 @@ class WebSocket():
                 elif message[2] == "BootNotification":
                     message_str = str(message[3]["status"])
                     if message_str == "Accepted":
-                        await self.data_transfer_response(message)
-                        # self.status = "Available"
-                        # state.set_state(States.S_AVAILABLE)
-                        # return States,S_AVIl
-                        # Status notification should be sent after a boot
-                        # await asyncio.gather(self.send_status_notification())
-                        return States.S_AVAILABLE
+                        confirm = await asyncio.gather(self.listen_for_response())
+                        if confirm == "sent 1000 (OK); then received 1000 (OK)":
+                            return States.S_AVAILABLE
+                        pass
                     else:
                         self.misc.status = "Faulted"
                         await asyncio.gather(self.send_status_notification())
@@ -130,7 +130,9 @@ class WebSocket():
                 elif message[2] == "RemoteStopTransaction":
                     return await asyncio.gather(self.remote_stop_transaction(message))
                 elif message[2] == "DataTransfer":
+                    Charger.charger_id = json.loads(message[5]["chargerId"])
                     return await asyncio.gather(self.data_transfer_response(message))
+
                 elif message[2] == "StartTransaction":
                     pass
                     self.transaction_id = 347
@@ -144,7 +146,7 @@ class WebSocket():
         return self.misc.status, self.charger.charger_id
 
     async def get_reservation_info(self):
-        return self.resevation.is_reserved, self.misc.status, self.resevation.reservation_id_tag, self.resevation.reservation_id, self.resevation.reserved_connector, self.resevation.reserve_now_timer
+        return self.reservation.is_reserved, self.misc.status, self.reservation.reservation_id_tag, self.reservation.reservation_id, self.reservation.reserved_connector, self.reservation.reserve_now_timer
 
     async def data_transfer_request(self, message_id, message_data):
         """
@@ -159,8 +161,8 @@ class WebSocket():
         # msg_id = self.charger_id + "DataTransfer" +
 
         msg = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "DataTransfer", {
-            "vendorId": "<Put VendorId here>",
-            "messageId": message_id,
+            "vendorId": "com.flexicharge",
+            "messageId": "BootData",
             "data": s
         }]
         msg_send = json.dumps(msg)
@@ -169,7 +171,7 @@ class WebSocket():
     # Does not work as of now
     async def data_transfer_response(self, message):
         status = "Rejected"
-        if message[3]["vendorId"] == self.hardcoded_vendor_id:
+        if message[3]["vendorId"] == "com.flexicharge":
             if message[3]["messageId"] == "BootData":
                 parsed_data = json.loads(message[3]["data"])
                 self.charger.charger_id = parsed_data["chargerId"]
@@ -177,8 +179,10 @@ class WebSocket():
                 status = "Accepted"
             else:
                 status = "UnknownMessageId"
+                print("UnknownMessageId")
         else:
             status = "UnknownVendorId"
+            print("UnknownVendorId")
         # Send a conf
         conf_msg = [3,
                     message[1],
@@ -210,7 +214,7 @@ class WebSocket():
                 "id_tag": self.charger.charging_id_tag,
                 "meterStart": self.misc.meter_value_total,
                 "timestamp": timestamp,
-                "reservationId": self.resevation.reservation_id,
+                "reservationId": self.reservation.reservation_id,
             }]
 
             self.hard_reset_reservation()
@@ -355,8 +359,8 @@ class WebSocket():
     async def reserve_now(self, message):
         local_reservation_id = message[3]["reservationID"]
         local_connector_id = message[3]["connectorID"]
-        if self.resevation.reservation_id == None or self.resevation.reservation_id == local_reservation_id:
-            if self.resevation.reserved_connector == False and local_connector_id == 0:
+        if self.reservation.reservation_id == None or self.reservation.reservation_id == local_reservation_id:
+            if self.reservation.reserved_connector == False and local_connector_id == 0:
                 print("Connector zero not allowed")
                 msg = [3,
                        # Have to use the unique message id received from server
@@ -368,7 +372,7 @@ class WebSocket():
                 await self.send_message(msg_send)
                 return
             self.hard_reset_reservation()
-            self.resevation.is_reserved = True
+            self.reservation.is_reserved = True
             self.misc.status = "Reserved"
             await asyncio.gather(self.send_status_notification(None))
             # state.set_state(States.S_FLEXICHARGEAPP)
@@ -390,7 +394,7 @@ class WebSocket():
             msg_send = json.dumps(msg)
             await self.send_message(msg_send)
             return States.S_FLEXICHARGEAPP
-        elif self.resevation.reserved_connector == local_connector_id:
+        elif self.reservation.reserved_connector == local_connector_id:
             print("Connector occupied")
             msg = [3,
                    # Have to use the unique message id received from server
