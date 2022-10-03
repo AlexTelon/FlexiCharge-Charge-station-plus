@@ -21,7 +21,7 @@ from variables.reservation_variables import Reservation
 from variables.misc_variables import Misc
 
 state = StateHandler()
-# chargerGUI = ChargerGUI(States.S_STARTUP)
+
 charger_gui = UI(None)
 
 hardware = Hardware()
@@ -517,7 +517,10 @@ class ChargePoint():
 
 async def choose_state(choosen_state: StateHandler):
     while True:
-        charger_gui.change_state(choosen_state)
+            charger_gui.change_state(choosen_state)
+
+          
+        
 
 
 async def statemachine(charge_point: ChargePoint):
@@ -610,7 +613,7 @@ async def statemachine(charge_point: ChargePoint):
                 if (time.time() - timestamp_at_last_transfer) >= 1:
                     timestamp_at_last_transfer = time.time()
                     await asyncio.gather(charge_point.send_data_transfer(1, percent))
-                if percent == 100:
+                if percent >= 100:
                     await asyncio.gather(charge_point.stop_transaction(False))
                     state.set_state(States.S_BATTERYFULL)
                     break
@@ -629,46 +632,28 @@ async def statemachine(charge_point: ChargePoint):
             state.set_state(States.S_AVAILABLE)
             charger_gui.change_state(state.get_state())
 
-
 async def main():
     """
     It connects to a websocket server, sends a boot notification, and then runs a state machine
     """
-    # try:
-    """async with websockets.connect(
+
+     #try:
+    async with websockets.connect(
             'ws://127.0.0.1:60003',
             subprotocols=['ocpp1.6'],
             ping_interval=5,
             timeout = None
         ) as ws:
-    """
-
-    # charge_point = UI(States.S_CHARGING)
-
-    #    await chargePoint.send_heartbeat() """
-    # asyncio.get_event_loop().run_until_complete(await loop_statemachine())
-
-    async with websockets.connect(
-        'ws://127.0.0.1:60003',
-        subprotocols=['ocpp1.6'],
-        ping_interval=5,
-        timeout=None
-    ) as ws:
-        charge_point = ChargePoint('0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v', ws)
-        await charge_point.send_boot_notification()
-        asyncio.get_event_loop().run_until_complete(await statemachine(charge_point))
-        # asyncio.get_event_loop().run_until_complete(await choose_state(States.S_AVAILABLE))
-        if hardware.rfid_reader == 330174510923:
-            asyncio.get_event_loop().run_until_complete(await choose_state(States.S_PLUGINCABLE))
-
+     charge_point = ChargePoint('0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v', ws)
+     await charge_point.send_boot_notification()
+     #asyncio.get_event_loop().run_until_complete(await statemachine(charge_point))
+     asyncio.get_event_loop().run_until_complete(await choose_state(States.S_FLEXICHARGEAPP))
+     #asyncio.get_event_loop().run_until_complete(await choose_state(States.S_CHARGING))
+     
     # except:
     # print("Websocket error: Could not connect to server!")
     # Ugly? Yes! Works? Yes! (Should might use the statemachine but that will generate problems due to the websocket not working, due to the lack of time i won't fix that now)
 
-    """chargeGUI = ChargerGUI(States.S_STARTUP)
-    chargeGUI.change_state(States.S_NOTAVAILABLE)
-    while True:
-       dummy_variable = 0 """
 
 if __name__ == '__main__':
     asyncio.run(main())
