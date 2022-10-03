@@ -1,4 +1,3 @@
-import imp
 import websockets
 import asyncio
 import json

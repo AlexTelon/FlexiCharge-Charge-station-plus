@@ -4,7 +4,6 @@ from asyncio.tasks import gather
 import threading
 from datetime import datetime
 import time
-import asyncio
 from threading import Thread
 from variables.charger_variables import Charger
 from variables.reservation_variables import Reservation
@@ -13,7 +12,7 @@ import platform
 
 if platform.system() == 'Linux':
     import RPi.GPIO as GPIO
-    from mfrc522 import SimpleMFRC55
+    from mfrc522 import SimpleMFRC522
 
 
 """
@@ -106,7 +105,7 @@ class Hardware():
         threading.Timer(1, self.meter_counter_charging).start()
 
     def rfid_reader(self):
-        reader = SimpleMFRC55()
+        reader = SimpleMFRC522()
         try:
             print("Place tag")
 
@@ -120,7 +119,7 @@ class Hardware():
         return idToken
 
     def rfid_write(self):
-        reader = SimpleMFRC55()
+        reader = SimpleMFRC522()
         try:
             text = input("New Data: ")
             print("Place tag to write")
