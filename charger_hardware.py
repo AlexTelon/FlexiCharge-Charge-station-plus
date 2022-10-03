@@ -4,11 +4,17 @@ from asyncio.tasks import gather
 import threading
 from datetime import datetime
 import time
-import asyncio
 from threading import Thread
 from variables.charger_variables import Charger
 from variables.reservation_variables import Reservation
 from variables.misc_variables import Misc
+import platform
+
+if platform.system() == 'Linux':
+    import RPi.GPIO as GPIO
+    from mfrc522 import SimpleMFRC522
+
+
 """
 Due to async funtions not being active in all cases.
 Problems may occur in the future with certain functions due to lack of testing capabilities
@@ -21,6 +27,7 @@ class Hardware():
     charger = Charger()
     misc = Misc()
     reservation = Reservation()
+    hardcoded_rfid_token = 330174510923
 
     def meter_counter_charging(self):
         """
@@ -96,3 +103,28 @@ class Hardware():
         self.charger.charging_id_tag = id_tag
         self.charger.charging_connector = connector_id
         threading.Timer(1, self.meter_counter_charging).start()
+
+    def rfid_reader(self):
+        reader = SimpleMFRC522()
+        try:
+            print("Place tag")
+
+            idToken, text = reader.read()
+            print(idToken)
+            print(text)
+
+        finally:
+            GPIO.cleanup()
+
+        return idToken
+
+    def rfid_write(self):
+        reader = SimpleMFRC522()
+        try:
+            text = input("New Data: ")
+            print("Place tag to write")
+            reader.write(text)
+            print("written")
+
+        finally:
+            GPIO.cleanup()

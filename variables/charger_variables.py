@@ -3,7 +3,7 @@ class Charger():
     def __init__(self):
         # Charger variables
         self._is_charging = False
-        self._charging_id_tag = None
+        self._charging_id_tag = 330174510923  # Thid id the RFID tags id
         self._charging_connector = None
         self._charger_id = 000000
         self._charging_Wh = 0  # I think this is how many Wh have been used to charge
