@@ -172,6 +172,7 @@ class ChargePoint():
 
 ##########################################################################################################################
 
+
     def send_periodic_meter_values(self):
         """
         It sends the current charging percentage to the server every 2 seconds, and if the car is
@@ -574,9 +575,6 @@ async def statemachine(charge_point: ChargePoint):
 
     while True:
         await asyncio.gather(charge_point.get_message())
-
-        if hardware.rfid_reader == hardware.hardcoded_rfid_token:
-            state.set_state(States.S_PLUGINCABLE)
 
         if state.get_state() == States.S_STARTUP:
             charger_gui.change_state(state.get_state())
