@@ -43,6 +43,10 @@ class WebSocket():
             print(str(e))
 
     async def connect(self):
+        """
+        It tries to connect to a websocket, if it succeeds it sends a boot notification request.
+        :return: The return value is a coroutine object.
+        """
         try:
             async with ws.connect(
                 'ws://18.202.253.30:1337/testnumber13',
@@ -60,6 +64,11 @@ class WebSocket():
             return False
 
     async def send_message(self, json_formatted_message):
+        """
+        It sends a message to the websocket
+
+        :param json_formatted_message: The message you want to send to the server
+        """
         await self.webSocket.send(json_formatted_message)
 
     async def send_status_notification(self):
@@ -74,6 +83,9 @@ class WebSocket():
         await self.send_message(json_msg)
 
     async def listen_for_response(self):
+        """
+        It listens for a response from the server and prints it out
+        """
         try:
             json_formatted_message = await self.webSocket.recv()
             message = json.loads(json_formatted_message)
@@ -180,7 +192,6 @@ class WebSocket():
 
 ####################Start/Stop Transaction####################
 #                 Page 39 in the OCPP Manual                 #
-
 
     async def start_transaction(self, is_remote):
         """
@@ -340,6 +351,7 @@ class WebSocket():
 
 ##############################################################
 
+
     async def reserve_now(self, message):
         local_reservation_id = message[3]["reservationID"]
         local_connector_id = message[3]["connectorID"]
@@ -430,4 +442,7 @@ class WebSocket():
         pass
 
     async def hard_reset_charging(self):
+        pass
+
+    async def hard_reset_reservation(self):
         pass
