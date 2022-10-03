@@ -28,9 +28,9 @@ Felix Sundman was here
 
 class WebSocket():
     # Get variables
-    charger = None
-    misc = None
-    reservation = None
+    #charger = None #Should not be here!!
+    #misc = None
+    #reservation = None
 
     def __init__(self):
         try:
@@ -41,6 +41,9 @@ class WebSocket():
             self.webSocket = None
             print("ws_init_failed")
             print(str(e))
+
+    def get_status(self):
+        return Misc.status
 
     async def connect(self):
         """
@@ -90,6 +93,7 @@ class WebSocket():
             json_formatted_message = await self.webSocket.recv()
             message = json.loads(json_formatted_message)
             print(message)
+            return message
         except Exception as e:
             print(str(e))
 
@@ -99,15 +103,15 @@ class WebSocket():
         the appropriate function.
         """
         # for i in range(3):
-        while True:
+        while True: #why while true??
             try:
-                self.charger = charger_variables
-                self.misc = misc_variables
-                self.reservation = reservation_variables
+                #self.charger = charger_variables
+                #self.misc = misc_variables
+                #self.reservation = reservation_variables
                 websocket_timeout = 0.5  # Timeout in seconds
                 json_formatted_message = await asyncio.wait_for(self.webSocket.recv(), websocket_timeout)
                 # async for msg in self.my_websocket: #Takes latest message
-                print("Check for message")
+                print("get_message")
                 message = json.loads(json_formatted_message)
                 print(message)
 
@@ -121,7 +125,7 @@ class WebSocket():
                             return States.S_AVAILABLE
                         pass
                     else:
-                        self.misc.status = "Faulted"
+                        Misc.status = "Faulted"
                         await asyncio.gather(self.send_status_notification())
                         # state.set_state(States.S_NOTAVAILABLE)
                         return States.S_NOTAVAILABLE
@@ -138,9 +142,10 @@ class WebSocket():
                     self.transaction_id = 347
                 elif message[2] == "NotImplemented":
                     print(message[3])
-            except:
-                #print("NO MESSAGE BRO")
-                pass
+            except Exception as e:
+                print("Get_message ERROR:")
+                print(e)
+                break
 
     async def update_charger_data(self):
         return self.misc.status, self.charger.charger_id
@@ -427,6 +432,7 @@ class WebSocket():
             "meterType": "AVT NQC-ACDC",
             "meterSerialNumber": "avt.001.13.1.01"}]
         msg_send = json.dumps(msg)
+        print("Sending boot notification")
         await self.send_message(msg_send)
 
     async def send_boot_notification_conf(self, message):

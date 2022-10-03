@@ -117,7 +117,6 @@ async def statemachine(webSocket: WebSocket):
     variables_misc.status, variables_charger.charger_id = await webSocket.update_charger_data()
     if variables_misc.status == "Available":
             while variables_charger.charger_id == 000000:
-                #print("poop")
                 pass
 
     if variables_charger.charger_id == 000000:
@@ -228,7 +227,7 @@ async def statemachine(webSocket: WebSocket):
 
 async def main():
     """
-    It connects to a websocket server, sends a boot notification, and then runs a state machine
+    It connects to a websocket server and then runs a state machine
     """
     try:
         ws = WebSocket()
@@ -236,8 +235,8 @@ async def main():
         asyncio.get_event_loop().run_until_complete(await statemachine(ws))
 
     except Exception as e:
+        print("ERROR:")
         print(e)
-        print("Could not connect to WebSocket")
 
 
 if __name__ == '__main__':

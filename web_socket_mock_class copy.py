@@ -7,6 +7,7 @@ import websockets
 import asyncio
 from config import Configurations
 from StateHandler import States
+from variables.charger_variables import Charger
 
 class WebSocket():
 #THIS FILE IS TO MIMIC THE WEB SOCKET IMPLEMENTATION WITHOUT USING THE WEBSOCKETS 
@@ -109,8 +110,6 @@ class WebSocket():
         pass
 
 
-
-    
 
 
         
