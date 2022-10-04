@@ -29,11 +29,6 @@ Felix Sundman was here
 
 
 class WebSocket():
-    # Get variables
-    #charger = None #Should not be here!!
-    #misc = None
-    #reservation = None
-
     def __init__(self):
         try:
             print("ws_init")
@@ -55,9 +50,9 @@ class WebSocket():
         try:
             async with ws.connect(
                 Config().getMockServerAddress(),
-                subprotocols= Config().getProtocol(),
-                ping_interval= Config().getWebSocketPingInterval(),
-                timeout= Config().getWebSocketTimeout()
+                subprotocols=Config().getProtocol(),
+                ping_interval=Config().getWebSocketPingInterval(),
+                timeout=Config().getWebSocketTimeout()
             ) as webSocketConnection:
                 self.webSocket = webSocketConnection
                 print("Successfully connected to WebSocket")
@@ -77,15 +72,15 @@ class WebSocket():
         await self.webSocket.send(json_formatted_message)
 
     async def send_status_notification(self):
-        """
-        It sends a message to the back-end with the status of the charging station.
-
-        :param info: A string that contains information about the status
-        """
+     # Sending a status notification to the server.
         print("Send STATUS notificaition: ")
-        json_msg = json.dumps(OCPPMessages.boot_notification_conf)
-        print(str(json_msg))
-        await self.send_message(json_msg)
+        msg = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "StatusNotification", {
+            "connectorId": "1",
+            "errorCode": "",
+            "status": Misc.status
+        }]
+        msg_send = json.dumps(msg)
+        await self.send_message(msg_send)
 
     async def listen_for_response(self):
         """
@@ -99,13 +94,13 @@ class WebSocket():
         except Exception as e:
             print(str(e))
 
-    async def get_message(self,charger_variables,misc_variables,reservation_variables):
+    async def get_message(self, charger_variables, misc_variables, reservation_variables):
         """
         It checks for a message from the server, if it gets one, it checks the message type and calls
         the appropriate function.
         """
         # for i in range(3):
-        while True: #why while true??
+        while True:  # why while true??
             try:
                 #self.charger = charger_variables
                 #self.misc = misc_variables
@@ -204,6 +199,7 @@ class WebSocket():
 ####################Start/Stop Transaction####################
 #                 Page 39 in the OCPP Manual                 #
 
+
     async def start_transaction(self, is_remote):
         """
         If the charging is remote, then the charging has already started in the remote_start_transaction
@@ -217,7 +213,7 @@ class WebSocket():
         if is_remote == True:
             # If remote then charging have started in remote_start_transaction. Notify server here.
             msg = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "StartTransaction", {
-                "connectorId": Charger.charging_connector,
+                "connectorId": "1",
                 "id_tag": Charger.charging_id_tag,
                 "meterStart": Misc.meter_value_total,
                 "timestamp": timestamp,
@@ -362,7 +358,6 @@ class WebSocket():
 
 ##############################################################
 
-
     async def reserve_now(self, message):
         local_reservation_id = message[3]["reservationID"]
         local_connector_id = message[3]["connectorID"]
@@ -422,10 +417,6 @@ class WebSocket():
             msg_send = json.dumps(msg)
             await self.send_message(msg_send)
 
-
-
-
-
     async def send_boot_notification_req(self):
         msg = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "BootNotification", {
             "chargePointVendor": "AVT-Company",
@@ -470,14 +461,12 @@ class WebSocket():
         """
        #asyncio.run(self.send_data_transfer(1, self.charger.current_charging_percentage))
        #
-       #if self.charger.current_charging_percentage:
+       # if self.charger.current_charging_percentage:
        #    threading.Timer(2, self.send_periodic_meter_values).start()
 
-
        #msg_send = json.dumps(msg)
-       #await self.my_websocket.send(msg_send)
+       # await self.my_websocket.send(msg_send)
 
-    
     async def send_heartbeat(self):
         """
         It sends a heartbeat message to the websocket server
@@ -539,24 +528,26 @@ class WebSocket():
             }, ],
         }]
 
+
 async def send_data_transfer(self, message_id, message_data):
-        """
-        I'm trying to send a JSON string to the server, but the server is expecting a JSON object
-        :param message_id: The message ID of the message you want to send
-        :param message_data: This is the data that is being sent to the server
-        """
-        s: str = "{}{}{}{}{}{}{}".format("{\"transactionId\":", self.transaction_id,
-                                         ",\"latestMeterValue\":", message_data, ",\"CurrentChargePercentage\":", message_data, "}")
-        print(s)
+    """
+    I'm trying to send a JSON string to the server, but the server is expecting a JSON object
+    :param message_id: The message ID of the message you want to send
+    :param message_data: This is the data that is being sent to the server
+    """
+    s: str = "{}{}{}{}{}{}{}".format("{\"transactionId\":", self.transaction_id,
+                                     ",\"latestMeterValue\":", message_data, ",\"CurrentChargePercentage\":", message_data, "}")
+    print(s)
 
-        msg = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "DataTransfer", {
-            # "vendorId" : self.hardcoded_vendor_id,
-            "messageId": "ChargeLevelUpdate",
-            "data": s
-        }]
+    msg = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "DataTransfer", {
+        # "vendorId" : self.hardcoded_vendor_id,
+        "messageId": "ChargeLevelUpdate",
+        "data": s
+    }]
 
-        msg_send = json.dumps(msg)
-        await self.my_websocket.send(msg_send)
+    msg_send = json.dumps(msg)
+    await self.my_websocket.send(msg_send)
+
 
 async def recive_data_transfer(self, message):
     """
@@ -587,6 +578,7 @@ async def recive_data_transfer(self, message):
     print("Sending confirmation: " + conf_send)
     await self.my_websocket.send(conf_send)
 
+
 async def send_data_reserve(self):
     """
     It sends a message to the server, which is a list of two strings.
@@ -595,6 +587,7 @@ async def send_data_reserve(self):
     msg_send = json.dumps(msg)
     await self.my_websocket.send(msg_send)
 
+
 async def send_data_remote_start(self):
     """
     It sends a message to the websocket server, which then sends a message to the car.
@@ -602,6 +595,7 @@ async def send_data_remote_start(self):
     msg = ["chargerplus", "RemoteStart"]
     msg_send = json.dumps(msg)
     await self.my_websocket.send(msg_send)
+
 
 async def send_data_remote_stop(self):
     """
