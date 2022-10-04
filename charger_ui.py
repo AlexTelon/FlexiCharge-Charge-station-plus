@@ -26,6 +26,7 @@ class UI():
         """
         if state != self.current_state:
             self.current_state = state
+            self.hide_all_windows()
             self.run_state()
 
     def set_charger_id(self, id):
@@ -256,8 +257,8 @@ class UI():
         self.window_charging_percent_mark.hide()
         self.window_power.hide()
         self.window_time.hide()
-        self.window_charging_last_price.un_hide()
-        self.window_used_kwh.un_hide()
+        self.window_charging_last_price.hide()
+        self.window_used_kwh.hide()
 
     def generate_qr_code(chargerID):
         """
