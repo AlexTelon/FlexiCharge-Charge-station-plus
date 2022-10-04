@@ -3,7 +3,7 @@ class Charger():
     def __init__(self):
         # Charger variables
         self._is_charging = False
-        self._charging_id_tag = 330174510923  # Thid id the RFID tags id
+        self._charging_id_tag = None
         self._charging_connector = None
         self._charger_id = 000000
         self._charging_Wh = 0  # I think this is how many Wh have been used to charge
@@ -59,3 +59,13 @@ class Charger():
     @current_charging_percentage.setter
     def increment_current_charging_percentage_by(self, value: int):
         self._current_charging_percentage += value
+        
+    # Get for misc variables
+    @property
+    def meter_value_total(self):
+        return self._meter_value_total
+
+    # Set for misc variables
+    @meter_value_total.setter
+    def increment_meter_value_total_by(self, value: int):  # increment variable
+        self._meter_value_total += value
