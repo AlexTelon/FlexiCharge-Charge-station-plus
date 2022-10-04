@@ -28,65 +28,65 @@ from variables import misc_variables
 STATE = StateHandler()
 CHARGER_GUI = ChargerGUI(States.S_STARTUP)
 
-class ChargePoint():
-    hardware = Hardware()
-    get = Get()
-    set = Set()
-    # Send this to server at start and stop. It will calculate cost. Incremented during charging.
-    # ReserveConnectorZeroSupported  NEVER USED! why - Kevin and Elin 2022-09-14
-    ReserveConnectorZeroSupported = True
-    webSocket : WebSocket = None
-    # Transaction related variables
-    transaction_id = None
-
-    # Define enums for status and error_code (or use the onses in OCPP library)
-    status = "Available"
-    error_code = "NoError"
-
-    hardcoded_connector_id = 1
-    hardcoded_vendor_id = "com.flexicharge"
-
-    hardcoded_id_tag = 1
-
-    charger_id = 000000
-
-    reserve_now_timer = 0
-    is_reserved = False
-    reservation_id_tag = None
-    reservation_id = None
-    reserved_connector = None
-    ReserveConnectorZeroSupported = True
-
-    timestamp_at_last_heartbeat: float = time.perf_counter()
-    # In seconds (heartbeat should be sent once every 24h)
-    time_between_heartbeats = 60 * 60 * 24
-
-    def __init__(self, _webSocket: WebSocket):
-        self.webSocket = _webSocket
-    def send_periodic_meter_values(self):
-        """
-        It sends the current charging percentage to the server every 2 seconds, and if the car is
-        charging, it starts the function again
-        """
-        asyncio.run(self.send_data_transfer(
-            1, self.get.current_charging_percentage))
-        if self.get.current_charging_percentage:
-            threading.Timer(2, self.send_periodic_meter_values).start()
-
-
-
-    async def check_if_time_for_heartbeat(self):
-        """
-        If the time since the last heartbeat is greater than or equal to the time between heartbeats,
-        return True. Otherwise, return False.
-        :return: a boolean value.
-        """
-        seconds_since_last_heartbeat = time.perf_counter() - \
-            (self.timestamp_at_last_heartbeat)
-        if seconds_since_last_heartbeat >= self.time_between_heartbeats:
-            return True
-        else:
-            return False
+#lass ChargePoint():
+#   hardware = Hardware()
+#   get = Get()
+#   set = Set()
+#   # Send this to server at start and stop. It will calculate cost. Incremented during charging.
+#   # ReserveConnectorZeroSupported  NEVER USED! why - Kevin and Elin 2022-09-14
+#   ReserveConnectorZeroSupported = True
+#   webSocket : WebSocket = None
+#   # Transaction related variables
+#   transaction_id = None
+#
+#   # Define enums for status and error_code (or use the onses in OCPP library)
+#   status = "Available"
+#   error_code = "NoError"
+#
+#   hardcoded_connector_id = 1
+#   hardcoded_vendor_id = "com.flexicharge"
+#
+#   hardcoded_id_tag = 1
+#
+#   charger_id = 000000
+#
+#   reserve_now_timer = 0
+#   is_reserved = False
+#   reservation_id_tag = None
+#   reservation_id = None
+#   reserved_connector = None
+#   ReserveConnectorZeroSupported = True
+#
+#   timestamp_at_last_heartbeat: float = time.perf_counter()
+#   # In seconds (heartbeat should be sent once every 24h)
+#   time_between_heartbeats = 60 * 60 * 24
+#
+#   def __init__(self, _webSocket: WebSocket):
+#       self.webSocket = _webSocket
+#   def send_periodic_meter_values(self):
+#       """
+#       It sends the current charging percentage to the server every 2 seconds, and if the car is
+#       charging, it starts the function again
+#       """
+#       asyncio.run(self.send_data_transfer(
+#           1, self.get.current_charging_percentage))
+#       if self.get.current_charging_percentage:
+#           threading.Timer(2, self.send_periodic_meter_values).start()
+#
+#
+#
+#   async def check_if_time_for_heartbeat(self):
+#       """
+#       If the time since the last heartbeat is greater than or equal to the time between heartbeats,
+#       return True. Otherwise, return False.
+#       :return: a boolean value.
+#       """
+#       seconds_since_last_heartbeat = time.perf_counter() - \
+#           (self.timestamp_at_last_heartbeat)
+#       if seconds_since_last_heartbeat >= self.time_between_heartbeats:
+#           return True
+#       else:
+#           return False
 
     #Depricated in back-end
 

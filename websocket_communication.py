@@ -4,6 +4,7 @@ import datetime
 import time
 from multiprocessing.connection import wait
 import webbrowser
+from config import Configurations as Config
 import websockets as ws
 import json
 from StateHandler import States
@@ -18,7 +19,7 @@ We have tried to rewrite and fix the websockets but we were left with a burning 
 It does not work and probably wont ever work.
 Increase this timer for every hour spent trying to fix it and make it work.
 And write your name below to we can remember our fallen comrades
-Hours spent in this shithole: 20 (20 too many)
+Hours spent in this shithole: 23 (23 too many)
 
 Albin Samefors was here
 Axel Björkman was here
@@ -52,17 +53,17 @@ class WebSocket():
         """
         try:
             async with ws.connect(
-                'ws://18.202.253.30:1337/testnumber13',
-                subprotocols=['ocpp1.6'],
-                ping_interval=5,
-                timeout=None
+                Config().getWebSocketAddress(),
+                subprotocols= Config().getProtocol(),
+                ping_interval= Config().getWebSocketPingInterval(),
+                timeout= Config().getWebSocketTimeout()
             ) as webSocketConnection:
                 self.webSocket = webSocketConnection
                 print("Successfully connected to WebSocket")
                 await self.send_boot_notification_req()
                 return True
         except Exception as e:
-            print("fail")
+            print("connect failed")
             print(str(e))
             return False
 
