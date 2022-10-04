@@ -16,6 +16,7 @@ import websockets
 from StateHandler import StateHandler
 from StateHandler import States
 from variables import charger_variables
+from variables import reservation_variables
 from websocket_communication import WebSocket
 
 from charger_hardware import Hardware
@@ -101,28 +102,30 @@ async def statemachine(webSocket: WebSocket):
 
     # response = await ocpp_client.send_boot_notification()
     # chargerID = response.charger_id
-    variables_charger = Charger() 
-    variables_misc = Misc()
-    variables_reservation = Reservation()
+    charger_vars = Charger() 
+    misc_vars = Misc()
+    reservation_vars = Reservation()
     
-    new_state = await asyncio.gather(webSocket.get_message(variables_charger,variables_misc,variables_reservation))
-    STATE.set_state(new_state)
-    variables_misc.status, variables_charger.charger_id = await webSocket.update_charger_data()
-    if variables_misc.status == "Available":
-            while variables_charger.charger_id == 000000: #hw.getchargerid
-                pass
+    STATE.set_state( await asyncio.gather(webSocket.get_message()))
 
+
+    print(misc_vars.status)
+    if misc_vars.status == "Available":
+            while charger_vars.charger_id == 000000: #hw.getchargerid
+                break
+    print(charger_vars.charger_id)
     # chargerGUI.change_state(state.get_state())
 
-    if variables_charger.charger_id == 000000:
+    if charger_vars.charger_id == 000000:
         STATE.set_state(States.S_NOTAVAILABLE)
-        CHARGER_GUI.change_state(STATE.get_state())
-        while True:
-            STATE.set_state(States.S_NOTAVAILABLE)
-            # Display QR code image
-            CHARGER_GUI.change_state(STATE.get_state())
+        #set this in stateMachine
+       # 
+       # 
+       # 
+       # 
+       # 
 
-    charger_ID = variables_charger.charger_id
+    charger_ID = charger_vars.charger_id
 
     first_number_of_charger_id = int(charger_ID % 10)
     second_number_of_charger_id = int(charger_ID/10) % 10
@@ -154,16 +157,16 @@ async def statemachine(webSocket: WebSocket):
     charger_id_window.hide()
 
     while True:
-        new_state  = await asyncio.gather(webSocket.get_message(variables_charger,variables_misc,variables_reservation))
-        STATE.set_state(new_state)
-        variables_misc.status, variables_charger.charger_id = webSocket.update_charger_data()
-        if variables_misc.status == "ReserveNow":
+        #new_state  = await asyncio.gather(webSocket.get_message(variables_charger,variables_misc,Reservation))
+        #STATE.set_state(new_state)
+        #misc_vars.status, charger_vars.charger_id = webSocket.update_charger_data()
+        if misc_vars.status == "ReserveNow":
 
-          variables_reservation.is_reserved, variables_misc.status,
-          variables_reservation.reservation_id_tag,
-          variables_reservation.reservation_id,
-          variables_reservation.reserved_connector,
-          variables_reservation.reserve_now_timer = await webSocket.get_reservation_info()
+          reservation_vars.is_reserved, misc_vars.status,
+          reservation_vars.reservation_id_tag,
+          reservation_vars.reservation_id,
+          reservation_vars.reserved_connector,
+          reservation_vars.reserve_now_timer = await webSocket.get_reservation_info()
 
         if STATE.get_state() == States.S_STARTUP:
             CHARGER_GUI.change_state(STATE.get_state())
@@ -171,7 +174,7 @@ async def statemachine(webSocket: WebSocket):
 
         elif STATE.get_state() == States.S_AVAILABLE:
             CHARGER_GUI.set_charger_id(charger_ID)
-            variables_misc.status, variables_charger.charger_id = await webSocket.update_charger_data()
+            misc_vars.status, charger_vars.charger_id = await webSocket.update_charger_data()
             CHARGER_GUI.change_state(STATE.get_state())
 
         elif STATE.get_state() == States.S_FLEXICHARGEAPP:
@@ -190,9 +193,9 @@ async def statemachine(webSocket: WebSocket):
             timestamp_at_last_transfer = 0
             CHARGER_GUI.change_state(STATE.get_state())
             while True:
-                await asyncio.gather(webSocket.get_message(variables_charger,variables_misc,variables_reservation))
+                await asyncio.gather(webSocket.get_message())
 
-                if variables_misc.status != "Charging":
+                if misc_vars.status != "Charging":
                     STATE.set_state(States.S_AVAILABLE)
                     CHARGER_GUI.change_state(STATE.get_state())
                     break
@@ -217,6 +220,9 @@ async def statemachine(webSocket: WebSocket):
             CHARGER_GUI.change_state(STATE.get_state())
             await asyncio.sleep(5)
             STATE.set_state(States.S_AVAILABLE)
+            CHARGER_GUI.change_state(STATE.get_state())
+
+        elif STATE.get_state() == States.S_NOTAVAILABLE:
             CHARGER_GUI.change_state(STATE.get_state())
 
 async def main():

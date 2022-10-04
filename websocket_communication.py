@@ -99,7 +99,7 @@ class WebSocket():
         except Exception as e:
             print(str(e))
 
-    async def get_message(self,charger_variables,misc_variables,reservation_variables):
+    async def get_message(self):
         """
         It checks for a message from the server, if it gets one, it checks the message type and calls
         the appropriate function.
@@ -122,10 +122,9 @@ class WebSocket():
                 elif message[2] == "BootNotification":
                     message_str = str(message[3]["status"])
                     if message_str == "Accepted":
-                        confirm = await asyncio.gather(self.listen_for_response())
-                        if confirm == "sent 1000 (OK); then received 1000 (OK)":
-                            return States.S_AVAILABLE
-                        pass
+                       #confirm = await asyncio.gather(self.listen_for_response())
+                       #if confirm == "sent 1000 (OK); then received 1000 (OK)":
+                        return States.S_AVAILABLE
                     else:
                         Misc.status = "Faulted"
                         await asyncio.gather(self.send_status_notification())
@@ -149,10 +148,10 @@ class WebSocket():
                 print(e)
                 break
 
-    async def update_charger_data(self):
+    def update_charger_data(self):
         return Misc.status, Charger.charger_id
 
-    async def get_reservation_info(self):
+    def get_reservation_info(self):
         return Reservation.is_reserved, Misc.status, Reservation.reservation_id_tag, Reservation.reservation_id, Reservation.reserved_connector, Reservation.reserve_now_timer
 
     async def data_transfer_request(self, message_id, message_data):
