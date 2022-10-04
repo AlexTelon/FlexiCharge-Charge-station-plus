@@ -1,6 +1,6 @@
 from errno import WSAENOBUFS
 from hashlib import new
-from chargerui import ChargerGUI
+from charger_ui import ChargerGUI
 import asyncio
 import json
 import threading
@@ -109,13 +109,11 @@ async def statemachine(webSocket: WebSocket):
     # response = await ocpp_client.send_boot_notification()
     # chargerID = response.charger_id
 
-    #These should probably not be here. Move to correct classes.
-
-    
+    #These should probably not be here. Move to correct classes.    
     variables_charger = charger_variables.Charger() 
     variables_misc = misc_variables.Misc()
     variables_reservation = reservation_variables.Reservation()
-#
+
     new_state = await asyncio.gather(webSocket.get_message(variables_charger,variables_misc,variables_reservation))
     STATE.set_state(new_state)
     variables_misc.status, variables_charger.charger_id = await webSocket.update_charger_data()

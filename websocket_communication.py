@@ -1,6 +1,7 @@
 from asyncio import wait_for
 import asyncio
 import datetime
+import threading
 import time
 from multiprocessing.connection import wait
 import webbrowser
@@ -53,7 +54,7 @@ class WebSocket():
         """
         try:
             async with ws.connect(
-                Config().getWebSocketAddress(),
+                Config().getMockServerAddress(),
                 subprotocols= Config().getProtocol(),
                 ping_interval= Config().getWebSocketPingInterval(),
                 timeout= Config().getWebSocketTimeout()
@@ -421,6 +422,10 @@ class WebSocket():
             msg_send = json.dumps(msg)
             await self.send_message(msg_send)
 
+
+
+
+
     async def send_boot_notification_req(self):
         msg = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "BootNotification", {
             "chargePointVendor": "AVT-Company",
@@ -457,3 +462,151 @@ class WebSocket():
 
     async def hard_reset_reservation(self):
         pass
+
+    async def send_periodic_meter_values(self):
+        """
+        It sends the current charging percentage to the server every 2 seconds, and if the car is
+        charging, it starts the function again
+        """
+       #asyncio.run(self.send_data_transfer(1, self.charger.current_charging_percentage))
+       #
+       #if self.charger.current_charging_percentage:
+       #    threading.Timer(2, self.send_periodic_meter_values).start()
+
+
+       #msg_send = json.dumps(msg)
+       #await self.my_websocket.send(msg_send)
+
+    
+    async def send_heartbeat(self):
+        """
+        It sends a heartbeat message to the websocket server
+        """
+        msg = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "Heartbeat", {}]
+        msg_send = json.dumps(msg)
+        await self.my_websocket.send(msg_send)
+        # print(await self.my_websocket.recv())
+        # await asyncio.sleep(1)
+        self.timestamp_at_last_heartbeat = time.perf_counter()
+
+    async def check_if_time_for_heartbeat(self):
+        """
+        If the time since the last heartbeat is greater than or equal to the time between heartbeats,
+        return True. Otherwise, return False.
+        :return: a boolean value.
+        """
+        seconds_since_last_heartbeat = time.perf_counter() - \
+            (self.timestamp_at_last_heartbeat)
+        if seconds_since_last_heartbeat >= self.time_between_heartbeats:
+            return True
+        else:
+            return False
+
+    # Depricated in back-end
+    async def send_meter_values(self):
+        """
+        It sends a message to the back-end with the sampled values
+        """
+        current_time = datetime.now()
+        # Can be removed if back-end does want the time-stamp formated
+        timestamp = current_time.timestamp()
+        # Can be removed if back-end does not want the time-stamp formated
+        formated_timestamp = current_time.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+        # Should be replace with "real" sampled values (this is just for testing)
+        sample_value = "12345"
+        sample_context = "Sample.Clock"
+        sample_format = "Raw"
+        sample_measurand = "Energy.Active.Export.Register"
+        sample_phase = "L1"
+        sample_location = "Cable"
+        sample_unit = "kWh"
+
+        msg = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "MeterValues", {
+            "connectorId": self.hardcoded_connector_id,
+            "transactionId": self.transaction_id,
+            "meterValue": [{
+                "timestamp": formated_timestamp,
+                "sampledValue": [
+                    {"value": sample_value,
+                        "context": sample_context,
+                        "format": sample_format,
+                        "measurand": sample_measurand,
+                        "phase": sample_phase,
+                        "location": sample_location,
+                        "unit": sample_unit},
+                ]
+            }, ],
+        }]
+
+async def send_data_transfer(self, message_id, message_data):
+        """
+        I'm trying to send a JSON string to the server, but the server is expecting a JSON object
+        :param message_id: The message ID of the message you want to send
+        :param message_data: This is the data that is being sent to the server
+        """
+        s: str = "{}{}{}{}{}{}{}".format("{\"transactionId\":", self.transaction_id,
+                                         ",\"latestMeterValue\":", message_data, ",\"CurrentChargePercentage\":", message_data, "}")
+        print(s)
+
+        msg = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "DataTransfer", {
+            # "vendorId" : self.hardcoded_vendor_id,
+            "messageId": "ChargeLevelUpdate",
+            "data": s
+        }]
+
+        msg_send = json.dumps(msg)
+        await self.my_websocket.send(msg_send)
+
+async def recive_data_transfer(self, message):
+    """
+    It receives a message from the server, checks if the vendorId is correct, if it is, it checks if
+    the messageId is correct, if it is, it parses the data and sets the charger_id to the parsed
+    data
+    :param message: The message received from the websocket
+    """
+    status = "Rejected"
+    if message[3]["vendorId"] == self.hardcoded_vendor_id:
+        if message[3]["messageId"] == "BootData":
+            parsed_data = json.loads(message[3]["data"])
+            self.charger_id = parsed_data["chargerId"]
+            print("Charger ID is set to: " + str(self.charger.charging_id))
+            status = "Accepted"
+        else:
+            status = "UnknownMessageId"
+    else:
+        status = "UnknownVenorId"
+
+    # Send a conf
+    conf_msg = [3,
+                message[1],
+                "DataTransfer",
+                {"status": status}]
+
+    conf_send = json.dumps(conf_msg)
+    print("Sending confirmation: " + conf_send)
+    await self.my_websocket.send(conf_send)
+
+async def send_data_reserve(self):
+    """
+    It sends a message to the server, which is a list of two strings.
+    """
+    msg = ["chargerplus", "ReserveNow"]
+    msg_send = json.dumps(msg)
+    await self.my_websocket.send(msg_send)
+
+async def send_data_remote_start(self):
+    """
+    It sends a message to the websocket server, which then sends a message to the car.
+    """
+    msg = ["chargerplus", "RemoteStart"]
+    msg_send = json.dumps(msg)
+    await self.my_websocket.send(msg_send)
+
+async def send_data_remote_stop(self):
+    """
+    It sends a message to the websocket server to stop the charging session
+    """
+    msg = ["chargerplus", "RemoteStop"]
+    msg_send = json.dumps(msg)
+    await self.my_websocket.send(msg_send)

@@ -8,6 +8,7 @@ class Charger():
         self._charger_id = 000000
         self._charging_Wh = 0  # I think this is how many Wh have been used to charge
         self._current_charging_percentage = 0
+        self._meter_value_total = 0
     # Get for charging variables
 
     @property
