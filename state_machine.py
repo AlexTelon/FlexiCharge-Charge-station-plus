@@ -656,7 +656,7 @@ async def main():
      charge_point = ChargePoint('0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v', ws)
      await charge_point.send_boot_notification()
      #asyncio.get_event_loop().run_until_complete(await statemachine(charge_point))
-     asyncio.get_event_loop().run_until_complete(await choose_state(States.S_CHARGING))
+     asyncio.get_event_loop().run_until_complete(await choose_state(States.S_FLEXICHARGEAPP))
     # except:
     #print("Websocket error: Could not connect to server!")
     # Ugly? Yes! Works? Yes! (Should might use the statemachine but that will generate problems due to the websocket not working, due to the lack of time i won't fix that now)

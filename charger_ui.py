@@ -250,8 +250,8 @@ class UI():
         self.window_charging_time.hide()
         self.window_power.hide()
         self.window_time.hide()
-        self.window_charging_last_price.un_hide()
-        self.window_used_kwh.un_hide()
+        self.window_charging_last_price.hide()
+        self.window_used_kwh.hide()
 
     def generate_qr_code(chargerID):
         """
