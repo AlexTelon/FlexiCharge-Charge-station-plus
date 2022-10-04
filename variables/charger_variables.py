@@ -59,3 +59,13 @@ class Charger():
     @current_charging_percentage.setter
     def increment_current_charging_percentage_by(self, value: int):
         self._current_charging_percentage += value
+        
+    # Get for misc variables
+    @property
+    def meter_value_total(self):
+        return self._meter_value_total
+
+    # Set for misc variables
+    @meter_value_total.setter
+    def increment_meter_value_total_by(self, value: int):  # increment variable
+        self._meter_value_total += value

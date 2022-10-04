@@ -5,8 +5,9 @@ import threading
 import time
 import websockets
 import asyncio
-from config import Configurations
+from config import Configurations as Config
 from StateHandler import States
+from variables.charger_variables import Charger
 
 class WebSocket():
 #FUNCTIONS AND VARIABLES ARE RELEVANT TO WEB SOCKETS. THIS FILE IS TO EVALUATE HOW WEBSOCKET
@@ -504,8 +505,6 @@ class WebSocket():
         await self.my_websocket.send(msg_send)
 
 
-
-    
 
 
         

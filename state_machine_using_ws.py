@@ -27,6 +27,8 @@ from variables import misc_variables
 
 STATE = StateHandler()
 CHARGER_GUI = ChargerGUI(States.S_STARTUP)
+CHARGER_VARIABLES = charger_variables()
+
 
 #lass ChargePoint():
 #   hardware = Hardware()
@@ -108,15 +110,17 @@ async def statemachine(webSocket: WebSocket):
     # chargerID = response.charger_id
 
     #These should probably not be here. Move to correct classes.
+
+    
     variables_charger = charger_variables.Charger() 
     variables_misc = misc_variables.Misc()
     variables_reservation = reservation_variables.Reservation()
-
+#
     new_state = await asyncio.gather(webSocket.get_message(variables_charger,variables_misc,variables_reservation))
     STATE.set_state(new_state)
     variables_misc.status, variables_charger.charger_id = await webSocket.update_charger_data()
     if variables_misc.status == "Available":
-            while variables_charger.charger_id == 000000:
+            while variables_charger.charger_id == 000000: #hw.getchargerid
                 pass
 
     if variables_charger.charger_id == 000000:
