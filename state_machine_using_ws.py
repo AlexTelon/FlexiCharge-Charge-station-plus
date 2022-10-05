@@ -107,7 +107,10 @@ async def statemachine(webSocket: WebSocket):
     # chargerID = response.charger_id
 
     await asyncio.gather(webSocket.get_message())
+    CHARGER_VARIABLES = await webSocket.update_charger_variables()
+    print(str(CHARGER_VARIABLES.current_state))
     STATE.set_state(CHARGER_VARIABLES.current_state)
+    print(str(STATE.get_state()))
     CHARGER_VARIABLES.status, CHARGER_VARIABLES.charger_id = await webSocket.update_charger_data()
     if CHARGER_VARIABLES.status == "Available":
         while CHARGER_VARIABLES.charger_id == 000000:  # hw.getchargerid
@@ -120,7 +123,7 @@ async def statemachine(webSocket: WebSocket):
             STATE.set_state(States.S_NOTAVAILABLE)
             # Display QR code image
             CHARGER_GUI.change_state(STATE.get_state())
-
+    print(str(STATE.get_state()))
     chargerID = CHARGER_VARIABLES.charger_id
 
     firstNumberOfChargerID = int(chargerID % 10)
@@ -154,9 +157,9 @@ async def statemachine(webSocket: WebSocket):
 
     while True:
         await asyncio.gather(webSocket.get_message())
+        CHARGER_VARIABLES = await webSocket.update_charger_variables()
         STATE.set_state(CHARGER_VARIABLES.current_state)
         CHARGER_GUI.change_state(CHARGER_VARIABLES.current_state)
-        CHARGER_VARIABLES.status, CHARGER_VARIABLES.charger_id = await webSocket.update_charger_data()
         if CHARGER_VARIABLES.status == "ReserveNow":
 
             Reservation.is_reserved, CHARGER_VARIABLES.status,
