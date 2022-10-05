@@ -106,18 +106,18 @@ async def statemachine(webSocket: WebSocket):
     misc_vars = Misc()
     reservation_vars = Reservation()
     
-    STATE.set_state( await asyncio.gather(webSocket.get_message()))
+    STATE.set_state(await asyncio.gather(webSocket.get_message()))
 
 
     print(misc_vars.status)
     if misc_vars.status == "Available":
-            while charger_vars.charger_id == 000000: #hw.getchargerid
-                break
-    print(charger_vars.charger_id)
+            #Do something that gets the chargerID
+            
+        print(charger_vars.charger_id)
     # chargerGUI.change_state(state.get_state())
 
     if charger_vars.charger_id == 000000:
-        STATE.set_state(States.S_NOTAVAILABLE)
+        STATE.set_state(States.S_CHARGING)
         #set this in stateMachine
        # 
        # 
