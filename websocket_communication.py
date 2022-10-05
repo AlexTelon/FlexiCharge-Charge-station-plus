@@ -53,7 +53,7 @@ class WebSocket():
         """
         try:
             async with ws.connect(
-                Config().getWebSocketAddress(),
+                Config().getMockServerAddress(),
                 subprotocols=Config().getProtocol(),
                 ping_interval=Config().getWebSocketPingInterval(),
                 timeout=Config().getWebSocketTimeout()
@@ -147,6 +147,9 @@ class WebSocket():
     async def update_charger_data(self):
         return CHARGER_VARIABLES.status, CHARGER_VARIABLES.charger_id
 
+    async def update_charger_variables(self):
+        return CHARGER_VARIABLES
+
     async def get_reservation_info(self):
         return RESERVATION_VARIABLES.is_reserved, CHARGER_VARIABLES.status, RESERVATION_VARIABLES.reservation_id_tag, RESERVATION_VARIABLES.reservation_id, RESERVATION_VARIABLES.reserved_connector, RESERVATION_VARIABLES.reserve_now_timer
 
@@ -193,10 +196,9 @@ class WebSocket():
                         message[1],
                         "DataTransfer",
                         {"status": str(CHARGER_VARIABLES.status)}]
-            # MIGHT BE PROBLEMS HERE
             conf_send = json.dumps(conf_msg)
             print("Sending confirmation: " + conf_send)
-            CHARGER_VARIABLES.current_state = States.S_AVAILABLE #FAILING HERE State
+            CHARGER_VARIABLES.current_state = States.S_AVAILABLE 
         except Exception as e:
             print(str(e))
 
@@ -336,24 +338,33 @@ class WebSocket():
 
         :param message: [3, "Unique message id", "RemoteStartTransaction", {"idTag": "12345"}]
         """
-        if int(message[3]["idTag"]) == self.reservation_id_tag:  # If the idTag has a reservation
-            self.start_charging_from_reservation()
+        print(message)
+        
+        if int(message[3]["idTag"]) == RESERVATION_VARIABLES.reservation_id_tag:  # If the idTag has a reservation
             print("Remote transaction started")
             # state.set_state(States.S_CHARGING)
             msg = [3,
-                   message[1],  # Unique message id
-                   "RemoteStartTransaction",
-                   {"status": "Accepted"}
-                   ]
-            response = json.dumps(msg)
-            await self.send_message(response)
-
+                message[1],  # Unique message id
+                "RemoteStartTransaction",
+                {"status": "Accepted"}
+                ]
+            try:
+                response = json.dumps(msg)
+                print("SENDING RESERVATION MESSAGE ......")
+                await self.send_message(response)
+                print("SENT MESSAGE")
+            except Exception as e:
+                print(str(e))
             await self.start_transaction(is_remote=True)
-            self.status = "Charging"
+            print("REMOTE START MESSAGE SENT!")
+            CHARGER_VARIABLES.status = "Charging"
             # Notify central system that connector is now available
+            print("SENDING STATUS NOTIFICATION")
             await self.send_status_notification(None)
+            print("STATUS NOTIFICATION SENT")
             print("Charge should be started")
-            CHARGER_VARIABLES.current_state(States.S_CHARGING)
+            CHARGER_VARIABLES.current_state = States.S_CHARGING
+        
         else:  # A non reserved tag tries to use the connector
             print("This tag does not have a reservation")
             msg = [3,
@@ -388,14 +399,14 @@ class WebSocket():
             CHARGER_VARIABLES.status = "Reserved"
             await asyncio.gather(self.send_status_notification(None))
             # state.set_state(States.S_FLEXICHARGEAPP)
-            self.resevation.reservation_id_tag = int(message[3]["idTag"])
-            self.resevation.reservation_id = message[3]["reservationID"]
-            self.resevation.reserved_connector = message[3]["connectorID"]
+            RESERVATION_VARIABLES.reservation_id_tag = int(message[3]["idTag"])
+            RESERVATION_VARIABLES.reservation_id = message[3]["reservationID"]
+            RESERVATION_VARIABLES.reserved_connector = message[3]["connectorID"]
             timestamp = message[3]["expiryDate"]  # Given in ms since epoch
             reserved_for_s = int(timestamp - int(time.time()))
             # reserved_for_ms/1000)   #Reservation time in seconds
-            self.resevation.reserve_now_timer = int(reserved_for_s)
-            self.timer_countdown_reservation  # Countdown every second
+            RESERVATION_VARIABLES.reserve_now_timer = int(reserved_for_s)
+            RESERVATION_VARIABLES.timer_countdown_reservation  # Countdown every second
 
             msg = [3,
                    # Have to use the unique message id received from server
@@ -405,7 +416,7 @@ class WebSocket():
                    ]
             msg_send = json.dumps(msg)
             await self.send_message(msg_send)
-            CHARGER_VARIABLES.current_state(States.S_FLEXICHARGEAPP)
+            CHARGER_VARIABLES.current_state = States.S_FLEXICHARGEAPP
         elif RESERVATION_VARIABLES.reserved_connector == local_connector_id:
             print("Connector occupied")
             msg = [3,
