@@ -106,8 +106,8 @@ async def statemachine(webSocket: WebSocket):
     # response = await ocpp_client.send_boot_notification()
     # chargerID = response.charger_id
 
-    new_state = await asyncio.gather(webSocket.get_message())
-    STATE.set_state(new_state)
+    await asyncio.gather(webSocket.get_message())
+    STATE.set_state(CHARGER_VARIABLES.current_state)
     CHARGER_VARIABLES.status, CHARGER_VARIABLES.charger_id = await webSocket.update_charger_data()
     if CHARGER_VARIABLES.status == "Available":
         while CHARGER_VARIABLES.charger_id == 000000:  # hw.getchargerid
@@ -153,9 +153,10 @@ async def statemachine(webSocket: WebSocket):
     chargerID_window.hide()
 
     while True:
-        new_state = await asyncio.gather(webSocket.get_message())
-        STATE.set_state(new_state)
-        CHARGER_VARIABLES.status, CHARGER_VARIABLES.charger_id = webSocket.update_charger_data()
+        await asyncio.gather(webSocket.get_message())
+        STATE.set_state(CHARGER_VARIABLES.current_state)
+        CHARGER_GUI.change_state(CHARGER_VARIABLES.current_state)
+        CHARGER_VARIABLES.status, CHARGER_VARIABLES.charger_id = await webSocket.update_charger_data()
         if CHARGER_VARIABLES.status == "ReserveNow":
 
             Reservation.is_reserved, CHARGER_VARIABLES.status,

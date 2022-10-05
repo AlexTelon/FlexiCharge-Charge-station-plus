@@ -1,6 +1,7 @@
 from asyncio import wait_for
 import asyncio
 import datetime
+from sre_parse import State
 import threading
 import time
 from multiprocessing.connection import wait
@@ -20,7 +21,7 @@ We have tried to rewrite and fix the websockets but we were left with a burning 
 It does not work and probably wont ever work.
 Increase this timer for every hour spent trying to fix it and make it work.
 And write your name below to we can remember our fallen comrades
-Hours spent in this shithole: 24 (24 too many)
+Hours spent in this shithole: 26 (26 too many)
 
 Albin Samefors was here
 Axel Björkman was here
@@ -31,6 +32,7 @@ CHARGER_VARIABLES = Charger()
 
 
 class WebSocket():
+    webSocket = None
     def __init__(self):
         try:
             print("ws_init")
@@ -102,14 +104,14 @@ class WebSocket():
         the appropriate function.
         """
         # for i in range(3):
-        while True:  # why while true??
+        for i in range(3):
             try:
                 #self.charger = charger_variables
                 #self.misc = misc_variables
                 #self.reservation = reservation_variables
                 websocket_timeout = 0.5  # Timeout in seconds
                 json_formatted_message = await asyncio.wait_for(self.webSocket.recv(), websocket_timeout)
-                # async for msg in self.my_websocket: #Takes latest message
+                # async for msg in self.webSocket: #Takes latest message
                 print("get_message")
                 message = json.loads(json_formatted_message)
                 print(message)
@@ -126,8 +128,7 @@ class WebSocket():
                     return await asyncio.gather(self.remote_stop_transaction(message))
                 elif message[2] == "DataTransfer":
                     print("Recieved Data transfer")
-                    CHARGER_VARIABLES.charger_id = json.loads(
-                        message[5]["chargerId"])
+                    
                     return await asyncio.gather(self.data_transfer_response(message))
 
                 elif message[2] == "StartTransaction":
@@ -137,9 +138,10 @@ class WebSocket():
                     print(message[3])
                 else:
                     print(message)
+                    print("I GOT NOTIN")
             except Exception as e:
-                print("Get_message ERROR:")
-                print(e)
+                #print("Get_message ERROR:")
+                #print(e)
                 break
 
     async def update_charger_data(self):
@@ -171,29 +173,37 @@ class WebSocket():
     # Does not work as of now
     async def data_transfer_response(self, message):
         print("Entered send data transfer response")
-        status = "Rejected"
-        if message[3]["vendorId"] == "com.flexicharge":
-            if message[3]["messageId"] == "BootData":
+        CHARGER_VARIABLES.status = "Rejected"
+        try:
+            if message[3]["vendorId"] == "com.flexicharge" and message[3]["messageId"] == "BootData":
                 parsed_data = json.loads(message[3]["data"])
                 CHARGER_VARIABLES.charger_id = parsed_data["chargerId"]
+                #CHARGER_VARIABLES.charging_price = float(parsed_data["chargingPrice"])
                 print("Charger ID is set to: " +
-                      str(CHARGER_VARIABLES.charger_id))
-                status = "Accepted"
-            else:
-                status = "UnknownMessageId"
-                print("UnknownMessageId")
-        else:
-            status = "UnknownVendorId"
-            print("UnknownVendorId")
+                    str(CHARGER_VARIABLES.charger_id))
+                #print("Charging price was set to: "+ str(CHARGER_VARIABLES.charging_price) )
+                CHARGER_VARIABLES.status = "Accepted"
+                print("CHARGER STATUS IS" + CHARGER_VARIABLES.status)
+        except Exception as e:
+            print("CHARGER ID: ",str(CHARGER_VARIABLES.get_charger_id()))
+            print(str(e))
+        try:
         # Send a conf
-        conf_msg = [3,
-                    message[1],
-                    "DataTransfer",
-                    {"status": status}]
-        # MIGHT BE PROBLEMS HERE
-        conf_send = json.dumps(conf_msg)
-        print("Sending confirmation: " + conf_send)
+            conf_msg = [3,
+                        message[1],
+                        "DataTransfer",
+                        {"status": str(CHARGER_VARIABLES.status)}]
+            # MIGHT BE PROBLEMS HERE
+            conf_send = json.dumps(conf_msg)
+            print("Sending confirmation: " + conf_send)
+            CHARGER_VARIABLES.current_state = States.S_AVAILABLE #FAILING HERE State
+        except Exception as e:
+            print(str(e))
+
+        print("message sent" + str(CHARGER_VARIABLES.current_state))
         await self.send_message(conf_send)
+        
+
 
 
 ####################Start/Stop Transaction####################
@@ -283,7 +293,7 @@ class WebSocket():
             await self.send_message(msg_send)
             self.hard_reset_charging()
 
-        response = await self.my_websocket.recv()
+        response = await self.webSocket.recv()
         print(json.loads(response))
 
     async def remote_stop_transaction(self, message):
@@ -343,7 +353,7 @@ class WebSocket():
             # Notify central system that connector is now available
             await self.send_status_notification(None)
             print("Charge should be started")
-            return States.S_CHARGING
+            CHARGER_VARIABLES.current_state(States.S_CHARGING)
         else:  # A non reserved tag tries to use the connector
             print("This tag does not have a reservation")
             msg = [3,
@@ -395,7 +405,7 @@ class WebSocket():
                    ]
             msg_send = json.dumps(msg)
             await self.send_message(msg_send)
-            return States.S_FLEXICHARGEAPP
+            CHARGER_VARIABLES.current_state(States.S_FLEXICHARGEAPP)
         elif RESERVATION_VARIABLES.reserved_connector == local_connector_id:
             print("Connector occupied")
             msg = [3,
@@ -431,6 +441,7 @@ class WebSocket():
         msg_send = json.dumps(msg)
         print("Sending boot notification")
         await self.send_message(msg_send)
+        await self.get_message()
 
     async def send_boot_notification_conf(self, message):
         conf_msg = [3,
@@ -465,7 +476,7 @@ class WebSocket():
        #    threading.Timer(2, self.send_periodic_meter_values).start()
 
        #msg_send = json.dumps(msg)
-       # await self.my_websocket.send(msg_send)
+       # await self.webSocket.send(msg_send)
 
     async def send_heartbeat(self):
         """
@@ -473,8 +484,8 @@ class WebSocket():
         """
         msg = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "Heartbeat", {}]
         msg_send = json.dumps(msg)
-        await self.my_websocket.send(msg_send)
-        # print(await self.my_websocket.recv())
+        await self.webSocket.send(msg_send)
+        # print(await self.webSocket.recv())
         # await asyncio.sleep(1)
         self.timestamp_at_last_heartbeat = time.perf_counter()
 
