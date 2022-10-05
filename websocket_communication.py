@@ -109,7 +109,7 @@ class WebSocket():
                 #self.charger = charger_variables
                 #self.misc = misc_variables
                 #self.reservation = reservation_variables
-                websocket_timeout = 0.5  # Timeout in seconds
+                websocket_timeout = 5  # Timeout in seconds
                 json_formatted_message = await asyncio.wait_for(self.webSocket.recv(), websocket_timeout)
                 # async for msg in self.webSocket: #Takes latest message
                 print("get_message")
@@ -123,9 +123,9 @@ class WebSocket():
                     print("Got boot notification response")
                     print("Was: " + message_str)
                 elif message[2] == "RemoteStartTransaction":
-                    return await asyncio.gather(self.remote_start_transaction(message))
+                    await asyncio.gather(self.remote_start_transaction(message))
                 elif message[2] == "RemoteStopTransaction":
-                    return await asyncio.gather(self.remote_stop_transaction(message))
+                    await asyncio.gather(self.remote_stop_transaction(message))
                 elif message[2] == "DataTransfer":
                     print("Recieved Data transfer")
                     
@@ -338,7 +338,6 @@ class WebSocket():
 
         :param message: [3, "Unique message id", "RemoteStartTransaction", {"idTag": "12345"}]
         """
-        print(message)
         
         if int(message[3]["idTag"]) == RESERVATION_VARIABLES.reservation_id_tag:  # If the idTag has a reservation
             print("Remote transaction started")
@@ -348,13 +347,10 @@ class WebSocket():
                 "RemoteStartTransaction",
                 {"status": "Accepted"}
                 ]
-            try:
-                response = json.dumps(msg)
-                print("SENDING RESERVATION MESSAGE ......")
-                await self.send_message(response)
-                print("SENT MESSAGE")
-            except Exception as e:
-                print(str(e))
+            response = json.dumps(msg)
+            print("SENDING RESERVATION MESSAGE ......")
+            self.send_message(response)
+            print("SENT MESSAGE")
             await self.start_transaction(is_remote=True)
             print("REMOTE START MESSAGE SENT!")
             CHARGER_VARIABLES.status = "Charging"

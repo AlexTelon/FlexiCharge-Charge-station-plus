@@ -73,18 +73,13 @@ boot_message_response = [3, '0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v', 'BootNotific
     'currentTime': 1663966665,
     'interval': 86400}]
 
-data_transfer_req = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v",  # OCPP p.68
-                     "DataTransfer", {
-                        "vendorId": "",  # identify vendor specific implementation
-                        "messageId": "",  # optional
-                        "data": ""  # optional
-                     }]
+data_transfer_req = [2, '100009DataTransfer1664971239072', 'DataTransfer', {'vendorId': 'com.flexicharge', 'messageId': 'BootData', 'data': '{"chargerId":100009,"chargingPrice":"7500.00"}'}]
 
-start_remote_transaction_request = [3,
+start_remote_transaction_request = [2,
                                     "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v",
                                     "RemoteStartTransaction",
                                     {
-                                        "status": "Accepted"
+                                        "idTag": "1"
                                     }]
 stop_remote_transation_request = [3,
                                   "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v",
@@ -122,6 +117,7 @@ async def ocpp_server(websocket):
         print(message)
         await websocket.send(json.dumps(boot_message_response))
         print(boot_message_response)
+        await websocket.send(json.dumps(data_transfer_req))
         await websocket.send(json.dumps(start_remote_transaction_request))
 
 start_server = websockets.serve(ocpp_server, "127.0.0.1", 60003)
