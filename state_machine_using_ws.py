@@ -1,6 +1,6 @@
 from errno import WSAENOBUFS
 from hashlib import new
-from charger_ui import ChargerGUI
+from charger_ui import UI
 import asyncio
 import json
 import threading
@@ -17,20 +17,17 @@ import variables
 from websocket_communication import WebSocket
 
 from charger_hardware import Hardware
-from get_set_variables import Get
-from get_set_variables import Set
 
-from variables import charger_variables
-from variables import reservation_variables
-from variables import misc_variables
+from variables.charger_variables import Charger
+from variables.reservation_variables import Reservation
 
 
 STATE = StateHandler()
-CHARGER_GUI = ChargerGUI(States.S_STARTUP)
-CHARGER_VARIABLES = charger_variables()
+CHARGER_GUI = UI(States.S_STARTUP)
+CHARGER_VARIABLES = Charger()
 
 
-#lass ChargePoint():
+# lass ChargePoint():
 #   hardware = Hardware()
 #   get = Get()
 #   set = Set()
@@ -90,7 +87,7 @@ CHARGER_VARIABLES = charger_variables()
 #       else:
 #           return False
 
-    #Depricated in back-end
+#Depricated in back-end
 
 ###########################################################################################################
 
@@ -109,34 +106,32 @@ async def statemachine(webSocket: WebSocket):
     # response = await ocpp_client.send_boot_notification()
     # chargerID = response.charger_id
 
-    #These should probably not be here. Move to correct classes.    
-    variables_charger = charger_variables.Charger() 
-    variables_misc = misc_variables.Misc()
-    variables_reservation = reservation_variables.Reservation()
+    await asyncio.gather(webSocket.get_message())
+    CHARGER_VARIABLES = await webSocket.update_charger_variables()
+    print(str(CHARGER_VARIABLES.current_state))
+    STATE.set_state(CHARGER_VARIABLES.current_state)
+    print(str(STATE.get_state()))
+    CHARGER_VARIABLES.status, CHARGER_VARIABLES.charger_id = await webSocket.update_charger_data()
+    if CHARGER_VARIABLES.status == "Available":
+        while CHARGER_VARIABLES.charger_id == 000000:  # hw.getchargerid
+            pass
 
-    new_state = await asyncio.gather(webSocket.get_message(variables_charger,variables_misc,variables_reservation))
-    STATE.set_state(new_state)
-    variables_misc.status, variables_charger.charger_id = await webSocket.update_charger_data()
-    if variables_misc.status == "Available":
-            while variables_charger.charger_id == 000000: #hw.getchargerid
-                pass
-
-    if variables_charger.charger_id == 000000:
+    if CHARGER_VARIABLES.charger_id == 000000:
         STATE.set_state(States.S_NOTAVAILABLE)
         CHARGER_GUI.change_state(STATE.get_state())
         while True:
             STATE.set_state(States.S_NOTAVAILABLE)
             # Display QR code image
             CHARGER_GUI.change_state(STATE.get_state())
+    print(str(STATE.get_state()))
+    chargerID = CHARGER_VARIABLES.charger_id
 
-    chargerID = variables_charger.charger_id
-
-    firstNumberOfChargerID  = int(chargerID % 10)
+    firstNumberOfChargerID = int(chargerID % 10)
     secondNumberOfChargerID = int(chargerID/10) % 10
-    thirdNumberOfChargerID  = int(chargerID/100) % 10
-    fouthNumberOfChargerID  = int(chargerID/1000) % 10
-    fifthNumberOfChargerID  = int(chargerID/10000) % 10
-    sixthNumberOfChargerID  = int(chargerID/100000) % 10
+    thirdNumberOfChargerID = int(chargerID/100) % 10
+    fouthNumberOfChargerID = int(chargerID/1000) % 10
+    fifthNumberOfChargerID = int(chargerID/10000) % 10
+    sixthNumberOfChargerID = int(chargerID/100000) % 10
 
     chargerIdLayout = [
         [
@@ -161,17 +156,17 @@ async def statemachine(webSocket: WebSocket):
     chargerID_window.hide()
 
     while True:
-        new_state  = await asyncio.gather(webSocket.get_message(variables_charger,variables_misc,variables_reservation))
-        STATE.set_state(new_state)
-        variables_misc.status, variables_charger.charger_id = webSocket.update_charger_data()
-        if variables_misc.status == "ReserveNow":
+        await asyncio.gather(webSocket.get_message())
+        CHARGER_VARIABLES = await webSocket.update_charger_variables()
+        STATE.set_state(CHARGER_VARIABLES.current_state)
+        CHARGER_GUI.change_state(CHARGER_VARIABLES.current_state)
+        if CHARGER_VARIABLES.status == "ReserveNow":
 
-          variables_reservation.is_reserved, variables_misc.status,
-          variables_reservation.reservation_id_tag,
-          variables_reservation.reservation_id,
-          variables_reservation.reserved_connector,
-          variables_reservation.reserve_now_timer = await webSocket.get_reservation_info()
-
+            Reservation.is_reserved, CHARGER_VARIABLES.status,
+            Reservation.reservation_id_tag,
+            Reservation.reservation_id,
+            Reservation.reserved_connector,
+            Reservation.reserve_now_timer = await webSocket.get_reservation_info
         if STATE.get_state() == States.S_STARTUP:
             CHARGER_GUI.change_state(STATE.get_state())
             continue
@@ -179,7 +174,7 @@ async def statemachine(webSocket: WebSocket):
         elif STATE.get_state() == States.S_AVAILABLE:
 
             CHARGER_GUI.set_charger_id(chargerID)
-            variables_misc.status, variables_charger.charger_id = await webSocket.update_charger_data()
+            CHARGER_VARIABLES.status, CHARGER_VARIABLES.charger_id = await webSocket.update_charger_data()
             CHARGER_GUI.change_state(STATE.get_state())
 
         elif STATE.get_state() == States.S_FLEXICHARGEAPP:
@@ -197,9 +192,9 @@ async def statemachine(webSocket: WebSocket):
             timestamp_at_last_transfer = 0
             CHARGER_GUI.change_state(STATE.get_state())
             while True:
-                await asyncio.gather(webSocket.get_message(variables_charger,variables_misc,variables_reservation))
+                await asyncio.gather(webSocket.get_message())
 
-                if variables_misc.status != "Charging":
+                if CHARGER_VARIABLES.status != "Charging":
                     STATE.set_state(States.S_AVAILABLE)
                     CHARGER_GUI.change_state(STATE.get_state())
                     break
