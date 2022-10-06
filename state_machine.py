@@ -1,7 +1,5 @@
 from errno import WSAENOBUFS
 from hashlib import new
-# from curses import window
-from sre_parse import State
 from charger_ui import UI
 import asyncio
 import json
@@ -15,26 +13,18 @@ import websockets
 
 from StateHandler import StateHandler
 from StateHandler import States
-from variables import charger_variables
-from variables import reservation_variables
+import variables
 from websocket_communication import WebSocket
 
 from charger_hardware import Hardware
 
 from variables.charger_variables import Charger
 from variables.reservation_variables import Reservation
-from variables.misc_variables import Misc
+
 
 STATE = StateHandler()
-
-CHARGER_GUI = UI(None)
-
-hardware = Hardware()
-
-
-async def choose_state(choosen_state: StateHandler):
-    while True:
-            CHARGER_GUI.change_state(choosen_state)
+CHARGER_GUI = UI(States.S_STARTUP)
+CHARGER_VARIABLES = Charger()
 
 async def statemachine(webSocket: WebSocket):
     """
@@ -50,65 +40,61 @@ async def statemachine(webSocket: WebSocket):
 
     # response = await ocpp_client.send_boot_notification()
     # chargerID = response.charger_id
-    charger_vars = Charger() 
-    misc_vars = Misc()
-    reservation_vars = Reservation()
-    
-    charger_ID = charger_vars.charger_id
 
-    first_number_of_charger_id = int(charger_ID % 10)
-    second_number_of_charger_id = int(charger_ID/10) % 10
-    third_number_of_charger_id = int(charger_ID/100) % 10
-    fouth_number_of_charger_id = int(charger_ID/1000) % 10
-    fifth_number_of_charger_id = int(charger_ID/10000) % 10
-    sixth_number_of_charger_id = int(charger_ID/100000) % 10
+    await asyncio.gather(webSocket.get_message())
+    CHARGER_VARIABLES = webSocket.update_charger_variables()
+    chargerID = CHARGER_VARIABLES.charger_id
 
-    charger_id_layout = [
+    firstNumberOfChargerID = int(chargerID % 10)
+    secondNumberOfChargerID = int(chargerID/10) % 10
+    thirdNumberOfChargerID = int(chargerID/100) % 10
+    fouthNumberOfChargerID = int(chargerID/1000) % 10
+    fifthNumberOfChargerID = int(chargerID/10000) % 10
+    sixthNumberOfChargerID = int(chargerID/100000) % 10
+
+    chargerIdLayout = [
         [
-            sg.Text(sixth_number_of_charger_id, font=(
+            sg.Text(sixthNumberOfChargerID, font=(
                 'Tw Cen MT Condensed Extra Bold', 30), key='ID5', justification='center', pad=(25, 0)),
-            sg.Text(fifth_number_of_charger_id, font=(
+            sg.Text(fifthNumberOfChargerID, font=(
                 'Tw Cen MT Condensed Extra Bold', 30), key='ID4', justification='center', pad=(20, 0)),
-            sg.Text(fouth_number_of_charger_id, font=(
+            sg.Text(fouthNumberOfChargerID, font=(
                 'Tw Cen MT Condensed Extra Bold', 30), key='ID3', justification='center', pad=(25, 0)),
-            sg.Text(third_number_of_charger_id, font=(
+            sg.Text(thirdNumberOfChargerID, font=(
                 'Tw Cen MT Condensed Extra Bold', 30), key='ID2', justification='center', pad=(20, 0)),
-            sg.Text(second_number_of_charger_id, font=(
+            sg.Text(secondNumberOfChargerID, font=(
                 'Tw Cen MT Condensed Extra Bold', 30), key='ID1', justification='center', pad=(25, 0)),
-            sg.Text(first_number_of_charger_id, font=(
+            sg.Text(firstNumberOfChargerID, font=(
                 'Tw Cen MT Condensed Extra Bold', 30), key='ID0', justification='center', pad=(20, 0))
         ]
     ]
 
-    charger_id_window = sg.Window(title="FlexiChargeTopWindow", layout=charger_id_layout, location=(15, 735), keep_on_top=True,
-                                  grab_anywhere=False, transparent_color='white', background_color='white', size=(470, 75), no_titlebar=True).finalize()
-    charger_id_window.TKroot["cursor"] = "none"
-    charger_id_window.hide()
+    chargerID_window = sg.Window(title="FlexiChargeTopWindow", layout=chargerIdLayout, location=(15, 735), keep_on_top=True,
+                                 grab_anywhere=False, transparent_color='white', background_color='white', size=(470, 75), no_titlebar=True).finalize()
+    chargerID_window.TKroot["cursor"] = "none"
+    chargerID_window.hide()
 
-    STATE.set_state(await asyncio.gather(webSocket.get_message()))  
     while True:
-
-        # if misc_vars.status == "ReserveNow":
-
-        #   reservation_vars.is_reserved, misc_vars.status
-        #   reservation_vars.reservation_id_tag,
-        #   reservation_vars.reservation_id,
-        #   reservation_vars.reserved_connector,
-        #   reservation_vars.reserve_now_timer = await webSocket.get_reservation_info()
-        print(STATE.get_state())
-        
+        await asyncio.gather(webSocket.get_message())
+        CHARGER_VARIABLES = webSocket.update_charger_variables()
+        STATE.set_state(CHARGER_VARIABLES.current_state)
+        CHARGER_GUI.change_state(CHARGER_VARIABLES.current_state)
+        if CHARGER_VARIABLES.status == "ReserveNow":
+            Reservation.is_reserved, CHARGER_VARIABLES.status,
+            Reservation.reservation_id_tag,
+            Reservation.reservation_id,
+            Reservation.reserved_connector,
+            Reservation.reserve_now_timer = await webSocket.get_reservation_info
         if STATE.get_state() == States.S_STARTUP:
             CHARGER_GUI.change_state(STATE.get_state())
             continue
 
         elif STATE.get_state() == States.S_AVAILABLE:
-            CHARGER_GUI.set_charger_id(charger_ID)
+            CHARGER_GUI.set_charger_id(chargerID)
             CHARGER_GUI.change_state(STATE.get_state())
-            
 
         elif STATE.get_state() == States.S_FLEXICHARGEAPP:
             CHARGER_GUI.change_state(STATE.get_state())
-            print("flexichargeapp")
 
         elif STATE.get_state() == States.S_PLUGINCABLE:
             CHARGER_GUI.change_state(STATE.get_state())
@@ -124,7 +110,7 @@ async def statemachine(webSocket: WebSocket):
             while True:
                 await asyncio.gather(webSocket.get_message())
 
-                if misc_vars.status != "Charging":
+                if CHARGER_VARIABLES.status != "Charging":
                     STATE.set_state(States.S_AVAILABLE)
                     CHARGER_GUI.change_state(STATE.get_state())
                     break
@@ -132,7 +118,7 @@ async def statemachine(webSocket: WebSocket):
                 if (time.time() - timestamp_at_last_transfer) >= 1:
                     timestamp_at_last_transfer = time.time()
                     await asyncio.gather(webSocket.send_data_transfer(1, percent))
-                if percent >= 100:
+                if percent == 100:
                     await asyncio.gather(webSocket.stop_transaction(False))
                     STATE.set_state(States.S_BATTERYFULL)
                     break
@@ -151,15 +137,10 @@ async def statemachine(webSocket: WebSocket):
             STATE.set_state(States.S_AVAILABLE)
             CHARGER_GUI.change_state(STATE.get_state())
 
-        elif STATE.get_state() == States.S_NOTAVAILABLE:
-            CHARGER_GUI.change_state(STATE.get_state())
-
-        else:
-            print("No state")
 
 async def main():
     """
-    It connects to a websocket server, sends a boot notification, and then runs a state machine
+    It connects to a websocket server and then runs a state machine
     """
     try:
         ws = WebSocket()
@@ -169,6 +150,7 @@ async def main():
     except Exception as e:
         print("ERROR:")
         print(e)
+
 
 if __name__ == '__main__':
     asyncio.run(main())

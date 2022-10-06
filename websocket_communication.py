@@ -104,7 +104,6 @@ class WebSocket():
         It checks for a message from the server, if it gets one, it checks the message type and calls
         the appropriate function.
         """
-        # for i in range(3):
         for i in range(3):
             try:
                 #self.charger = charger_variables
@@ -142,9 +141,9 @@ class WebSocket():
             except Exception as e:
                 #print("Get_message ERROR:")
                 #print(e)
-                break
+                pass
 
-    async def update_charger_variables(self):
+    def update_charger_variables(self):
         return CHARGER_VARIABLES
 
     async def get_reservation_info(self):
@@ -344,7 +343,7 @@ class WebSocket():
                 ]
             confirmation_msg_json = json.dumps(confirmation_msg)
             print("SENDING RESERVATION MESSAGE ......")
-            self.send_message(confirmation_msg_json)
+            await self.send_message(confirmation_msg_json)
             print("SENT MESSAGE")
             await self.start_transaction(is_remote=True)
             print("REMOTE START MESSAGE SENT!")
