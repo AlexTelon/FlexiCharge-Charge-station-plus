@@ -1,6 +1,7 @@
 from asyncio import wait_for
 import asyncio
 import datetime
+from sre_parse import State
 import threading
 import time
 from multiprocessing.connection import wait
@@ -9,6 +10,7 @@ from config import Configurations as Config
 import websockets as ws
 import json
 from StateHandler import States
+from variables import reservation_variables
 from variables.charger_variables import Charger
 from variables.misc_variables import Misc
 from variables.reservation_variables import Reservation
@@ -20,20 +22,18 @@ We have tried to rewrite and fix the websockets but we were left with a burning 
 It does not work and probably wont ever work.
 Increase this timer for every hour spent trying to fix it and make it work.
 And write your name below to we can remember our fallen comrades
-Hours spent in this shithole: 23 (23 too many)
+Hours spent in this shithole: 26 (26 too many)
 
 Albin Samefors was here
 Axel Björkman was here
 Felix Sundman was here
 """
+RESERVATION_VARIABLES = Reservation()
+CHARGER_VARIABLES = Charger()
 
 
 class WebSocket():
-    # Get variables
-    #charger = None #Should not be here!!
-    #misc = None
-    #reservation = None
-
+    webSocket = None
     def __init__(self):
         try:
             print("ws_init")
@@ -45,7 +45,7 @@ class WebSocket():
             print(str(e))
 
     def get_status(self):
-        return Misc.status
+        return CHARGER_VARIABLES.status
 
     async def connect(self):
         """
@@ -55,9 +55,9 @@ class WebSocket():
         try:
             async with ws.connect(
                 Config().getMockServerAddress(),
-                subprotocols= Config().getProtocol(),
-                ping_interval= Config().getWebSocketPingInterval(),
-                timeout= Config().getWebSocketTimeout()
+                subprotocols=Config().getProtocol(),
+                ping_interval=Config().getWebSocketPingInterval(),
+                timeout=Config().getWebSocketTimeout()
             ) as webSocketConnection:
                 self.webSocket = webSocketConnection
                 print("Successfully connected to WebSocket")
@@ -77,15 +77,15 @@ class WebSocket():
         await self.webSocket.send(json_formatted_message)
 
     async def send_status_notification(self):
-        """
-        It sends a message to the back-end with the status of the charging station.
-
-        :param info: A string that contains information about the status
-        """
+     # Sending a status notification to the server.
         print("Send STATUS notificaition: ")
-        json_msg = json.dumps(OCPPMessages.boot_notification_conf)
-        print(str(json_msg))
-        await self.send_message(json_msg)
+        msg = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "StatusNotification", {
+            "connectorId": "1",
+            "errorCode": "",
+            "status": CHARGER_VARIABLES.status
+        }]
+        msg_send = json.dumps(msg)
+        await self.send_message(msg_send)
 
     async def listen_for_response(self):
         """
@@ -104,15 +104,14 @@ class WebSocket():
         It checks for a message from the server, if it gets one, it checks the message type and calls
         the appropriate function.
         """
-        # for i in range(3):
-        while True: #why while true??
+        for i in range(3):
             try:
                 #self.charger = charger_variables
                 #self.misc = misc_variables
                 #self.reservation = reservation_variables
-                websocket_timeout = 0.5  # Timeout in seconds
+                websocket_timeout = 5  # Timeout in seconds
                 json_formatted_message = await asyncio.wait_for(self.webSocket.recv(), websocket_timeout)
-                # async for msg in self.my_websocket: #Takes latest message
+                # async for msg in self.webSocket: #Takes latest message
                 print("get_message")
                 message = json.loads(json_formatted_message)
                 print(message)
@@ -121,38 +120,34 @@ class WebSocket():
                     await asyncio.gather(self.reserve_now(message))
                 elif message[2] == "BootNotification":
                     message_str = str(message[3]["status"])
-                    if message_str == "Accepted":
-                       #confirm = await asyncio.gather(self.listen_for_response())
-                       #if confirm == "sent 1000 (OK); then received 1000 (OK)":
-                        return States.S_AVAILABLE
-                    else:
-                        Misc.status = "Faulted"
-                        await asyncio.gather(self.send_status_notification())
-                        # state.set_state(States.S_NOTAVAILABLE)
-                        return States.S_NOTAVAILABLE
+                    print("Got boot notification response")
+                    print("Was: " + message_str)
                 elif message[2] == "RemoteStartTransaction":
-                    return await asyncio.gather(self.remote_start_transaction(message))
+                    await asyncio.gather(self.remote_start_transaction(message))
                 elif message[2] == "RemoteStopTransaction":
-                    return await asyncio.gather(self.remote_stop_transaction(message))
+                    await asyncio.gather(self.remote_stop_transaction(message))
                 elif message[2] == "DataTransfer":
-                    Charger.charger_id = json.loads(message[5]["chargerId"])
+                    print("Recieved Data transfer")
+                    
                     return await asyncio.gather(self.data_transfer_response(message))
 
                 elif message[2] == "StartTransaction":
-                    pass
                     self.transaction_id = 347
                 elif message[2] == "NotImplemented":
                     print(message[3])
+                else:
+                    print(message)
+                    print("I GOT NOTIN")
             except Exception as e:
-                print("Get_message ERROR:")
-                print(e)
-                break
+                #print("Get_message ERROR:")
+                #print(e)
+                pass
 
-    def update_charger_data(self):
-        return Misc.status, Charger.charger_id
+    def update_charger_variables(self):
+        return CHARGER_VARIABLES
 
-    def get_reservation_info(self):
-        return Reservation.is_reserved, Misc.status, Reservation.reservation_id_tag, Reservation.reservation_id, Reservation.reserved_connector, Reservation.reserve_now_timer
+    async def get_reservation_info(self):
+        return RESERVATION_VARIABLES.is_reserved, CHARGER_VARIABLES.status, RESERVATION_VARIABLES.reservation_id_tag, RESERVATION_VARIABLES.reservation_id, RESERVATION_VARIABLES.reserved_connector, RESERVATION_VARIABLES.reserve_now_timer
 
     async def data_transfer_request(self, message_id, message_data):
         """
@@ -176,29 +171,36 @@ class WebSocket():
 
     # Does not work as of now
     async def data_transfer_response(self, message):
-        status = "Rejected"
-        if message[3]["vendorId"] == "com.flexicharge":
-            if message[3]["messageId"] == "BootData":
+        print("Entered send data transfer response")
+        CHARGER_VARIABLES.status = "Rejected"
+        try:
+            if message[3]["vendorId"] == "com.flexicharge" and message[3]["messageId"] == "BootData":
                 parsed_data = json.loads(message[3]["data"])
-                Charger.charger_id = parsed_data["chargerId"]
-                print("Charger ID is set to: " + str(Charger.charger_id))
-                status = "Accepted"
-            else:
-                status = "UnknownMessageId"
-                print("UnknownMessageId")
-        else:
-            status = "UnknownVendorId"
-            print("UnknownVendorId")
+                CHARGER_VARIABLES.charger_id = parsed_data["chargerId"]
+                #CHARGER_VARIABLES.charging_price = float(parsed_data["chargingPrice"])
+                print("Charger ID is set to: " +
+                    str(CHARGER_VARIABLES.charger_id))
+                #print("Charging price was set to: "+ str(CHARGER_VARIABLES.charging_price) )
+                CHARGER_VARIABLES.status = "Accepted"
+                print("CHARGER STATUS IS" + CHARGER_VARIABLES.status)
+        except Exception as e:
+            print("CHARGER ID: ",str(CHARGER_VARIABLES.get_charger_id()))
+            print(str(e))
+        try:
         # Send a conf
-        conf_msg = [3,
-                    message[1],
-                    "DataTransfer",
-                    {"status": status}]
-        # MIGHT BE PROBLEMS HERE
-        conf_send = json.dumps(conf_msg)
-        print("Sending confirmation: " + conf_send)
-        await self.send_message(conf_send)
+            conf_msg = [3,
+                        message[1],
+                        "DataTransfer",
+                        {"status": str(CHARGER_VARIABLES.status)}]
+            conf_send = json.dumps(conf_msg)
+            print("Sending confirmation: " + conf_send)
+            CHARGER_VARIABLES.current_state = States.S_AVAILABLE 
+        except Exception as e:
+            print(str(e))
 
+        print("message sent" + str(CHARGER_VARIABLES.current_state))
+        await self.send_message(conf_send)
+        
 
 ####################Start/Stop Transaction####################
 #                 Page 39 in the OCPP Manual                 #
@@ -216,11 +218,11 @@ class WebSocket():
         if is_remote == True:
             # If remote then charging have started in remote_start_transaction. Notify server here.
             msg = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "StartTransaction", {
-                "connectorId": Charger.charging_connector,
-                "id_tag": Charger.charging_id_tag,
-                "meterStart": Misc.meter_value_total,
+                "connectorId": "1",
+                "id_tag": CHARGER_VARIABLES.charging_id_tag,
+                "meterStart": CHARGER_VARIABLES.meter_value_total,
                 "timestamp": timestamp,
-                "reservationId": Reservation.reservation_id,
+                "reservationId": RESERVATION_VARIABLES.reservation_id,
             }]
 
             self.hard_reset_reservation()
@@ -231,9 +233,9 @@ class WebSocket():
                                 self.hardcoded_id_tag)
 
             msg = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "StartTransaction", {
-                "connectorId": self.charging_connector,
-                "id_tag": self.charging_id_tag,
-                "meterStart": self.meter_value_total,
+                "connectorId": CHARGER_VARIABLES.charging_connector,
+                "id_tag": CHARGER_VARIABLES.charging_id_tag,
+                "meterStart": CHARGER_VARIABLES.meter_value_total,
                 "timestamp": timestamp,
                 "reservationId": None,  # If here, no reservation was made
             }]
@@ -250,14 +252,14 @@ class WebSocket():
         """
         current_time = datetime.now()
         timestamp = current_time.timestamp()
-        Misc.status = "Available"
+        CHARGER_VARIABLES.status = "Available"
         await asyncio.gather(self.send_status_notification(None))
         if is_remote == True:
             msg = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "StopTransaction", {
-                "idTag": Charger.charging_id_tag,
-                "meterStop": Misc.meter_value_total,
+                "idTag": CHARGER_VARIABLES.charging_id_tag,
+                "meterStop": CHARGER_VARIABLES.meter_value_total,
                 "timestamp": timestamp,
-                "transactionId": self.transaction_id,
+                "transactionId": 1,                 #This is hardcoded to work with the mock server change to var
                 "reason": "Remote",
                 "transactionData": None  # [
                 # {
@@ -271,8 +273,8 @@ class WebSocket():
             self.hard_reset_charging()
         else:
             msg = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "StopTransaction", {
-                "idTag": Charger.charging_id_tag,
-                "meterStop": Misc.meter_value_total,
+                "idTag": CHARGER_VARIABLES.charging_id_tag,
+                "meterStop": CHARGER_VARIABLES.meter_value_total,
                 "timestamp": timestamp,
                 "transactionId": self.transaction_id,
                 "reason": "Remote",
@@ -287,7 +289,7 @@ class WebSocket():
             await self.send_message(msg_send)
             self.hard_reset_charging()
 
-        response = await self.my_websocket.recv()
+        response = await self.webSocket.recv()
         print(json.loads(response))
 
     async def remote_stop_transaction(self, message):
@@ -299,7 +301,7 @@ class WebSocket():
         """
         local_transaction_id = message[3]["transactionID"]
         # and int(local_transaction_id) == int(self.transaction_id):
-        if Charger.is_charging == True:
+        if CHARGER_VARIABLES.is_charging == True:
             print("Remote stop charging")
             msg = [3,
                    # Have to use the unique message id received from server
@@ -330,33 +332,38 @@ class WebSocket():
 
         :param message: [3, "Unique message id", "RemoteStartTransaction", {"idTag": "12345"}]
         """
-        if int(message[3]["idTag"]) == self.reservation_id_tag:  # If the idTag has a reservation
-            self.start_charging_from_reservation()
+        
+        if int(message[3]["idTag"]) == RESERVATION_VARIABLES.reservation_id_tag:  # If the idTag has a reservation
             print("Remote transaction started")
             # state.set_state(States.S_CHARGING)
-            msg = [3,
-                   message[1],  # Unique message id
-                   "RemoteStartTransaction",
-                   {"status": "Accepted"}
-                   ]
-            response = json.dumps(msg)
-            await self.send_message(response)
-
+            confirmation_msg = [3,
+                message[1],  # Unique message id
+                "RemoteStartTransaction",
+                {"status": "Accepted"}
+                ]
+            confirmation_msg_json = json.dumps(confirmation_msg)
+            print("SENDING RESERVATION MESSAGE ......")
+            await self.send_message(confirmation_msg_json)
+            print("SENT MESSAGE")
             await self.start_transaction(is_remote=True)
-            self.status = "Charging"
+            print("REMOTE START MESSAGE SENT!")
+            CHARGER_VARIABLES.status = "Charging"
             # Notify central system that connector is now available
+            print("SENDING STATUS NOTIFICATION")
             await self.send_status_notification(None)
+            print("STATUS NOTIFICATION SENT")
             print("Charge should be started")
-            return States.S_CHARGING
+            CHARGER_VARIABLES.current_state = States.S_CHARGING
+        
         else:  # A non reserved tag tries to use the connector
             print("This tag does not have a reservation")
-            msg = [3,
+            confirmation_msg = [3,
                    message[1],  # Unique message id
                    "RemoteStartTransaction",
                    {"status": "Rejected"}
                    ]
-            response = json.dumps(msg)
-            await self.send_message(response)
+            confirmation_msg_json = json.dumps(confirmation_msg)
+            await self.send_message(confirmation_msg_json)
 
 
 ##############################################################
@@ -365,8 +372,8 @@ class WebSocket():
     async def reserve_now(self, message):
         local_reservation_id = message[3]["reservationID"]
         local_connector_id = message[3]["connectorID"]
-        if Reservation.reservation_id == None or Reservation.reservation_id == local_reservation_id:
-            if Reservation.reserved_connector == False and local_connector_id == 0:
+        if RESERVATION_VARIABLES.reservation_id == None or RESERVATION_VARIABLES.reservation_id == local_reservation_id:
+            if RESERVATION_VARIABLES.reserved_connector == False and local_connector_id == 0:
                 print("Connector zero not allowed")
                 msg = [3,
                        # Have to use the unique message id received from server
@@ -378,18 +385,18 @@ class WebSocket():
                 await self.send_message(msg_send)
                 return
             self.hard_reset_reservation()
-            Reservation.is_reserved = True
-            Misc.status = "Reserved"
+            RESERVATION_VARIABLES.is_reserved = True
+            CHARGER_VARIABLES.status = "Reserved"
             await asyncio.gather(self.send_status_notification(None))
             # state.set_state(States.S_FLEXICHARGEAPP)
-            self.resevation.reservation_id_tag = int(message[3]["idTag"])
-            self.resevation.reservation_id = message[3]["reservationID"]
-            self.resevation.reserved_connector = message[3]["connectorID"]
+            RESERVATION_VARIABLES.reservation_id_tag = int(message[3]["idTag"])
+            RESERVATION_VARIABLES.reservation_id = message[3]["reservationID"]
+            RESERVATION_VARIABLES.reserved_connector = message[3]["connectorID"]
             timestamp = message[3]["expiryDate"]  # Given in ms since epoch
             reserved_for_s = int(timestamp - int(time.time()))
             # reserved_for_ms/1000)   #Reservation time in seconds
-            self.resevation.reserve_now_timer = int(reserved_for_s)
-            self.timer_countdown_reservation  # Countdown every second
+            RESERVATION_VARIABLES.reserve_now_timer = int(reserved_for_s)
+            RESERVATION_VARIABLES.timer_countdown_reservation  # Countdown every second
 
             msg = [3,
                    # Have to use the unique message id received from server
@@ -399,8 +406,8 @@ class WebSocket():
                    ]
             msg_send = json.dumps(msg)
             await self.send_message(msg_send)
-            return States.S_FLEXICHARGEAPP
-        elif Reservation.reserved_connector == local_connector_id:
+            CHARGER_VARIABLES.current_state = States.S_FLEXICHARGEAPP
+        elif RESERVATION_VARIABLES.reserved_connector == local_connector_id:
             print("Connector occupied")
             msg = [3,
                    # Have to use the unique message id received from server
@@ -420,10 +427,6 @@ class WebSocket():
                    ]
             msg_send = json.dumps(msg)
             await self.send_message(msg_send)
-
-
-
-
 
     async def send_boot_notification_req(self):
         msg = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "BootNotification", {
@@ -483,8 +486,8 @@ class WebSocket():
         """
         msg = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "Heartbeat", {}]
         msg_send = json.dumps(msg)
-        await self.my_websocket.send(msg_send)
-        # print(await self.my_websocket.recv())
+        await self.webSocket.send(msg_send)
+        # print(await self.webSocket.recv())
         # await asyncio.sleep(1)
         self.timestamp_at_last_heartbeat = time.perf_counter()
 
@@ -506,106 +509,59 @@ class WebSocket():
         """
         It sends a message to the back-end with the sampled values
         """
-        current_time = datetime.now()
-        # Can be removed if back-end does want the time-stamp formated
-        timestamp = current_time.timestamp()
-        # Can be removed if back-end does not want the time-stamp formated
-        formated_timestamp = current_time.strftime("%Y-%m-%dT%H:%M:%SZ")
+        timestamp = int(time.time() * 1000)
+        unique_id = CHARGER_VARIABLES.charger_id + "MeterValues" + timestamp
 
-        # Should be replace with "real" sampled values (this is just for testing)
-        sample_value = "12345"
-        sample_context = "Sample.Clock"
-        sample_format = "Raw"
-        sample_measurand = "Energy.Active.Export.Register"
-        sample_phase = "L1"
-        sample_location = "Cable"
-        sample_unit = "kWh"
+        message = [2,
+                   unique_id,
+                   "MeterValues",
+                   {
+                       "connectorId": 1,
+                       "transactionId": 1,
+                       "timestamp": timestamp,
+                       "values": {
+                           "chargingPercent": {
+                               "value": CHARGER_VARIABLES.current_charging_percentage,
+                               "unit": "%",
+                               "measurand": "SoC"
 
-        msg = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "MeterValues", {
-            "connectorId": self.hardcoded_connector_id,
-            "transactionId": self.transaction_id,
-            "meterValue": [{
-                "timestamp": formated_timestamp,
-                "sampledValue": [
-                    {"value": sample_value,
-                        "context": sample_context,
-                        "format": sample_format,
-                        "measurand": sample_measurand,
-                        "phase": sample_phase,
-                        "location": sample_location,
-                        "unit": sample_unit},
-                ]
-            }, ],
-        }]
+                           },
+                           "chargingPower": {
+                               "value": "chargingPower",
+                               "unit": "W",
+                               "measurand": "Power.Active,Import"
+                           },
+                           "chargedSoFar": {
+                               "value": CHARGER_VARIABLES.meter_value_total,
+                               "unit": "Wh",
+                               "measurand": "Energy.Active.Import"
+                           }
 
-async def send_data_transfer(self, message_id, message_data):
+                       }
+                   }]
+        json_formatted_message = json.dumps(message)
+        await self.send_message(json_formatted_message)
+
+    async def send_data_reserve(self):
         """
-        I'm trying to send a JSON string to the server, but the server is expecting a JSON object
-        :param message_id: The message ID of the message you want to send
-        :param message_data: This is the data that is being sent to the server
+        It sends a message to the server, which is a list of two strings.
         """
-        s: str = "{}{}{}{}{}{}{}".format("{\"transactionId\":", self.transaction_id,
-                                         ",\"latestMeterValue\":", message_data, ",\"CurrentChargePercentage\":", message_data, "}")
-        print(s)
-
-        msg = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "DataTransfer", {
-            # "vendorId" : self.hardcoded_vendor_id,
-            "messageId": "ChargeLevelUpdate",
-            "data": s
-        }]
-
+        msg = ["chargerplus", "ReserveNow"]
         msg_send = json.dumps(msg)
-        await self.my_websocket.send(msg_send)
+        await self.send_message(msg_send)
 
-async def recive_data_transfer(self, message):
-    """
-    It receives a message from the server, checks if the vendorId is correct, if it is, it checks if
-    the messageId is correct, if it is, it parses the data and sets the charger_id to the parsed
-    data
-    :param message: The message received from the websocket
-    """
-    status = "Rejected"
-    if message[3]["vendorId"] == self.hardcoded_vendor_id:
-        if message[3]["messageId"] == "BootData":
-            parsed_data = json.loads(message[3]["data"])
-            self.charger_id = parsed_data["chargerId"]
-            print("Charger ID is set to: " + str(self.charger.charging_id))
-            status = "Accepted"
-        else:
-            status = "UnknownMessageId"
-    else:
-        status = "UnknownVenorId"
+    async def send_data_remote_start(self):
+        """
+        It sends a message to the websocket server, which then sends a message to the car.
+        """
+        msg = ["chargerplus", "RemoteStart"]
+        msg_send = json.dumps(msg)
+        await self.send_message(msg_send)
 
-    # Send a conf
-    conf_msg = [3,
-                message[1],
-                "DataTransfer",
-                {"status": status}]
-
-    conf_send = json.dumps(conf_msg)
-    print("Sending confirmation: " + conf_send)
-    await self.my_websocket.send(conf_send)
-
-async def send_data_reserve(self):
-    """
-    It sends a message to the server, which is a list of two strings.
-    """
-    msg = ["chargerplus", "ReserveNow"]
-    msg_send = json.dumps(msg)
-    await self.my_websocket.send(msg_send)
-
-async def send_data_remote_start(self):
-    """
-    It sends a message to the websocket server, which then sends a message to the car.
-    """
-    msg = ["chargerplus", "RemoteStart"]
-    msg_send = json.dumps(msg)
-    await self.my_websocket.send(msg_send)
-
-async def send_data_remote_stop(self):
-    """
-    It sends a message to the websocket server to stop the charging session
-    """
-    msg = ["chargerplus", "RemoteStop"]
-    msg_send = json.dumps(msg)
-    await self.my_websocket.send(msg_send)
+    async def send_data_remote_stop(self):
+        """
+        It sends a message to the websocket server to stop the charging session
+        """
+        msg = ["chargerplus", "RemoteStop"]
+        msg_send = json.dumps(msg)
+        await self.send_message(msg_send)

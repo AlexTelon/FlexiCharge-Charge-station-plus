@@ -5,7 +5,7 @@ class Reservation():
         self._reserved_connector = None
         self._reserve_now_timer = 0
         self._is_reserved = False
-        self._reservation_id_tag = None
+        self._reservation_id_tag = 1
         self._reservation_id = None
 
     # Get for reservation variables

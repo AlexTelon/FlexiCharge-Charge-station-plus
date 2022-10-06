@@ -1,4 +1,5 @@
-
+from sre_parse import State
+from StateHandler import States
 class Charger():
     def __init__(self):
         # Charger variables
@@ -7,13 +8,19 @@ class Charger():
         self._charging_connector = None
         self._charger_id = 000000
         self._charging_Wh = 0  # I think this is how many Wh have been used to charge
+        self._charging_price = 0.0
         self._current_charging_percentage = 0
         self._meter_value_total = 0
+        self._status = "Available"
+        self._state = States.S_STARTUP
     # Get for charging variables
 
     @property
     def charging_Wh(self):
         return self._charging_Wh
+    @property
+    def charging_price(self):
+        return self.charging_price
 
     @property
     def is_charging(self):
@@ -35,15 +42,26 @@ class Charger():
     def charger_id(self):
         return self._charger_id
 
+    @property    
+    def current_state(self):
+        return self._state
+
      # Set for charging variables
 
     @charging_Wh.setter
     def charging_Wh(self, Wh: int):
         self._charging_Wh = Wh
+    @charging_price.setter
+    def charging_price(self, price: float):
+        self._charging_price = price
 
     @is_charging.setter
     def is_charging(self, boolean: bool):
         self._is_charging = boolean
+
+    @current_state.setter
+    def current_state(self, state: States):
+        self._state = state   
 
     @charger_id.setter
     def charger_id(self, id):
@@ -60,7 +78,7 @@ class Charger():
     @current_charging_percentage.setter
     def increment_current_charging_percentage_by(self, value: int):
         self._current_charging_percentage += value
-        
+
     # Get for misc variables
     @property
     def meter_value_total(self):
@@ -70,3 +88,20 @@ class Charger():
     @meter_value_total.setter
     def increment_meter_value_total_by(self, value: int):  # increment variable
         self._meter_value_total += value
+
+    @property
+    def meter_value_total(self):
+        return self._meter_value_total
+
+    @property
+    def status(self):
+        return self._status
+
+    # Set for misc variables
+    @meter_value_total.setter
+    def increment_meter_value_total_by(self, value: int):  # increment variable
+        self._meter_value_total += value
+
+    @status.setter
+    def status(self, status):
+        self._status = status
