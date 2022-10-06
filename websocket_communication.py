@@ -33,21 +33,23 @@ CHARGER_VARIABLES = Charger()
 
 
 class WebSocket():
-    webSocket = None
     def __init__(self):
         try:
             print("ws_init")
-            self.webSocket = None
+            self._webSocket = None
 
         except Exception as e:
-            self.webSocket = None
+            self._webSocket = None
             print("ws_init_failed")
             print(str(e))
 
     def get_status(self):
         return CHARGER_VARIABLES.status
 
-    async def connect(self):
+    def is_closed(self):
+        return self._webSocket.closed
+
+    async def initiate_websocket(self):
         """
         It tries to connect to a websocket, if it succeeds it sends a boot notification request.
         :return: The return value is a coroutine object.
@@ -59,14 +61,12 @@ class WebSocket():
                 ping_interval=Config().getWebSocketPingInterval(),
                 timeout=Config().getWebSocketTimeout()
             ) as webSocketConnection:
-                self.webSocket = webSocketConnection
+                self._webSocket = webSocketConnection
                 print("Successfully connected to WebSocket")
                 await self.send_boot_notification_req()
-                return True
         except Exception as e:
             print("connect failed")
             print(str(e))
-            return False
 
     async def send_message(self, json_formatted_message):
         """
@@ -74,7 +74,7 @@ class WebSocket():
 
         :param json_formatted_message: The message you want to send to the server
         """
-        await self.webSocket.send(json_formatted_message)
+        await self._webSocket.send(json_formatted_message)
 
     async def send_status_notification(self):
      # Sending a status notification to the server.
@@ -92,7 +92,7 @@ class WebSocket():
         It listens for a response from the server and prints it out
         """
         try:
-            json_formatted_message = await self.webSocket.recv()
+            json_formatted_message = await self._webSocket.recv()
             message = json.loads(json_formatted_message)
             print(message)
             return message
@@ -110,7 +110,7 @@ class WebSocket():
                 #self.misc = misc_variables
                 #self.reservation = reservation_variables
                 websocket_timeout = 5  # Timeout in seconds
-                json_formatted_message = await asyncio.wait_for(self.webSocket.recv(), websocket_timeout)
+                json_formatted_message = await asyncio.wait_for(self._webSocket.recv(), websocket_timeout)
                 # async for msg in self.webSocket: #Takes latest message
                 print("get_message")
                 message = json.loads(json_formatted_message)
@@ -289,7 +289,7 @@ class WebSocket():
             await self.send_message(msg_send)
             self.hard_reset_charging()
 
-        response = await self.webSocket.recv()
+        response = await self._webSocket.recv()
         print(json.loads(response))
 
     async def remote_stop_transaction(self, message):
@@ -486,7 +486,7 @@ class WebSocket():
         """
         msg = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "Heartbeat", {}]
         msg_send = json.dumps(msg)
-        await self.webSocket.send(msg_send)
+        await self._webSocket.send(msg_send)
         # print(await self.webSocket.recv())
         # await asyncio.sleep(1)
         self.timestamp_at_last_heartbeat = time.perf_counter()

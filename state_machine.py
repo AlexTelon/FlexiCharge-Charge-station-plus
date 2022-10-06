@@ -27,6 +27,8 @@ CHARGER_GUI = UI(States.S_STARTUP)
 CHARGER_VARIABLES = Charger()
 
 async def statemachine(webSocket: WebSocket):
+
+    
     """
     The function is a state machine that changes the state of the charge point and displays the relevant
     image on the screen
@@ -143,9 +145,9 @@ async def main():
     It connects to a websocket server and then runs a state machine
     """
     try:
-        ws = WebSocket()
-        await ws.connect()
-        asyncio.get_event_loop().run_until_complete(await statemachine(ws))
+        webSocket = WebSocket()
+        await webSocket.initiate_websocket()
+        asyncio.get_event_loop().run_until_complete(await statemachine(webSocket))
 
     except Exception as e:
         print("ERROR:")
