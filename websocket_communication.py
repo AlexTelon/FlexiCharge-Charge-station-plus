@@ -9,6 +9,7 @@ from config import Configurations as Config
 import websockets as ws
 import json
 from StateHandler import States
+from variables import reservation_variables
 from variables.charger_variables import Charger
 from variables.misc_variables import Misc
 from variables.reservation_variables import Reservation
@@ -100,53 +101,52 @@ class WebSocket():
             print(str(e))
 
     async def get_message(self):
-        """
-        It checks for a message from the server, if it gets one, it checks the message type and calls
-        the appropriate function.
-        """
-        # for i in range(3):
-        while True: #why while true??
-            try:
-                #self.charger = charger_variables
-                #self.misc = misc_variables
-                #self.reservation = reservation_variables
-                websocket_timeout = 0.5  # Timeout in seconds
-                json_formatted_message = await asyncio.wait_for(self.webSocket.recv(), websocket_timeout)
-                # async for msg in self.my_websocket: #Takes latest message
-                print("get_message")
-                message = json.loads(json_formatted_message)
-                print(message)
+        #"""
+        #It checks for a message from the server, if it gets one, it checks the message type and calls
+        #the appropriate function.
+        #"""
+        try:
+            #self.charger = charger_variables
+            #self.misc = misc_variables
+            #self.reservation = reservation_variables
+            websocket_timeout = 0.5  # Timeout in seconds
+            json_formatted_message = await asyncio.wait_for(self.webSocket.recv(), websocket_timeout)
+            # async for msg in self.my_websocket: #Takes latest message
+            print("get_message")
+            message = json.loads(json_formatted_message)
+            print(message)
 
-                if message[2] == "ReserveNow":
-                    await asyncio.gather(self.reserve_now(message))
-                elif message[2] == "BootNotification":
-                    message_str = str(message[3]["status"])
-                    if message_str == "Accepted":
-                       #confirm = await asyncio.gather(self.listen_for_response())
-                       #if confirm == "sent 1000 (OK); then received 1000 (OK)":
-                        return States.S_AVAILABLE
-                    else:
-                        Misc.status = "Faulted"
-                        await asyncio.gather(self.send_status_notification())
-                        # state.set_state(States.S_NOTAVAILABLE)
-                        return States.S_NOTAVAILABLE
-                elif message[2] == "RemoteStartTransaction":
-                    return await asyncio.gather(self.remote_start_transaction(message))
-                elif message[2] == "RemoteStopTransaction":
-                    return await asyncio.gather(self.remote_stop_transaction(message))
-                elif message[2] == "DataTransfer":
-                    Charger.charger_id = json.loads(message[5]["chargerId"])
-                    return await asyncio.gather(self.data_transfer_response(message))
+            if message[2] == "ReserveNow":
+                await asyncio.gather(self.reserve_now(message))
+            elif message[2] == "BootNotification":
+                message_str = str(message[3]["status"])
+                if message_str == "Accepted":
+                #confirm = await asyncio.gather(self.listen_for_response())
+                #if confirm == "sent 1000 (OK); then received 1000 (OK)":
+                    return States.S_AVAILABLE
+                else:
+                    Misc.status = "Faulted"
+                    await asyncio.gather(self.send_status_notification())
+                    # state.set_state(States.S_NOTAVAILABLE)
+                    return States.S_NOTAVAILABLE
+            elif message[2] == "RemoteStartTransaction":
+                return await asyncio.gather(self.remote_start_transaction(message))
+            elif message[2] == "RemoteStopTransaction":
+                return await asyncio.gather(self.remote_stop_transaction(message))
+            elif message[2] == "DataTransfer":
+                Charger.charger_id = json.loads(message[5]["chargerId"])
+                return await asyncio.gather(self.data_transfer_response(message))
 
-                elif message[2] == "StartTransaction":
-                    pass
-                    self.transaction_id = 347
-                elif message[2] == "NotImplemented":
-                    print(message[3])
-            except Exception as e:
-                print("Get_message ERROR:")
-                print(e)
-                break
+            elif message[2] == "StartTransaction":
+                pass
+                self.transaction_id = 347
+            elif message[2] == "NotImplemented":
+                print(message[3])
+            else:
+                return States.S_NOTAVAILABLE
+        except Exception as e:
+            print("Get_message ERROR:")
+            print(e)
 
     def update_charger_data(self):
         return Misc.status, Charger.charger_id
@@ -330,17 +330,17 @@ class WebSocket():
 
         :param message: [3, "Unique message id", "RemoteStartTransaction", {"idTag": "12345"}]
         """
-        if int(message[3]["idTag"]) == self.reservation_id_tag:  # If the idTag has a reservation
+        if int(message[3]["idTag"]) == Reservation().reservation_id_tag:  # If the idTag has a reservation
             self.start_charging_from_reservation()
             print("Remote transaction started")
             # state.set_state(States.S_CHARGING)
-            msg = [3,
+            confirmation_msg = [3,
                    message[1],  # Unique message id
                    "RemoteStartTransaction",
                    {"status": "Accepted"}
                    ]
-            response = json.dumps(msg)
-            await self.send_message(response)
+            confirmation_msg_json = json.dumps(confirmation_msg)
+            await self.send_message(confirmation_msg_json)
 
             await self.start_transaction(is_remote=True)
             self.status = "Charging"
@@ -350,13 +350,13 @@ class WebSocket():
             return States.S_CHARGING
         else:  # A non reserved tag tries to use the connector
             print("This tag does not have a reservation")
-            msg = [3,
+            confirmation_msg = [3,
                    message[1],  # Unique message id
                    "RemoteStartTransaction",
                    {"status": "Rejected"}
                    ]
-            response = json.dumps(msg)
-            await self.send_message(response)
+            confirmation_msg_json = json.dumps(confirmation_msg)
+            await self.send_message(confirmation_msg_json)
 
 
 ##############################################################

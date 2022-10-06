@@ -80,11 +80,11 @@ data_transfer_req = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v",  # OCPP p.68
                         "data": ""  # optional
                      }]
 
-start_remote_transaction_request = [3,
+start_remote_transaction_request = [2,
                                     "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v",
                                     "RemoteStartTransaction",
                                     {
-                                        "status": "Accepted"
+                                        "idTag": "1"
                                     }]
 stop_remote_transation_request = [3,
                                   "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v",
