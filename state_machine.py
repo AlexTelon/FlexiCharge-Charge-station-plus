@@ -34,6 +34,7 @@ async def statemachine(webSocket: WebSocket):
     :param chargePoint: The ChargePoint object that is used to communicate with the OCPP server
     :type chargePoint: ChargePoint
     """
+
     # -- Variable not used : global window_back, window_qrCode
 
     # instead of chargerID = 128321 you have to write the follwoing two rows(your ocpp code) to get
@@ -42,6 +43,8 @@ async def statemachine(webSocket: WebSocket):
     # response = await ocpp_client.send_boot_notification()
     # chargerID = response.charger_id
     print("STATEMACHINE")
+    task = asyncio.create_task(webSocket.start_websocket())
+    await asyncio.sleep(1)
     CHARGER_VARIABLES = webSocket.update_charger_variables()
 
     chargerID = CHARGER_VARIABLES.charger_id
@@ -148,11 +151,12 @@ async def main():
     """
     try:
         webSocket = WebSocket()
-        asyncio.create_task(webSocket.start_websocket())
+
+        # await task
         #print("WebSocket close status: {}".format(webSocket._webSocket.closed))
         # webSocket._webSocket.closed: True
         # asyncio.get_event_loop().run_until_complete(statemachine(webSocket))
-        await statemachine(webSocket)
+        await(statemachine(webSocket))
 
     except Exception as e:
         print("ERROR:")
