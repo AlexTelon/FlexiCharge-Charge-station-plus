@@ -16,9 +16,9 @@ It looks something like below.
             print(e)
 
 ### __This is the order that things progress__
-### 1. **The websocket is initialized as an object.**
-### 2. **The initiate_websocket() function is called**
-### 3. **Run the state machine until complete.**
+#### 1. **The websocket is initialized as an object.**
+#### 2. **The initiate_websocket() function is called**
+#### 3. **Run the state machine until complete.**
 
 Lets dive a bit deeper into the second step to find what is actually going on under the hood.
 
@@ -59,9 +59,9 @@ Is called. This creates the connection to the websocket server and is the start 
                 print("connect failed")
                 print(str(e))
 ### __The initiation runs like this__
-### 1. **Insert the configuration variables into the connect function and save the connection as webSocketConnection**
-### 2. **Assign the webSocketConnection to the local _webSocket variable**
-### 3. **Run the boot notification request to start the communication between our client and the OCPP Server**
+#### 1. **Insert the configuration variables into the connect function and save the connection as webSocketConnection**
+#### 2. **Assign the webSocketConnection to the local _webSocket variable**
+#### 3. **Run the boot notification request to start the communication between our client and the OCPP Server**
 <br />
 
 **In step 1:**
@@ -110,7 +110,7 @@ We send a __Boot Notification__ to the __OCPP__ Server to let them know that we 
             await self.send_message(msg_send)
 
 ### **Here three things are happening**
-### 1. We create a standard boot notification message containing all the nessecary information for the OCPP server.
+#### 1. We create a standard boot notification message containing all the nessecary information for the OCPP server.
     msg = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "BootNotification", {
                 "chargePointVendor": "AVT-Company",
                 "chargePointModel": "AVT-Express",
@@ -121,9 +121,9 @@ We send a __Boot Notification__ to the __OCPP__ Server to let them know that we 
                 "imsi": "",
                 "meterType": "AVT NQC-ACDC",
                 "meterSerialNumber": "avt.001.13.1.01"}]
-### 2. We transform the message to a json formatted string
+#### 2. We transform the message to a json formatted string
     msg_send = json.dumps(msg)
-### 3. We send the string
+#### 3. We send the string
 Here we are utilizing a function we wrote called __send_message()__
 
     await self.send_message(msg_send)
