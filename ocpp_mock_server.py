@@ -130,12 +130,10 @@ async def ocpp_server(websocket):
             print("Test available: startRemote")
             user_input = input()
             if user_input == "startRemote":
-                await websocket.send(json.dumps(start_remote_transaction_request))
-                continue
-                #print("Write: stopRemote to end transaction")
-                #user_input_dos = input()
-                #if user_input_dos == "stopRemote":
-                #    await websocket.send(json.dumps(stop_remote_transation_request))
+                await websocket.send(json.dumps(start_remote_transaction_request)) #startRemoteTransaction keeps the startRemote request waiting atm
+                #print("Press any key to stopRemoteTransaction")
+                #user = input()
+                #await websocket.send(json.dumps(stop_remote_transation_request))
         elif message_json[2] == "MeterValues":
             await websocket.send(json.dumps(meter_values_conf))
         elif message_json[2] == "Authorize":
