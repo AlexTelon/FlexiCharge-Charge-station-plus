@@ -73,7 +73,8 @@ boot_message_response = [3, '0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v', 'BootNotific
     'currentTime': 1663966665,
     'interval': 86400}]
 
-data_transfer_req = [2, '100009DataTransfer1664971239072', 'DataTransfer', {'vendorId': 'com.flexicharge', 'messageId': 'BootData', 'data': '{"chargerId":100009,"chargingPrice":"7500.00"}'}]
+data_transfer_req = [2, '100009DataTransfer1664971239072', 'DataTransfer', {
+    'vendorId': 'com.flexicharge', 'messageId': 'BootData', 'data': '{"chargerId":100009,"chargingPrice":"7500.00"}'}]
 
 start_remote_transaction_request = [2,
                                     "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v",
