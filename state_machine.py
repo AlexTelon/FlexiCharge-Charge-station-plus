@@ -8,7 +8,7 @@ import time
 from datetime import datetime
 
 import PySimpleGUI as sg
-import qrcode
+import qrcode   
 import websockets
 
 from StateHandler import StateHandler
