@@ -1,6 +1,7 @@
 import websockets
 import asyncio
 import json
+import time
 
 from variables.reservation_variables import Reservation
 from variables.charger_variables import Charger
@@ -16,17 +17,16 @@ meter_value_dummy = [["timestamp0", "Value0"], ["timestamp1", "Value1"], [
 
 # Client
 # Note that idTag is RFID tag hardcoded atm should be changed in the future // Elin and Kevin 2022-09-29
-boot_message_request = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v",
-                        "BootNotification", {
-                            "chargePointVendor": "AVT-Company",
-                            "chargePointModel": "AVT-Express",
-                            "chargePointSerialNumber": "avt.001.13.1",
-                            "chargeBoxSerialNumber": "avt.001.13.1.01",
-                            "firmwareVersion": "0.9.87",
-                            "iccid": "",
-                            "imsi": "",
-                            "meterType": "AVT NQC-ACDC",
-                            "meterSerialNumber": "avt.001.13.1.01"}]
+boot_message_request = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "BootNotification", {
+    "chargePointVendor": "AVT-Company",
+    "chargePointModel": "AVT-Express",
+    "chargePointSerialNumber": "avt.001.13.1",
+    "chargeBoxSerialNumber": "avt.001.13.1.01",
+    "firmwareVersion": "0.9.87",
+    "iccid": "",
+    "imsi": "",
+            "meterType": "AVT NQC-ACDC",
+            "meterSerialNumber": "avt.001.13.1.01"}]
 
 authorize_req = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v",
                  "Authorize", {
@@ -68,12 +68,13 @@ stop_transation_req = [2,  # OCPP p.81
                        }]
 
 # Server
-boot_message_response = [3, '0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v', 'BootNotification', {
+boot_message_conf = [3, '0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v', 'BootNotification', {
     'status': 'Accepted',
-    'currentTime': 1663966665,
+    'currentTime': time.time(),
     'interval': 86400}]
 
-data_transfer_req = [2, '100009DataTransfer1664971239072', 'DataTransfer', {'vendorId': 'com.flexicharge', 'messageId': 'BootData', 'data': '{"chargerId":100009,"chargingPrice":"7500.00"}'}]
+data_transfer_req = [2, '100009DataTransfer1664971239072', 'DataTransfer', {
+    'vendorId': 'com.flexicharge', 'messageId': 'BootData', 'data': '{"chargerId":100009,"chargingPrice":"7500.00"}'}]
 
 start_remote_transaction_request = [2,
                                     "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v",
@@ -111,16 +112,40 @@ authorize_conf = [3, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v",
                          "idTagInfo": ""  # Optional, info about auth status
                      }]
 
+"""
+Websocket Mock server used for testing purposes with the websocket client in state_machine.py
+Use this for local testing free from the OCPP-backend. Structured with simple If-statements.
+Server will run forever in terminal if not stopped (ctrl + c)
+:param websocket: the websocket object
+"""
 
 async def ocpp_server(websocket):
-    async for message in websocket:
-        print(message)
-        await websocket.send(json.dumps(boot_message_response))
-        print(boot_message_response)
-        await websocket.send(json.dumps(data_transfer_req))
-        await websocket.send(json.dumps(start_remote_transaction_request))
+    async for message in websocket: #check every "message" that is sent from the Websocket client
+        message_json = json.loads(message)
+        print("client sent")
+        print(message_json)
+        if message_json[2] == "BootNotification":
+            await websocket.send(json.dumps(boot_message_conf))
+            await websocket.send(json.dumps(data_transfer_req))
+            print("Test available: startRemote")
+            user_input = input()
+            if user_input == "startRemote":
+                await websocket.send(json.dumps(start_remote_transaction_request)) #startRemoteTransaction keeps the startRemote request waiting atm
+                #print("Press any key to stopRemoteTransaction")
+                #user = input()
+                #await websocket.send(json.dumps(stop_remote_transation_request))
+        elif message_json[2] == "MeterValues":
+            await websocket.send(json.dumps(meter_values_conf))
+        elif message_json[2] == "Authorize":
+            await websocket.send(json.dumps(authorize_conf))
+        elif message_json[2] == "StartTransaction":
+            await websocket.send(json.dumps(start_transaction_conf))
+        elif message_json[2] == "StopTransaction":
+            await websocket.send(json.dumps(stop_transaction_conf))
+        
 
-start_server = websockets.serve(ocpp_server, "127.0.0.1", 60003)
+
+start_server = websockets.serve(ocpp_server, "127.0.0.1", 60003) #set server ip and port
 
 asyncio.get_event_loop().run_until_complete(start_server)
 asyncio.get_event_loop().run_forever()
