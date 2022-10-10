@@ -121,10 +121,24 @@ We send a __Boot Notification__ to the __OCPP__ Server to let them know that we 
                 "imsi": "",
                 "meterType": "AVT NQC-ACDC",
                 "meterSerialNumber": "avt.001.13.1.01"}]
+
+To describe the message syntax it usually goes like this.
+
+    [Send or Answer(2/3),
+     UniqueID (In this case a hard coded string but usually following the format chargerId+MessageType+Timestamp in milliseconds since UNIX time),
+     Message type,{data}]
 #### 2. We transform the message to a json formatted string
     msg_send = json.dumps(msg)
 #### 3. We send the string
 Here we are utilizing a function we wrote called __send_message()__
 
     await self.send_message(msg_send)
-    
+
+
+## Receiving messages from OCPP
+Now that we have sent a boot notification the next thing to happen is that we should receive a __DataTransfer__ message from the __OCPP__ server.
+
+The __DataTransfer__ message will contain information that we need to run our application. The two most vital things are __chargerId__ and __chargingPrice__.<br />
+The __chargerId__ is the id for our specific charger and it is needed to create the qr code that is displayed in the **Available** state. <br />
+It is also used to create __unique ids__ for the conversations with the __OCPP__ server.
+
