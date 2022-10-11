@@ -26,6 +26,7 @@ from variables.reservation_variables import Reservation
 STATE = StateHandler()
 CHARGER_GUI = UI(States.S_STARTUP)
 CHARGER_VARIABLES = Charger()
+full_time = CHARGER_VARIABLES.current_charge_time_left
 
 
 async def statemachine(webSocket: WebSocket):
@@ -139,6 +140,7 @@ async def statemachine(webSocket: WebSocket):
             CHARGER_VARIABLES.current_charging_percentage += 10
             CHARGER_VARIABLES.current_charge_time_left -= 1
             CHARGER_GUI.set_charge_precentage(CHARGER_VARIABLES.current_charging_percentage)
+            CHARGER_GUI.set_power_charged((full_time - time_left)* CHARGER_VARIABLES.charging_Wh_per_second)
             try:
                 CHARGER_GUI.set_num_of_secs(time_left)
             except Exception as e:

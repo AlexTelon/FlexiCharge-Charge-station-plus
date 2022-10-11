@@ -11,6 +11,7 @@ class Charger():
         self._charging_connector = None
         self._charger_id = 000000
         self._charging_Wh = 0  # I think this is how many Wh have been used to charge
+        self._charging_Wh_per_second = 0.3
         self._charging_price = 0.0
         self._current_charging_percentage = 0
         self._current_charge_time_left = self.CHARGE_TIME_MAX
@@ -54,6 +55,10 @@ class Charger():
     def current_state(self):
         return self._state
 
+    @property
+    def charging_Wh_per_second(self):
+        return self._charging_Wh_per_second
+
      # Set for charging variables
 
     @charging_Wh.setter
@@ -70,6 +75,10 @@ class Charger():
     @current_state.setter
     def current_state(self, state: States):
         self._state = state   
+
+    @charging_Wh_per_second.setter
+    def charging_Wh_per_second(self, value):
+        self._charging_Wh_per_second = value
 
     @charger_id.setter
     def charger_id(self, id):

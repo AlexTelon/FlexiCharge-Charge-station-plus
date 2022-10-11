@@ -65,8 +65,10 @@ class WebSocket():
                     await self.handle_message(message_json)
 
         except Exception as e:
+            CHARGER_VARIABLES.current_state = States.S_NOTAVAILABLE
             print("connect failed")
             print(str(e))
+
 
     async def send_message(self, json_formatted_message):
         """

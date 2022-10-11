@@ -10,6 +10,7 @@ class UI():
     last_price = 50
     charger_id = 000000
     percent = 0
+    power_charged = 0
     num_of_secs = 100
     
 
@@ -36,6 +37,9 @@ class UI():
         :param id: The ID of the charger
         """
         self.charger_id = id
+
+    def set_power_charged(self, power):
+        self.power_charged = power
 
     def set_last_price(self, last_price):
         """
@@ -299,7 +303,7 @@ class UI():
         # update in precents how full the battery currently is
         # window_chargingPower['TAMER'].update(str(power))
         self.window_charging_percent['PERCENT'].update(str(self.percent))
-        self.window_power['POWERTEST'].update(str(self.percent))
+        self.window_power['POWERTEST'].update(str(self.power_charged))
         
         if self.percent >= 10 and self.percent < 100 :
             self.window_charging_percent_mark.move(330, 350)
