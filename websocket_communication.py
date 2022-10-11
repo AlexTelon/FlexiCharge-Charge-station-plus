@@ -285,6 +285,8 @@ class WebSocket():
                 # ]
             }]
             msg_send = json.dumps(msg)
+           # if CHARGER_VARIABLES.current_charging_percentage >= 100:
+           #     CHARGER_VARIABLES.current_state = States.S_BATTERYFULL
             await self.send_message(msg_send)
             await self.hard_reset_charging()
         else:

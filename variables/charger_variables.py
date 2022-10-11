@@ -1,6 +1,9 @@
 from sre_parse import State
 from StateHandler import States
 class Charger():
+
+    CHARGE_TIME_MAX = 10
+
     def __init__(self):
         # Charger variables
         self._is_charging = False
@@ -10,6 +13,7 @@ class Charger():
         self._charging_Wh = 0  # I think this is how many Wh have been used to charge
         self._charging_price = 0.0
         self._current_charging_percentage = 0
+        self._current_charge_time_left = self.CHARGE_TIME_MAX
         self._meter_value_total = 0 
         self._status = "Available"
         self._state = States.S_STARTUP
@@ -37,6 +41,10 @@ class Charger():
     @property
     def current_charging_percentage(self):
         return self._current_charging_percentage
+        
+    @property    
+    def current_charge_time_left(self):
+        return self._current_charge_time_left
 
     @property
     def charger_id(self):
@@ -78,6 +86,10 @@ class Charger():
     @current_charging_percentage.setter
     def current_charging_percentage(self, value):
         self._current_charging_percentage = value
+
+    @current_charge_time_left.setter
+    def current_charge_time_left(self, value):
+        self._current_charge_time_left = value
 
     # Get for misc variables
     @property
