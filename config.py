@@ -1,7 +1,7 @@
 class Configurations():
 
     def __init__(self):
-        self._useMockServer = False
+        self._useMockServer = True
         self._mockServerIP = 'ws://127.0.0.1:60003'
         self._iPAddress = "ws://18.202.253.30:1337/charger/"
         self._chargerSerialNumber = "testnumber13"
