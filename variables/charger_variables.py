@@ -10,7 +10,7 @@ class Charger():
         self._charging_Wh = 0  # I think this is how many Wh have been used to charge
         self._charging_price = 0.0
         self._current_charging_percentage = 0
-        self._meter_value_total = 0
+        self._meter_value_total = 0 
         self._status = "Available"
         self._state = States.S_STARTUP
     # Get for charging variables
@@ -76,8 +76,8 @@ class Charger():
         self._charging_connector = charging_connector
 
     @current_charging_percentage.setter
-    def increment_current_charging_percentage_by(self, value: int):
-        self._current_charging_percentage += value
+    def current_charging_percentage(self, value):
+        self._current_charging_percentage = value
 
     # Get for misc variables
     @property

@@ -45,7 +45,7 @@ class UI():
         """
         self.last_price = last_price
 
-    def set_charge_precentage(self, percentage):
+    def set_charge_precentage(self, percentage: int):
         """
         It sets the charge percentage of the battery to the given percentage and then updates the
         charging status
@@ -62,13 +62,13 @@ class UI():
             return self.percent
 
 
-    def set_num_of_secs(self, num_of_secs):
+    def set_num_of_secs(self, num_of_secs_):
         """
         It sets the number of seconds to charge the battery.
 
         :param num_of_secs: The number of seconds the battery has been charging for
         """
-        self.num_of_secs = num_of_secs
+        self.num_of_secs = num_of_secs_
         self.update_charging()
 
     def GUI():
