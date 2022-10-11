@@ -119,9 +119,8 @@ Server will run forever in terminal if not stopped (ctrl + c)
 :param websocket: the websocket object
 """
 
-
 async def ocpp_server(websocket):
-    async for message in websocket:  # check every "message" that is sent from the Websocket client
+    async for message in websocket: #check every "message" that is sent from the Websocket client
         message_json = json.loads(message)
         print("client sent")
         print(message_json)
@@ -131,11 +130,10 @@ async def ocpp_server(websocket):
             print("Test available: startRemote")
             user_input = input()
             if user_input == "startRemote":
-                # startRemoteTransaction keeps the startRemote request waiting atm
-                await websocket.send(json.dumps(start_remote_transaction_request))
+                await websocket.send(json.dumps(start_remote_transaction_request)) #startRemoteTransaction keeps the startRemote request waiting atm
                 #print("Press any key to stopRemoteTransaction")
                 #user = input()
-                # await websocket.send(json.dumps(stop_remote_transation_request))
+                #await websocket.send(json.dumps(stop_remote_transation_request))
         elif message_json[2] == "MeterValues":
             await websocket.send(json.dumps(meter_values_conf))
         elif message_json[2] == "Authorize":
@@ -144,10 +142,10 @@ async def ocpp_server(websocket):
             await websocket.send(json.dumps(start_transaction_conf))
         elif message_json[2] == "StopTransaction":
             await websocket.send(json.dumps(stop_transaction_conf))
+        
 
 
-start_server = websockets.serve(
-    ocpp_server, "127.0.0.1", 60003)  # set server ip and port
+start_server = websockets.serve(ocpp_server, "127.0.0.1", 60003) #set server ip and port
 
 asyncio.get_event_loop().run_until_complete(start_server)
 asyncio.get_event_loop().run_forever()

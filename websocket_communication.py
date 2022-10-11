@@ -7,7 +7,6 @@ import time
 from multiprocessing.connection import wait
 import webbrowser
 
-import jsonschema
 
 from config import Configurations as Config
 import websockets as ws
@@ -121,25 +120,23 @@ class WebSocket():
         """
 
         try:
-            #self.charger = charger_variables
-            #self.misc = misc_variables
-            #self.reservation = reservation_variables
-            websocket_timeout = 5  # Timeout in seconds
-            # async for msg in self.webSocket: #Takes latest message
             print("handle_message: ")
             print(message)
-            print(message[2])
 
             if message[2] == "ReserveNow":
                 await asyncio.gather(self.reserve_now(message))
+
             elif message[2] == "BootNotification":
                 message_str = str(message[3]["status"])
                 print("Got boot notification response")
                 print("Was: " + message_str)
+
             elif message[2] == "RemoteStartTransaction":
                 await asyncio.gather(self.remote_start_transaction(message))
+
             elif message[2] == "RemoteStopTransaction":
                 await asyncio.gather(self.remote_stop_transaction(message))
+
             elif message[2] == "DataTransfer":
                 print("Recieved Data transfer")
 
@@ -147,11 +144,16 @@ class WebSocket():
 
             elif message[2] == "StartTransaction":
                 self.transaction_id = 347
+
             elif message[2] == "NotImplemented":
                 print(message[3])
+
+            elif message[2] == "StopTransaction":
+                pass
+
             else:
                 print(message)
-                print("I GOT NOTIN")
+                print("Could not handle message")
         except Exception as e:
             print(e)
             pass
@@ -303,8 +305,10 @@ class WebSocket():
             await self.send_message(msg_send)
             await self.hard_reset_charging()
 
-        response = await self._webSocket.recv()
-        print(json.loads(response))
+       #print("Before recv")
+       #response = await self._webSocket.recv() #This is a troublemaker
+       #print("After recv")
+       #print(json.loads(response))
 
     async def remote_stop_transaction(self, message):
         """

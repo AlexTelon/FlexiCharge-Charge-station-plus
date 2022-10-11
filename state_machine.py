@@ -80,20 +80,20 @@ async def statemachine(webSocket: WebSocket):
     chargerID_window.hide()
 
     while True:
-        # try:
-        #    await asyncio.gather(webSocket.get_message())
-        # except Exception as e:
-        #    print("EXEPTION FROM STATMACHINE: {}".format(e))
+
         await asyncio.sleep(1)
         CHARGER_VARIABLES = webSocket.update_charger_variables()
         STATE.set_state(CHARGER_VARIABLES.current_state)
+        print("State is: ")
         CHARGER_GUI.change_state(CHARGER_VARIABLES.current_state)
+
         if CHARGER_VARIABLES.status == "ReserveNow":
             Reservation.is_reserved, CHARGER_VARIABLES.status,
             Reservation.reservation_id_tag,
             Reservation.reservation_id,
             Reservation.reserved_connector,
             Reservation.reserve_now_timer = await webSocket.get_reservation_info
+
         if STATE.get_state() == States.S_STARTUP:
             CHARGER_GUI.change_state(STATE.get_state())
             continue
@@ -115,44 +115,43 @@ async def statemachine(webSocket: WebSocket):
             time_left = int(100)
             timestamp_at_last_transfer = 0
             CHARGER_GUI.change_state(STATE.get_state())
-            while True:
-                print("ENTERED CHARGING WHILE")
-                await asyncio.sleep(1)
-                print(CHARGER_VARIABLES.status)
-                if CHARGER_VARIABLES.status != "Charging":
-                    STATE.set_state(States.S_AVAILABLE)
-                    CHARGER_GUI.change_state(STATE.get_state())
-                    break
+            
+            print("CHARGING")
+            await asyncio.sleep(1)
+            print(CHARGER_VARIABLES.status)
+            if CHARGER_VARIABLES.status != "Charging":
+                STATE.set_state(States.S_AVAILABLE)
 
-                try:
-                    if (time.time() - timestamp_at_last_transfer) >= 1:
-                        timestamp_at_last_transfer = time.time()
-                        await asyncio.gather(webSocket.send_meter_values())
-                except Exception as e:
-                    print(str(e))
-                
-                if CHARGER_VARIABLES.current_charging_percentage == 100:
-                    await asyncio.gather(webSocket.stop_transaction(True))
-                    STATE.set_state(States.S_BATTERYFULL)
-                    CHARGER_VARIABLES.current_state = States.S_BATTERYFULL
-                    break
-                new_charging_precentage = CHARGER_VARIABLES.current_charging_percentage
-                new_charging_precentage += 10
-                CHARGER_VARIABLES.current_charging_percentage = new_charging_precentage
-                time.sleep(1)
-                time_left -= 1
-                CHARGER_GUI.set_charge_precentage(CHARGER_VARIABLES.current_charging_percentage)
-                try:
-                    CHARGER_GUI.set_num_of_secs(time_left)
-                except Exception as e:
-                    print(str(e))
-                print("GUI UPDATED")
+            try:
+                if (time.time() - timestamp_at_last_transfer) >= 1:
+                    timestamp_at_last_transfer = time.time()
+                    await asyncio.gather(webSocket.send_meter_values())
+            except Exception as e:
+                print(str(e))
+            
+            if CHARGER_VARIABLES.current_charging_percentage >= 100:
+                await asyncio.gather(webSocket.stop_transaction(True))
+                CHARGER_VARIABLES.current_state = States.S_BATTERYFULL
+                STATE.set_state(States.S_BATTERYFULL)
+    
+
+            new_charging_precentage = CHARGER_VARIABLES.current_charging_percentage
+            new_charging_precentage += 10
+            CHARGER_VARIABLES.current_charging_percentage = new_charging_precentage
+
+            time_left -= 1
+            CHARGER_GUI.set_charge_precentage(CHARGER_VARIABLES.current_charging_percentage)
+            try:
+                CHARGER_GUI.set_num_of_secs(time_left)
+            except Exception as e:
+                print(str(e))
+            print("GUI UPDATED")
 
         elif STATE.get_state() == States.S_BATTERYFULL:
+            CHARGER_GUI.change_state(STATE.get_state())
             lastPrice = 50
             CHARGER_GUI.last_price(lastPrice)
-            CHARGER_GUI.change_state(STATE.get_state())
-            await asyncio.sleep(5)
+            await asyncio.sleep(10)
             STATE.set_state(States.S_AVAILABLE)
             CHARGER_GUI.change_state(STATE.get_state())
             
