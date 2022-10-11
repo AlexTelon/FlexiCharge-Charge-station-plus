@@ -1,6 +1,6 @@
 from asyncio import wait_for
 import asyncio
-import datetime
+from datetime import datetime
 from sre_parse import State
 import threading
 import time
@@ -123,7 +123,7 @@ class WebSocket():
             #self.reservation = reservation_variables
             websocket_timeout = 5  # Timeout in seconds
             # async for msg in self.webSocket: #Takes latest message
-            print("habndke_message: ")
+            print("handle_message: ")
             print(message)
             print(message[2])
 
@@ -281,7 +281,7 @@ class WebSocket():
                 "reservationId": RESERVATION_VARIABLES.reservation_id,
             }]
 
-            self.hard_reset_reservation()
+            await self.hard_reset_reservation()
             msg_send = json.dumps(msg)
             await self.send_message(msg_send)
         else:  # No reservation
@@ -411,7 +411,7 @@ class WebSocket():
             CHARGER_VARIABLES.status = "Charging"
             # Notify central system that connector is now available
             print("SENDING STATUS NOTIFICATION")
-            await self.send_status_notification(None)
+            await self.send_status_notification()
             print("STATUS NOTIFICATION SENT")
             print("Charge should be started")
             CHARGER_VARIABLES.current_state = States.S_CHARGING

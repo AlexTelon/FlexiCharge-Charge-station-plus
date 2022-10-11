@@ -44,7 +44,7 @@ async def statemachine(webSocket: WebSocket):
     # chargerID = response.charger_id
     print("STATEMACHINE")
     task = asyncio.create_task(webSocket.start_websocket())
-    await asyncio.sleep(1)
+    await asyncio.sleep(0.2)
     CHARGER_VARIABLES = webSocket.update_charger_variables()
 
     chargerID = CHARGER_VARIABLES.charger_id
@@ -83,6 +83,7 @@ async def statemachine(webSocket: WebSocket):
         #    await asyncio.gather(webSocket.get_message())
         # except Exception as e:
         #    print("EXEPTION FROM STATMACHINE: {}".format(e))
+        await asyncio.sleep(1)
         CHARGER_VARIABLES = webSocket.update_charger_variables()
         STATE.set_state(CHARGER_VARIABLES.current_state)
         CHARGER_GUI.change_state(CHARGER_VARIABLES.current_state)
@@ -124,7 +125,7 @@ async def statemachine(webSocket: WebSocket):
 
                 if (time.time() - timestamp_at_last_transfer) >= 1:
                     timestamp_at_last_transfer = time.time()
-                    await asyncio.gather(webSocket.send_data_transfer(1, percent))
+                    # await asyncio.gather(webSocket.send_data_transfer(1, percent)) #send_data_transfer function has not been implemented
                 if percent == 100:
                     await asyncio.gather(webSocket.stop_transaction(False))
                     STATE.set_state(States.S_BATTERYFULL)
