@@ -151,7 +151,7 @@ async def statemachine(webSocket: WebSocket):
             CHARGER_VARIABLES.current_state = States.S_AVAILABLE
             lastPrice = 50
             CHARGER_GUI.set_last_price(lastPrice)
-            await asyncio.sleep(2)
+            await asyncio.sleep(5)
             CHARGER_GUI.change_state(state)
             
 

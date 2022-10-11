@@ -89,7 +89,6 @@ class WebSocket():
 
     async def send_status_notification(self):
      # Sending a status notification to the server.
-        asyncio.sleep(1)
         print("Send STATUS notificaition: ")
         msg = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "StatusNotification", {
             "connectorId": "1",
