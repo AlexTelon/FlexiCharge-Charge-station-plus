@@ -44,10 +44,14 @@ __In step 2 where:__
     await webSocket.initiate_websocket()
 Is called. This creates the connection to the websocket server and is the start of the communication.<br /> I will describe the following function below:
 
-    async def initiate_websocket(self):
+    async def start_websocket(self):
+            """
+            It tries to connect to a websocket, if it succeeds it sends a boot notification request.
+            :return: The return value is a coroutine object.
+            """
             try:
                 async with ws.connect(
-                    Config().getWebSocketAddress(),
+                    Config().getServerAddress(),
                     subprotocols=Config().getProtocol(),
                     ping_interval=Config().getWebSocketPingInterval(),
                     timeout=Config().getWebSocketTimeout()
@@ -55,6 +59,12 @@ Is called. This creates the connection to the websocket server and is the start 
                     self._webSocket = webSocketConnection
                     print("Successfully connected to WebSocket")
                     await self.send_boot_notification_req()
+                    while (True):
+                        print("Reading ws")
+                        message = await self._webSocket.recv()
+                        message_json = json.loads(message)
+                        await self.handle_message(message_json)
+
             except Exception as e:
                 print("connect failed")
                 print(str(e))
@@ -62,6 +72,7 @@ Is called. This creates the connection to the websocket server and is the start 
 #### 1. **Insert the configuration variables into the connect function and save the connection as webSocketConnection**
 #### 2. **Assign the webSocketConnection to the local _webSocket variable**
 #### 3. **Run the boot notification request to start the communication between our client and the OCPP Server**
+#### 4. **Keep the connection alive and recieve messages using a while true loop that checks for new messages from the server and sends the messages into the self.handle_message function**
 <br />
 
 **In step 1:**
@@ -135,6 +146,9 @@ Here we are utilizing a function we wrote called __send_message()__
     await self.send_message(msg_send)
 
 
+**In step 4:**
+
+
 ## Receiving messages from OCPP
 Now that we have sent a boot notification the next thing to happen is that we should receive a __DataTransfer__ message from the __OCPP__ server.
 
@@ -142,3 +156,22 @@ The __DataTransfer__ message will contain information that we need to run our ap
 The __chargerId__ is the id for our specific charger and it is needed to create the qr code that is displayed in the **Available** state. <br />
 It is also used to create __unique ids__ for the conversations with the __OCPP__ server.
 
+### Here are some different messages that you will receive from the __OCPP__ server
+
+#### - ReserveNow
+    [3, "UNIQUE ID","ReserveNow",{"status": "Accepted"}]
+Reserve now is a pretty standard confirmation message. Which means that it is built on 4 different databoxes. <br/>
+__Index 0__ Means that we are answering a call since it is a 3. <br/>
+__Index 1__ Is a unique id. When we are answering a call we need to answer with the __same id__ that the server sent us. Therefor we save the message they sent us and use their unique id in our answer.<br/>
+__Index 2__ This box contains the message type. So in this case just __ReserveNow__ <br/>
+__Index 3__ This box contains __Data__ to be transfered to the __OCPP__ server it is structured up like this:<br/>
+__{ "datatype" : "DATA"}__ <br/>
+If you want to send more than one type of data you can do it like this! <br/>
+__{ "datatype" : "DATA" , <br/>
+    "some_other_datatype" : "OTHERDATA"}__
+
+Then when you send it to the server you need to do the following line.
+
+    message = [3, "UNIQUE ID","ReserveNow",{"status": "Accepted"}]
+    json_formatted_message = json.dumps(message)
+    self.send_message(json_formatted_message)
