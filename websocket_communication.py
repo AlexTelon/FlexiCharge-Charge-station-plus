@@ -19,17 +19,6 @@ from variables.reservation_variables import Reservation
 
 from ocpp_messages import OCPPMessages
 
-"""
-We have tried to rewrite and fix the websockets but we were left with a burning carwreck.
-It does not work and probably wont ever work.
-Increase this timer for every hour spent trying to fix it and make it work.
-And write your name below to we can remember our fallen comrades
-Hours spent in this shithole: 40 (40 too many)
-
-Albin Samefors was here
-Axel Björkman was here
-Felix Sundman was here
-"""
 RESERVATION_VARIABLES = Reservation()
 CHARGER_VARIABLES = Charger()
 

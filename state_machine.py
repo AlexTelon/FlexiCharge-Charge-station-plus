@@ -98,7 +98,6 @@ async def statemachine(webSocket: WebSocket):
 
         if state == States.S_STARTUP:
             CHARGER_GUI.change_state(state)
-            continue
 
         elif state == States.S_AVAILABLE:
             CHARGER_VARIABLES.current_charge_time_left = CHARGER_VARIABLES.CHARGE_TIME_MAX

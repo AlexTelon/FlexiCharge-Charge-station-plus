@@ -2,8 +2,6 @@ datetime bug:
     In the send_status_notification, the program gets stuck on the line 'current_time = datetime.now()'
     We have tried to add a print directly after but the terminal does not get any printout.
 
-Time bug: Time left is not displayed 
-
 Charging bug: 
     The percentage and charging wattage is using the same variable so they always stay the same
 State Machine bug:
