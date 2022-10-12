@@ -24,7 +24,7 @@ from variables.reservation_variables import Reservation
 
 
 STATE = StateHandler()
-CHARGER_GUI = UI(States.S_STARTUP)
+CHARGER_GUI = UI()
 CHARGER_VARIABLES = Charger()
 full_time = CHARGER_VARIABLES.current_charge_time_left
 
