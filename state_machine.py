@@ -85,8 +85,8 @@ async def statemachine(webSocket: WebSocket):
 
         await asyncio.sleep(1)
         CHARGER_VARIABLES = webSocket.update_charger_variables()
-        print(str(CHARGER_VARIABLES.current_state))
-        print(str(CHARGER_VARIABLES.current_state))
+        #print(str(CHARGER_VARIABLES.current_state))
+        #print(str(CHARGER_VARIABLES.current_state))
         CHARGER_GUI.change_state(CHARGER_VARIABLES.current_state)
 
         state = CHARGER_VARIABLES.current_state
@@ -94,8 +94,7 @@ async def statemachine(webSocket: WebSocket):
             Reservation.is_reserved, CHARGER_VARIABLES.status,
             Reservation.reservation_id_tag,
             Reservation.reservation_id,
-            Reservation.reserved_connector,
-            Reservation.reserve_now_timer = await webSocket.get_reservation_info
+            Reservation.reserved_connector = await webSocket.get_reservation_info
 
         if state == States.S_STARTUP:
             CHARGER_GUI.change_state(state)
@@ -137,7 +136,7 @@ async def statemachine(webSocket: WebSocket):
                 CHARGER_VARIABLES.current_state = States.S_BATTERYFULL
     
 
-            CHARGER_VARIABLES.current_charging_percentage += 10
+            CHARGER_VARIABLES.current_charging_percentage += 1
             CHARGER_VARIABLES.current_charge_time_left -= 1
             CHARGER_GUI.set_charge_precentage(CHARGER_VARIABLES.current_charging_percentage)
             CHARGER_GUI.set_power_charged(round((full_time - time_left)* CHARGER_VARIABLES.charging_Wh_per_second,2))

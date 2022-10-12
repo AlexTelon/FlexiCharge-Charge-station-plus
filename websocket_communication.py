@@ -152,7 +152,7 @@ class WebSocket():
         return CHARGER_VARIABLES
 
     async def get_reservation_info(self):
-        return RESERVATION_VARIABLES.is_reserved, CHARGER_VARIABLES.status, RESERVATION_VARIABLES.reservation_id_tag, RESERVATION_VARIABLES.reservation_id, RESERVATION_VARIABLES.reserved_connector, RESERVATION_VARIABLES.reserve_now_timer
+        return RESERVATION_VARIABLES.is_reserved, CHARGER_VARIABLES.status, RESERVATION_VARIABLES.reservation_id_tag, RESERVATION_VARIABLES.reservation_id, RESERVATION_VARIABLES.reserved_connector
 
     async def data_transfer_request(self, message_id, message_data):
         """
@@ -407,10 +407,6 @@ class WebSocket():
             RESERVATION_VARIABLES.reservation_id = message[3]["reservationID"]
             RESERVATION_VARIABLES.reserved_connector = message[3]["connectorID"]
             timestamp = message[3]["expiryDate"]  # Given in ms since epoch
-            reserved_for_s = int(timestamp - int(time.time()))
-            # reserved_for_ms/1000)   #Reservation time in seconds
-            RESERVATION_VARIABLES.reserve_now_timer = int(reserved_for_s)
-            RESERVATION_VARIABLES.timer_countdown_reservation  # Countdown every second
 
             msg = [3,
                    # Have to use the unique message id received from server
