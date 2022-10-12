@@ -18,6 +18,7 @@ class GUI():
         self._used_kwh_layout = None        
         self._power_layout = None        
         self._charging_id = None
+        self._charging_id_value = 000000
 
     @property
     def start_layout(self):
@@ -64,15 +65,23 @@ class GUI():
         self._power_layout =[[sg.Text("", font=('Lato', 20), key='POWERTEST', justification='center', text_color='white'), sg.Text(" kWh", font=('Lato', 20), key='CHARGERPOWERKW', justification='center', text_color='white')]]
         return self._power_layout
 
-   
-    #TODO - set charger dynamically
+    def set_charger_id(self,charger_id):
+        self._charging_id_value = charger_id
+    
     @property
     def charging_id(self):
-        self._charging_id = [[sg.Text(1, font=('Tw Cen MT Condensed Extra Bold', 30), key='ID5', justification='center', pad=(25, 0)),
-                              sg.Text(1, font=('Tw Cen MT Condensed Extra Bold', 30), key='ID4', justification='center', pad=(20, 0)),
-                              sg.Text(1, font=('Tw Cen MT Condensed Extra Bold', 30), key='ID3', justification='center', pad=(25, 0)),
-                              sg.Text(1, font=('Tw Cen MT Condensed Extra Bold', 30), key='ID2', justification='center', pad=(20, 0)),
-                              sg.Text(1, font=('Tw Cen MT Condensed Extra Bold', 30), key='ID1', justification='center', pad=(25, 0)),
-                              sg.Text(1, font=('Tw Cen MT Condensed Extra Bold', 30), key='ID0', justification='center', pad=(20, 0))]] 
+        firstNumber = int(self._charging_id_value % 10)
+        secondNumber = int(self._charging_id_value/10) % 10
+        thirdNumber = int(self._charging_id_value/100) % 10
+        fouthNumber = int(self._charging_id_value/1000) % 10
+        fifthNumber = int(self._charging_id_value/10000) % 10
+        sixthNumber = int(self._charging_id_value/100000) % 10
+
+        self._charging_id = [[sg.Text(firstNumber, font=('Tw Cen MT Condensed Extra Bold', 30), key='ID5', justification='center', pad=(25, 0)),
+                              sg.Text(secondNumber, font=('Tw Cen MT Condensed Extra Bold', 30), key='ID4', justification='center', pad=(20, 0)),
+                              sg.Text(thirdNumber, font=('Tw Cen MT Condensed Extra Bold', 30), key='ID3', justification='center', pad=(25, 0)),
+                              sg.Text(fouthNumber, font=('Tw Cen MT Condensed Extra Bold', 30), key='ID2', justification='center', pad=(20, 0)),
+                              sg.Text(fifthNumber, font=('Tw Cen MT Condensed Extra Bold', 30), key='ID1', justification='center', pad=(25, 0)),
+                              sg.Text(sixthNumber, font=('Tw Cen MT Condensed Extra Bold', 30), key='ID0', justification='center', pad=(20, 0))]] 
 
         return self._charging_id

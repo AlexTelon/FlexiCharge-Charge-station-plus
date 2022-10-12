@@ -52,35 +52,6 @@ async def statemachine(webSocket: WebSocket):
 
     chargerID = CHARGER_VARIABLES.charger_id
 
-    firstNumberOfChargerID = int(chargerID % 10)
-    secondNumberOfChargerID = int(chargerID/10) % 10
-    thirdNumberOfChargerID = int(chargerID/100) % 10
-    fouthNumberOfChargerID = int(chargerID/1000) % 10
-    fifthNumberOfChargerID = int(chargerID/10000) % 10
-    sixthNumberOfChargerID = int(chargerID/100000) % 10
-
-    chargerIdLayout = [
-        [
-            sg.Text(sixthNumberOfChargerID, font=(
-                'Tw Cen MT Condensed Extra Bold', 30), key='ID5', justification='center', pad=(25, 0)),
-            sg.Text(fifthNumberOfChargerID, font=(
-                'Tw Cen MT Condensed Extra Bold', 30), key='ID4', justification='center', pad=(20, 0)),
-            sg.Text(fouthNumberOfChargerID, font=(
-                'Tw Cen MT Condensed Extra Bold', 30), key='ID3', justification='center', pad=(25, 0)),
-            sg.Text(thirdNumberOfChargerID, font=(
-                'Tw Cen MT Condensed Extra Bold', 30), key='ID2', justification='center', pad=(20, 0)),
-            sg.Text(secondNumberOfChargerID, font=(
-                'Tw Cen MT Condensed Extra Bold', 30), key='ID1', justification='center', pad=(25, 0)),
-            sg.Text(firstNumberOfChargerID, font=(
-                'Tw Cen MT Condensed Extra Bold', 30), key='ID0', justification='center', pad=(20, 0))
-        ]
-    ]
-
-    chargerID_window = sg.Window(title="FlexiChargeTopWindow", layout=chargerIdLayout, location=(15, 735), keep_on_top=True,
-                                 grab_anywhere=False, transparent_color='white', background_color='white', size=(470, 75), no_titlebar=True).finalize()
-    chargerID_window.TKroot["cursor"] = "none"
-    chargerID_window.hide()
-
     while True:
 
         await asyncio.sleep(1)
@@ -102,7 +73,7 @@ async def statemachine(webSocket: WebSocket):
 
         elif state == States.S_AVAILABLE:
             CHARGER_VARIABLES.current_charge_time_left = CHARGER_VARIABLES.CHARGE_TIME_MAX
-            CHARGER_GUI.set_charger_id(chargerID)
+            CHARGER_GUI.set_charger_id(CHARGER_VARIABLES.charger_id)
             CHARGER_GUI.change_state(state)
 
         elif state == States.S_FLEXICHARGEAPP:
