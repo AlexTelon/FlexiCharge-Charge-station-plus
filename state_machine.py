@@ -22,8 +22,6 @@ from charger_hardware import Hardware
 from variables.charger_variables import Charger
 from variables.reservation_variables import Reservation
 
-
-STATE = StateHandler()
 CHARGER_GUI = UI()
 CHARGER_VARIABLES = Charger()
 full_time = CHARGER_VARIABLES.current_charge_time_left
@@ -34,18 +32,10 @@ async def statemachine(webSocket: WebSocket):
     """
     The function is a state machine that changes the state of the charge point and displays the relevant
     image on the screen
-    :param chargePoint: The ChargePoint object that is used to communicate with the OCPP server
-    :type chargePoint: ChargePoint
+    :param webSocket: The WebSocket object that is used to communicate with the OCPP server
     """
 
-    # -- Variable not used : global window_back, window_qrCode
-
-    # instead of chargerID = 128321 you have to write the follwoing two rows(your ocpp code) to get
-    # the charge id from back-end and display it on screen
-
-    # response = await ocpp_client.send_boot_notification()
-    # chargerID = response.charger_id
-    print("STATEMACHINE")
+    print("Entering State machine")
     task = asyncio.create_task(webSocket.start_websocket())
     await asyncio.sleep(0.2)
     CHARGER_VARIABLES = webSocket.update_charger_variables()
@@ -84,12 +74,12 @@ async def statemachine(webSocket: WebSocket):
     while True:
 
         await asyncio.sleep(1)
+
         CHARGER_VARIABLES = webSocket.update_charger_variables()
-        print(str(CHARGER_VARIABLES.current_state))
-        print(str(CHARGER_VARIABLES.current_state))
         CHARGER_GUI.change_state(CHARGER_VARIABLES.current_state)
 
         state = CHARGER_VARIABLES.current_state
+
         if CHARGER_VARIABLES.status == "ReserveNow":
             Reservation.is_reserved, CHARGER_VARIABLES.status,
             Reservation.reservation_id_tag,
@@ -163,11 +153,6 @@ async def main():
     """
     try:
         webSocket = WebSocket()
-
-        # await task
-        #print("WebSocket close status: {}".format(webSocket._webSocket.closed))
-        # webSocket._webSocket.closed: True
-        # asyncio.get_event_loop().run_until_complete(statemachine(webSocket))
         await(statemachine(webSocket))
 
     except Exception as e:

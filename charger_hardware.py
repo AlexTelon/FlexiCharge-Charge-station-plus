@@ -5,9 +5,9 @@ import threading
 from datetime import datetime
 import time
 from threading import Thread
-from variables.charger_variables import Charger
-from variables.reservation_variables import Reservation
-from variables.misc_variables import Misc
+from variables.charger_variables import Charger as ChargerVariables
+from variables.reservation_variables import Reservation as ReservationVariables
+from variables.misc_variables import Misc as MiscVariables
 import platform
 
 if platform.system() == 'Linux':
@@ -104,7 +104,7 @@ class Hardware():
         self.charger.charging_connector = connector_id
         threading.Timer(1, self.meter_counter_charging).start()
 
-    def rfid_reader(self):
+    def rfid_read(self):
         reader = SimpleMFRC522()
         try:
             print("Place tag")
