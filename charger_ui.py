@@ -19,8 +19,8 @@ class UI():
     num_of_secs = 100
     #windowses = Windows()
 
-    def __init__(self, state: State,):
-        self.current_state = state
+    def __init__(self):
+        self.WINDOW_GRAPHICS._background_window.finalize()
 
     def change_state(self, state: States):
         """
@@ -137,7 +137,7 @@ class UI():
 
             
         elif self.current_state == States.S_STARTUP:
-            self.WINDOW_GRAPHICS._background_window.finalize()
+            #self.WINDOW_GRAPHICS._background_window.finalize()
             self.WINDOW_GRAPHICS._background_window['IMAGE'].update(data=Display.starting_up())
             self.WINDOW_GRAPHICS._background_window.refresh()
 
@@ -183,6 +183,7 @@ class UI():
             self.WINDOW_GRAPHICS._time_window.finalize()
             self.WINDOW_GRAPHICS._power_window.finalize()
             self.WINDOW_GRAPHICS._charging_percent_window['PERCENT'].update(str(self.percent))
+            self.WINDOW_GRAPHICS._power_window['POWERTEST'].update(str(self.power_charged))
 
             if self.percent == 100:
                 self.WINDOW_GRAPHICS._charging_percent_mark_window.move(370,350)
