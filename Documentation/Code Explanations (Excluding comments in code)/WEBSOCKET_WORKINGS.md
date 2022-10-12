@@ -8,17 +8,15 @@ It looks something like below.
     async def main():
         try:
             webSocket = WebSocket()
-            await webSocket.initiate_websocket()
-            asyncio.get_event_loop().run_until_complete(await statemachine(webSocket))
+            await(statemachine(webSocket))
 
         except Exception as e:
             print("ERROR:")
             print(e)
 
 ### __This is the order that things progress__
-#### 1. **The websocket is initialized as an object.**
-#### 2. **The initiate_websocket() function is called**
-#### 3. **Run the state machine until complete.**
+#### 1. **An object of the websocket class is initialized.**
+#### 2. **The state machines is started**
 
 Lets dive a bit deeper into the second step to find what is actually going on under the hood.
 
@@ -41,7 +39,7 @@ This creates a member variable called _webSocket that will later be filled in by
 
 __In step 2 where:__
 
-    await webSocket.initiate_websocket()
+    await webSocket.start_websocket()
 Is called. This creates the connection to the websocket server and is the start of the communication.<br /> I will describe the following function below:
 
     async def start_websocket(self):
@@ -66,6 +64,7 @@ Is called. This creates the connection to the websocket server and is the start 
                         await self.handle_message(message_json)
 
             except Exception as e:
+                CHARGER_VARIABLES.current_state = States.S_NOTAVAILABLE
                 print("connect failed")
                 print(str(e))
 ### __The initiation runs like this__

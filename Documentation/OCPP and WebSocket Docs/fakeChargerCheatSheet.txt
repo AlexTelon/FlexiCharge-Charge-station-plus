@@ -99,4 +99,3 @@ AFTER THAT YOU SHOULD GET A RESPONSE FROM THE API
     "errorCode": "NoError",
     "status": "Available"
     } ]
-

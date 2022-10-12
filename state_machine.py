@@ -33,11 +33,13 @@ async def statemachine(webSocket: WebSocket):
     The function is a state machine that changes the state of the charge point and displays the relevant
     image on the screen
     :param webSocket: The WebSocket object that is used to communicate with the OCPP server
+
+    All states are not implemented. This is a todo for the next group
     """
 
     print("Entering State machine")
-    task = asyncio.create_task(webSocket.start_websocket())
-    await asyncio.sleep(0.2)
+    task = asyncio.create_task(webSocket.start_websocket())     #Starts the websocket listening in a thread that is running in the backgound
+    await asyncio.sleep(0.2)                                    #Make the state machine sleep in some time to give the background task a chance to run.
     CHARGER_VARIABLES = webSocket.update_charger_variables()
 
     chargerID = CHARGER_VARIABLES.charger_id
@@ -73,12 +75,12 @@ async def statemachine(webSocket: WebSocket):
 
     while True:
 
-        await asyncio.sleep(1)
+        await asyncio.sleep(1)      #Make the state machine sleep in some time to give the background task a chance to run.
 
-        CHARGER_VARIABLES = webSocket.update_charger_variables()
+        CHARGER_VARIABLES = webSocket.update_charger_variables()  
         CHARGER_GUI.change_state(CHARGER_VARIABLES.current_state)
 
-        state = CHARGER_VARIABLES.current_state
+        state = CHARGER_VARIABLES.current_state #Do not change 'state' after this
 
         if CHARGER_VARIABLES.status == "ReserveNow":
             Reservation.is_reserved, CHARGER_VARIABLES.status,
@@ -126,9 +128,10 @@ async def statemachine(webSocket: WebSocket):
                 await asyncio.gather(webSocket.stop_transaction(True))
                 CHARGER_VARIABLES.current_state = States.S_BATTERYFULL
     
-
+            #These two are hardcoded atm. Should be moved to background-threads.
             CHARGER_VARIABLES.current_charging_percentage += 10
             CHARGER_VARIABLES.current_charge_time_left -= 1
+            
             CHARGER_GUI.set_charge_precentage(CHARGER_VARIABLES.current_charging_percentage)
             CHARGER_GUI.set_power_charged(round((full_time - time_left)* CHARGER_VARIABLES.charging_Wh_per_second,2))
             try:
@@ -149,7 +152,7 @@ async def statemachine(webSocket: WebSocket):
 
 async def main():
     """
-    It connects to a websocket server and then runs a state machine
+    It initiates a WebSocket-object (from websocket_communication) and runs the state machine
     """
     try:
         webSocket = WebSocket()
