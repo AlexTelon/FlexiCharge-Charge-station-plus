@@ -110,7 +110,7 @@ class UI():
         # window_chargingPower['TAMER'].update(str(power))
         self.WINDOW_GRAPHICS._charging_percent_window['PERCENT'].update(str(self.percent))
         self.WINDOW_GRAPHICS._power_window['POWERTEST'].update(str(self.power_charged))
-
+        
         if self.percent >= 10 and self.percent < 100:
             self.WINDOW_GRAPHICS._charging_percent_mark_window.move(330,350)
             self.WINDOW_GRAPHICS._charging_percent_window.move(100, 245)
@@ -118,7 +118,7 @@ class UI():
         elif self.percent == 100:
             self.WINDOW_GRAPHICS._charging_percent_mark_window.move(370,350)
             self.WINDOW_GRAPHICS._charging_percent_window.move(20, 245)
-
+        
         self.WINDOW_GRAPHICS._background_window.refresh()
 
     def run_state(self):

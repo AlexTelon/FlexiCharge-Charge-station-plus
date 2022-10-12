@@ -5,9 +5,9 @@ import threading
 from datetime import datetime
 import time
 from threading import Thread
-from variables.charger_variables import Charger
-from variables.reservation_variables import Reservation
-from variables.misc_variables import Misc
+from variables.charger_variables import Charger as ChargerVariables
+from variables.reservation_variables import Reservation as ReservationVariables
+from variables.misc_variables import Misc as MiscVariables
 import platform
 
 if platform.system() == 'Linux':
@@ -24,9 +24,9 @@ Currently working as of 2022-09-14 - Kevin and Elin
 
 class Hardware():
 
-    charger = Charger()
-    misc = Misc()
-    reservation = Reservation()
+    charger = ChargerVariables()
+    misc = MiscVariables()
+    reservation = ReservationVariables()
     hardcoded_rfid_token = 330174510923
 
     def meter_counter_charging(self):
@@ -34,6 +34,8 @@ class Hardware():
         If the car is charging, add 1 to the meter value and the current charging percentage, then send
         the data to the server, and start the function again.
         """
+
+        #self.send_data_transfer is now in the web socket communication file. Should be removed from this file.
 
         if self.charger.is_charging == True:
             self.misc.increment_meter_value_total_by(1)
@@ -71,8 +73,6 @@ class Hardware():
         self.charger.is_charging = True
         self.charger.charging_id_tag = self.reservation.reservation_id_tag
         self.charger.charging_connector = self.reservation.reserved_connector
-        # threading.Timer(1, self.meter_counter_charging).start()
-        # threading.Timer(2, self.send_periodic_meter_values).start()
 
     # Will count down every second
     def timer_countdown_reservation(self):
@@ -81,12 +81,18 @@ class Hardware():
         :return: The timer_countdown_reservation() function is being returned.
         """
         if self.reservation.reserve_now_timer <= 0:
+            
+         # self.send_status_notification and hard_reset_reservation is now in the web socket communication file. Should be removed from this file. 
+         # The notification should probably be handeled in the state machine
+
             print("Reservation is canceled!")
             self.hard_reset_reservation()
+
             self.status = "Available"
             # Notify back-end that we are availiable again
             asyncio.run(self.send_status_notification(None))
             return
+
         self.reservation.decrement_reserve_now_timer_by(1)
         # Should only countdown if status us Reserved, otherwise won't be able to start charging
         if self.status == "Reserved":
@@ -104,7 +110,7 @@ class Hardware():
         self.charger.charging_connector = connector_id
         threading.Timer(1, self.meter_counter_charging).start()
 
-    def rfid_reader(self):
+    def rfid_read(self):
         reader = SimpleMFRC522()
         try:
             print("Place tag")
