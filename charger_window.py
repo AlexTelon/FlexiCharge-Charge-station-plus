@@ -90,12 +90,12 @@ class Windows():
         margins=(0, 0))
 
         #Charging id window
-        self._charging_id_windows = sg.Window(title="FlexiChargeTopWindow", 
-        layout=self.FLEXI_GUI.charging_id, 
-        location=(20,700), 
-        keep_on_top=True,
-        grab_anywhere=False, 
-        transparent_color='None', 
-        background_color='white', 
-        size=(440, 75), 
-        no_titlebar=True)
+        #self._charging_id_windows = sg.Window(title="FlexiChargeTopWindow", 
+        #layout=self.FLEXI_GUI.charging_id, 
+        #location=(20,700), 
+        #keep_on_top=True,
+        #grab_anywhere=False, 
+        #transparent_color='None', 
+        #background_color='white', 
+        #size=(440, 75), 
+        #no_titlebar=True)

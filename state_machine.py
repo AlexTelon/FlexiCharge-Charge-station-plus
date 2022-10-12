@@ -65,7 +65,7 @@ async def statemachine(webSocket: WebSocket):
 
         elif state == States.S_AVAILABLE:
             CHARGER_VARIABLES.current_charge_time_left = CHARGER_VARIABLES.CHARGE_TIME_MAX
-            CHARGER_GUI.set_charger_id(CHARGER_VARIABLES.charger_id)
+            #CHARGER_GUI.set_charger_id(CHARGER_VARIABLES.charger_id)
             CHARGER_GUI.change_state(state)
 
         elif state == States.S_FLEXICHARGEAPP:
