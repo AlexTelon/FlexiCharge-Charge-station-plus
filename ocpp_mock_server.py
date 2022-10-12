@@ -127,6 +127,9 @@ async def ocpp_server(websocket):
         if message_json[2] == "BootNotification":
             await websocket.send(json.dumps(boot_message_conf))
             await websocket.send(json.dumps(data_transfer_req))
+
+            
+        if message_json[2] == "DataTransfer":
             print("Test available: startRemote")
             user_input = input()
             if user_input == "startRemote":
