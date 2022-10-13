@@ -1,0 +1,6 @@
+{
+    "python.analysis.extraPaths": [
+        "./Graphical User Interface",
+        "./Graphical User Interface"
+    ]
+}

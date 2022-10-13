@@ -4,9 +4,9 @@ import PySimpleGUI as sg
 from numpy import char
 from StateHandler import States
 from images import Display
-from charger_gui import GUI
+from GUI.charger_gui import GUI
 import qrcode
-from charger_window import Windows
+from GUI.charger_window import Windows
 
 
 

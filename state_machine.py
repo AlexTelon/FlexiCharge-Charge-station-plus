@@ -1,6 +1,6 @@
 from ctypes.wintypes import CHAR
 from hashlib import new
-from charger_ui import UI
+from GUI.charger_ui import UI
 import asyncio
 import json
 import threading

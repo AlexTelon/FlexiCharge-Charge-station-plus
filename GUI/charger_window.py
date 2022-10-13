@@ -1,5 +1,5 @@
 import PySimpleGUI as sg
-from charger_gui import GUI
+from GUI.charger_gui import GUI
 from images import Display
 
 class Windows(): 
