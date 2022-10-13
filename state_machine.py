@@ -132,8 +132,7 @@ async def main():
         await(statemachine(webSocket))
 
     except Exception as e:
-        print("ERROR:")
-        print(e)
+        print("ERROR:"+ e)
 
 
 if __name__ == '__main__':
