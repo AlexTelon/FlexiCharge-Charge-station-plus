@@ -1,0 +1,101 @@
+FIRST YOU NEED TO CREATE A WEBSOCKET IN POSTMAN
+
+THEN CONNECTE TO THE SERVER WITH THIS URL:
+
+-- Deprecated IP - address (54.220.194.65:1337) - Use below instead.
+
+18.202.253.30:1337/ENTER YOUR DESIGNATED CHARGER HERER
+
+THEN FOLLOW THE STEPS IN EACH CASE DEPENING ON WHAT REQUEST YOU ARE SENDING TO THE API
+
+--------------------------------------------------------------------------------------------------------------------
+
+DESIGNETED CHARGERS:
+
+IOS -> ios
+ANDROID NATIVE -> android
+X-PLATFORM -> xplatform
+
+--------------------------------------------------------------------------------------------------------------------
+GOOD TO KNOW
+
+AT INDEX 0 IN THE ARRAY THE NUMBER REPRESENT:
+3 == ANSWERING A REQUEST
+2 == STARTING/SENDING A REQUEST
+
+--------------------------------------------------------------------------------------------------------------------
+
+//RESERVE NOW RESPONSE
+
+JUST ANSWER IN POSTMAN WITH THIS:
+[ 3,
+  "INSERT THE UNIQUE ID THAT YOU GOT IN THE REQUEST HERE (CAN ALLWAS BE FOUND AT INDEX 1)",
+  "ReserveNow",
+  { 
+    "status": "Accepted"
+    } ]
+
+--------------------------------------------------------------------------------------------------------------------
+
+//REMOTE START TRANSACTION IN ORDER YOU SHOULD SEND IN POSTMAN
+
+FIRST RESPOND WITH THIS:
+[ 3,
+  "INSERT THE UNIQUE ID THAT YOU GOT IN THE REQUEST HERE (CAN ALLWAS BE FOUND AT INDEX 1)",
+  "RemoteStartTransaction",
+  { 
+    "status": "Accepted"
+    } ]
+
+SECOND SEND THIS RIGHT AFTER THE LAST ONE YOU SENT:
+[ 2,
+  "WRITE SOMTHING LONG THAT SHOULD ACT AS A UNIQUIE ID HERE",
+  "StartTransaction",
+  { 
+    "connectorId": 1,
+    "idTag": 1,
+    "meterStart": 1,
+    "reservationId": 1,
+    "timestamp":1234512345124123
+
+    } ]
+AFTER THAT YOU SHOULD GET A RESPONSE FROM THE API
+
+--------------------------------------------------------------------------------------------------------------------
+
+//REMOTE STOP TRANSACTION IN ORDER YOU SHOULD SEND IN POSTMAN
+
+FIRST RESPOND WITH THIS:
+[ 3,
+  "INSERT THE UNIQUE ID THAT YOU GOT IN THE REQUEST HERE (CAN ALLWAS BE FOUND AT INDEX 1)",
+  "RemoteStopTransaction",
+  { 
+    "status": "Accepted"
+    } ]
+
+SECOND SEND THIS RIGHT AFTER THE LAST ONE YOU SENT:
+[ 2,
+  "WRITE SOMTHING LONG THAT SHOULD ACT AS A UNIQUIE ID HERE",
+  "StopTransaction",
+  { 
+    "connectorId": 1,
+    "idTag": 1,
+    "meterStop": 1,
+    "reservationId": 1,
+    "transactionId": 1,
+    "timestamp":1234512345124123
+
+    } ]
+AFTER THAT YOU SHOULD GET A RESPONSE FROM THE API
+
+--------------------------------------------------------------------------------------------------------------------
+
+// JUST SEND THIS TO SET THE STATUS TO AVALIBLE IN THE DATABASE
+// YOU CAN CHANGE THE status VARIABLE TO WHATER YOU WANT THE STATUS SHOULD BE, ASLONG AS IT'S AN APPROVED STATUS IN THE DATABASE
+[ 2,
+  "WRITE SOMTHING LONG THAT SHOULD ACT AS A UNIQUIE ID HERE",
+  "StatusNotification",
+  { 
+    "errorCode": "NoError",
+    "status": "Available"
+    } ]
