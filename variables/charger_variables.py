@@ -2,7 +2,7 @@ from sre_parse import State
 from StateHandler import States
 class Charger():
 
-    CHARGE_TIME_MAX = 10
+    CHARGE_TIME_MAX = 101
 
     def __init__(self):
         # Charger variables
