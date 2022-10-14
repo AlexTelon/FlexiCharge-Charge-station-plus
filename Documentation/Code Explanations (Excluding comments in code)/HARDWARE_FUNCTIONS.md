@@ -10,7 +10,10 @@ For the RFID functions to work on the Raspberry Pi we import these <br />
         import RPi.GPIO as GPIO
         from mfrc522 import SimpleMFRC522 
 
-Why we have the if-statement above the imports are because they can only be downloaded on a Linux based machine. So, we don't want to import them unless we are on a linux machine. <br/>
+Why we have the if-statement above the imports are because they can only be downloaded on a Linux based machine. So, we don't want to import them unless we are on a linux machine. <br/>  
+The hard coded RFID-token is the actuall idToken of the RFID-tag that we have
+
+            hardcoded_rfid_token = 330174510923
 
 ### RFID read function
 
