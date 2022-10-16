@@ -24,15 +24,15 @@ To start the mock server you open a new terminal and locate the ocpp_mock_server
 py file in the directory then you execute the code.
 e.g of idle server after boot ![](mock_server_boot.png)
 
-## __Server setup and use case__
-these are the adress and port setup for the server. This specific IP should work for all OS without an issue. The .run_forever() call will keep the server up until you exit it yourself. This means you dont have to restart the server every time you disconnect the charger.
+## __Server ip, port and runtime__
+The current IP should work for all OS without an issue. The .run_forever() call will keep the server up until you exit it yourself. This means you dont have to restart the server every time you disconnect the charger.
 
     start_server = websockets.serve(ocpp_server, "127.0.0.1", 60003) #set server ip and port
 
     asyncio.get_event_loop().run_until_complete(start_server)
     asyncio.get_event_loop().run_forever()
 
-## __Connecting to the server__
+## __Connecting the charger to the server__
 
 When connecting to the server it will respond with the BootNotification confirmation and then send out a DataRequest right after. This is the initial handshake between the charger and the server. After this both sides should be available for requests to be sent.
 
@@ -50,3 +50,15 @@ __Note__ That on the raspberry pi its difficult to use an a second terminal for 
 ![](startRemote.png)
 
 After inputing startRemote into the terminal you should receive a RemoteStartTransaction.conf from the charger and the the charging should commence. After this the server should print out the live metric values that the charger is sending to the server. __See image below__
+
+![](startRemote_connect.png)
+
+## __Good to knows__
+
+The current code is hardcoded to only try the startRemoteTransaction requests. remove this part if you want the server to be in idle wait for charger requests.
+
+          print("Test available: startRemote")
+            user_input = input()
+            if user_input == "startRemote":
+                await websocket.send(json.dumps(start_remote_transaction_request))
+
