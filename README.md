@@ -25,6 +25,8 @@ The setup for the RFID-reader to the raspberry pi:
         23              |     SCK
         24              |     NSS (= SDA)
         -               |     IRQ (not used)
+If you need to setup the RFID from scratch. This youtube video shows what you need to install and do.
+[How to setup the RFID on Rapberry Pi](https://www.youtube.com/watch?v=Q99N0AdifgY)
 
 ### PysimpleGUI
 
