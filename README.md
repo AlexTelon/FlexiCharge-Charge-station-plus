@@ -13,6 +13,19 @@ To connect the white ribbon cable supplied, connect one end to the controller bo
 
 <img width="393" alt="Capture" src="https://user-images.githubusercontent.com/82366694/186842602-1ed6600e-4e68-4280-a87a-749ac07913f9.PNG">
 
+### RFID-reader Setup
+The setup for the RFID-reader to the raspberry pi:
+
+    Raspberry Pi pin    |    VMA405
+        +3.3v           |     VCC
+        18              |     RST
+        GND             |     GND
+        21              |     MISO
+        19              |     MOSI
+        23              |     SCK
+        24              |     NSS (= SDA)
+        -               |     IRQ (not used)
+
 ### PysimpleGUI
 
 1- The used library is pysimpleGUI so you need to install the following commands on the terminal.
