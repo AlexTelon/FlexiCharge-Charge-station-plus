@@ -6,6 +6,8 @@ class GUI():
 
     sg.theme('black')
     
+    #TODO - Layout to display charger id needs to be implemented.
+
     def __init__(self):
         #Layout variables        
         self._starting_up_layout = None
@@ -110,6 +112,7 @@ class GUI():
         """
         self._charging_id_value = charger_id
     
+   #TODO - Legacy code which was not implemented. 
    # @property
    # def charging_id(self):
    #     firstNumber = int(self._charging_id_value % 10)

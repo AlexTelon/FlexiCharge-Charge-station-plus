@@ -7,6 +7,10 @@ class Windows():
     sg.theme('black')
     FLEXI_GUI = GUI()
 
+
+
+    #TODO - Window to display charger id needs to be implemented.
+
     def __init__(self):
         # Creating a window with the title "FlexiCharge" and the layout of the start_layout.
         self._background_window = sg.Window(title="FlexiCharge", 

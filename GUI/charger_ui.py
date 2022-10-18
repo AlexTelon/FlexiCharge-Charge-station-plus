@@ -27,6 +27,8 @@ class UI():
         """
         self.WINDOW_GRAPHICS._background_window.finalize()
 
+    #TODO - A function should be created which keeps track of which window was previously open and unhide its attribute if necessary.
+
     def change_state(self, state: States):
         """
         If the state is not the same as the current state, then set the current state to the new state and
@@ -39,6 +41,7 @@ class UI():
             self.current_state = state
             self.run_state()
 
+    #TODO - Needs to be troubleshooted of how to display the charger_id in the most efficient way
     def set_charger_id(self, id):
         """
         It sets the charger id
@@ -50,7 +53,6 @@ class UI():
         self.charger_id = id
         return self.charger_id
  
-
     def set_power_charged(self, power):
         """
         The function takes in a parameter called power, and sets the power_charged attribute to the
@@ -142,6 +144,7 @@ class UI():
         
         self.WINDOW_GRAPHICS._background_window.refresh()
 
+
     def run_state(self):
         """
         It's a function that updates the GUI based on the current state of the program
@@ -156,6 +159,7 @@ class UI():
             self.WINDOW_GRAPHICS._background_window['IMAGE'].update(data=Display.starting_up())
             self.WINDOW_GRAPHICS._background_window.refresh()
 
+        #TODO - Attribute to display charger id needs to be implemented.
         elif self.current_state == States.S_AVAILABLE:
             if self.charging_is_done:
                 self.WINDOW_GRAPHICS._charging_last_price_window.hide()
