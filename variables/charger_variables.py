@@ -25,7 +25,7 @@ class Charger():
         return self._charging_Wh
     @property
     def charging_price(self):
-        return self.charging_price
+        return self._charging_price
 
     @property
     def is_charging(self):
