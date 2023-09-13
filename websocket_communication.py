@@ -199,7 +199,7 @@ class WebSocket():
                         {"status": str(CHARGER_VARIABLES.status)}]
             conf_send = json.dumps(conf_msg)
             print("Sending confirmation: " + conf_send)
-            CHARGER_VARIABLES.current_state = States.S_CHARGING
+            CHARGER_VARIABLES.current_state = States.S_AVAILABLE
         except Exception as e:
             print(str(e))
 

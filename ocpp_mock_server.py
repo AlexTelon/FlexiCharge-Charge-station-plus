@@ -6,7 +6,6 @@ import time
 from variables.reservation_variables import Reservation
 from variables.charger_variables import Charger
 from variables.misc_variables import Misc
-from websocket_communication import CHARGER_VARIABLES
 
 # variables
 reservation = Reservation()
@@ -129,9 +128,6 @@ async def ocpp_server(websocket):
             await websocket.send(json.dumps(boot_message_conf))
             await websocket.send(json.dumps(data_transfer_req))
 
-            await asyncio.sleep(5)
-            data_transfer_req[3]['data'] = '{"chargerId":100009,"chargingPrice":"6.00"}'
-            await websocket.send(json.dumps(data_transfer_req))
             
         if message_json[2] == "DataTransfer":
             print("Test available: startRemote")

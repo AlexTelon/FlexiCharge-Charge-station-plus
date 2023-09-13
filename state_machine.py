@@ -87,8 +87,8 @@ async def statemachine(webSocket: WebSocket):
             
             print("CHARGING")
             print(CHARGER_VARIABLES.status)
-           # if CHARGER_VARIABLES.status != "Charging":
-            #    CHARGER_VARIABLES.current_state = States.S_AVAILABLE
+            if CHARGER_VARIABLES.status != "Charging":
+                CHARGER_VARIABLES.current_state = States.S_AVAILABLE
 
             try:
                 if (time.time() - timestamp_at_last_transfer) >= 1:
