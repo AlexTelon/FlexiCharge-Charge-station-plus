@@ -182,14 +182,14 @@ class WebSocket():
             if message[3]["vendorId"] == "com.flexicharge" and message[3]["messageId"] == "BootData":
                 parsed_data = json.loads(message[3]["data"])
                 CHARGER_VARIABLES.charger_id = parsed_data["chargerId"]
-                #CHARGER_VARIABLES.charging_price = float(parsed_data["chargingPrice"])
+                CHARGER_VARIABLES.charging_price = float(parsed_data["chargingPrice"])
                 print("Charger ID is set to: " +
                       str(CHARGER_VARIABLES.charger_id))
-                #print("Charging price was set to: "+ str(CHARGER_VARIABLES.charging_price) )
+                print("Charging price was set to: "+ str(CHARGER_VARIABLES.charging_price) )
                 CHARGER_VARIABLES.status = "Accepted"
                 print("CHARGER STATUS IS " + CHARGER_VARIABLES.status)
         except Exception as e:
-            print("CHARGER ID: ", str(CHARGER_VARIABLES.get_charger_id()))
+            #print("CHARGER ID: ", str(CHARGER_VARIABLES.get_charger_id()))
             print(str(e))
         try:
             # Send a conf
