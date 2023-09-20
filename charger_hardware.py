@@ -134,3 +134,6 @@ class Hardware():
 
         finally:
             GPIO.cleanup()
+
+    def calcPower(self, V: float, A: float ):
+        self.charger.charging_W = V * A        
