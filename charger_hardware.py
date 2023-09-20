@@ -9,10 +9,13 @@ from variables.charger_variables import Charger as ChargerVariables
 from variables.reservation_variables import Reservation as ReservationVariables
 from variables.misc_variables import Misc as MiscVariables
 import platform
+from ina219 import INA219
+from ina219 import DeviceRangeError
 
 if platform.system() == 'Linux':
     import RPi.GPIO as GPIO
     from mfrc522 import SimpleMFRC522
+    import smbus
 
 
 """
@@ -28,7 +31,8 @@ class Hardware():
     misc = MiscVariables()
     reservation = ReservationVariables()
     hardcoded_rfid_token = 330174510923
-
+    
+    
     def meter_counter_charging(self):
         """
         If the car is charging, add 1 to the meter value and the current charging percentage, then send
@@ -134,3 +138,41 @@ class Hardware():
 
         finally:
             GPIO.cleanup()
+
+class INA219():
+    SHUNT_OHMS = 0.1
+    MAX_EXPECTED_AMPS = 3
+    isConnected = False
+
+    def __init__(self):
+        self.init_INA219()
+
+    def init_INA219(self):
+        bus = smbus.SMBus(1)
+        try:
+            bus.write_quick(0x40)
+            self.isConnected = True
+            self.ina219 = INA219(self.SHUNT_OHMS, self.MAX_EXPECTED_AMPS)
+            self.ina219.configure(self.ina219.RANGE_16V, bus_adc=self.ina219.ADC_128SAMP, shunt_adc=self.ina219.ADC_128SAMP)
+        except Exception as e:
+            self.isConnected = False
+            print("Init Failed")
+
+    def read_current_from_INA219(self):
+        if(self.isConnected == True):
+            try:
+                print("Bus Current: %.3f mA" % self.ina219.current())
+            except DeviceRangeError as e:
+                print(e)
+            return self.ina219.current
+        else:
+            print("INA219 is not connected")
+            return -1
+        
+    def read_voltage_from_INA219(self):
+        if(self.isConnected == True):
+            print("Bus voltage: %.3f V" % self.ina219.voltage())
+            return self.ina219.voltage
+        else:
+            print("INA219 is not connected")
+            return -1
