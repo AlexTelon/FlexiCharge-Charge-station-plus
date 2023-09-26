@@ -145,25 +145,26 @@ class Hardware():
         #    GPIO.output(pin, GPIO.LOW)
         
         GPIO.setup(relay_pins, GPIO.OUT)
-        GPIO.output(relay_pins, GPIO.LOW)
+        GPIO.output(relay_pins, GPIO.HIGH)
     
         if voltage == "3.3v":
-            GPIO.output(21, GPIO.HIGH)
+            GPIO.output(21, GPIO.LOW)
         elif voltage == "4.2v":
-            GPIO.output(20, GPIO.HIGH)
+            GPIO.output(20, GPIO.LOW)
         elif voltage == "7.4v":
-            GPIO.output(16, GPIO.HIGH)
+            GPIO.output(16, GPIO.LOW)
         elif voltage == "9v":
-            GPIO.output(12, GPIO.HIGH)
+            GPIO.output(12, GPIO.LOW)
         elif voltage == "5v":
-            GPIO.output(26, GPIO.HIGH)
+            GPIO.output(26, GPIO.LOW)
         elif voltage == "6v":
-            GPIO.output(19, GPIO.HIGH)
+            GPIO.output(19, GPIO.LOW)
         elif voltage == "10v":
-            GPIO.output(13, GPIO.HIGH)
+            GPIO.output(13, GPIO.LOW)
         elif voltage == "11.5v":
-            GPIO.output(6, GPIO.HIGH)
+            GPIO.output(6, GPIO.LOW)
         else:
             print("Invalid voltage")
     
         GPIO.cleanup()
+        
