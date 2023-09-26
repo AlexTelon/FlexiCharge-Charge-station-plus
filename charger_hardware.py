@@ -12,6 +12,8 @@ import platform
 from ina219 import INA219
 from ina219 import DeviceRangeError
 import smbus2
+import serial
+
 
 if platform.system() == 'Linux':
     import RPi.GPIO as GPIO
@@ -34,8 +36,8 @@ class Hardware():
     __SHUNT_OHMS = 0.1
     __MAX_EXPECTED_AMPS = 3
     __ina219_is_Connected = False
-    
-    
+    __ser = None
+
     def meter_counter_charging(self):
         """
         If the car is charging, add 1 to the meter value and the current charging percentage, then send
@@ -141,6 +143,27 @@ class Hardware():
 
         finally:
             GPIO.cleanup()
+
+            
+    def calcPower(self, V: float, A: float ):
+        self.charger.charging_W = V * A  
+
+    def init_UART(self):
+        serial_port = '/dev/ttyS0'
+        baud_rate = 115200
+        self.ser = serial.Serial(serial_port, baud_rate, timeout=1)
+        self.ser.flush()
+
+    def read_via_UART(self):
+        if self.ser.in_waiting > 0:
+            try: #incomming data need to be a string or cstring otherwise the code will crash
+                line = self.ser.readling().decode('utf-8').rstrip()
+                #split incomming string and save wanted values ex battery percentage
+                #call a helper function that updates the diffrent values
+                print(line)
+            except serial.SerialException as e:
+                print(e)
+
 
     def init_INA219(self):
         bus = smbus2.SMBus(1)
