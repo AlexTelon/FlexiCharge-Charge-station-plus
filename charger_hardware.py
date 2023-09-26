@@ -136,7 +136,10 @@ class Hardware():
 
         finally:
             GPIO.cleanup()
-    
+            
+    def calcPower(self, V: float, A: float ):
+        self.charger.charging_W = V * A  
+
     def init_UART(self):
         serial_port = '/dev/ttyS0'
         baud_rate = 115200
