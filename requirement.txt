@@ -49,3 +49,5 @@ tornado==6.2
 traitlets==5.3.0
 wcwidth==0.2.5
 websockets==10.3
+pi-ina219==1.4.1
+smbus2==0.4.3

@@ -18,6 +18,7 @@ class Charger():
         self._meter_value_total = 0 
         self._status = "Available"
         self._state = States.S_STARTUP
+        self._charging_W = 0 
     # Get for charging variables
 
     @property
@@ -99,6 +100,14 @@ class Charger():
     @current_charge_time_left.setter
     def current_charge_time_left(self, value):
         self._current_charge_time_left = value
+
+    @property
+    def charging_W(self):
+        return self._charging_W
+    
+    @charging_W.setter
+    def charging_W(self, W: int):
+        self._charging_W = W   
 
     # Get for misc variables
     @property

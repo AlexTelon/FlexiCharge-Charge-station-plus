@@ -9,6 +9,11 @@ from variables.charger_variables import Charger as ChargerVariables
 from variables.reservation_variables import Reservation as ReservationVariables
 from variables.misc_variables import Misc as MiscVariables
 import platform
+from ina219 import INA219
+from ina219 import DeviceRangeError
+import smbus2
+import serial
+
 
 if platform.system() == 'Linux':
     import RPi.GPIO as GPIO
@@ -28,6 +33,10 @@ class Hardware():
     misc = MiscVariables()
     reservation = ReservationVariables()
     hardcoded_rfid_token = 330174510923
+    __SHUNT_OHMS = 0.1
+    __MAX_EXPECTED_AMPS = 3
+    __ina219_is_Connected = False
+    __ser = None
 
     def meter_counter_charging(self):
         """
@@ -137,3 +146,53 @@ class Hardware():
 
     def calcPowerHour(self, W: float, T: float ):
         self.charger.charging_Wh = W * T               
+            
+    def calcPower(self, V: float, A: float ):
+        self.charger.charging_W = V * A  
+
+    def init_UART(self):
+        serial_port = '/dev/ttyS0'
+        baud_rate = 115200
+        self.ser = serial.Serial(serial_port, baud_rate, timeout=1)
+        self.ser.flush()
+
+    def read_via_UART(self):
+        if self.ser.in_waiting > 0:
+            try: #incomming data need to be a string or cstring otherwise the code will crash
+                line = self.ser.readling().decode('utf-8').rstrip()
+                #split incomming string and save wanted values ex battery percentage
+                #call a helper function that updates the diffrent values
+                print(line)
+            except serial.SerialException as e:
+                print(e)
+
+
+    def init_INA219(self):
+        bus = smbus2.SMBus(1)
+        try:
+            bus.write_quick(0x40)
+            self.__ina219_is_Connected = True
+            self.ina219 = INA219(self.__SHUNT_OHMS, self.__MAX_EXPECTED_AMPS)
+            self.ina219.configure(self.ina219.RANGE_16V, bus_adc=self.ina219.ADC_128SAMP, shunt_adc=self.ina219.ADC_128SAMP)
+        except Exception as e:
+            self.__ina219_is_Connected = False
+            print("Init Failed")
+
+    def read_current_from_INA219(self):
+        if(self.__ina219_is_Connected == True):
+            try:
+                print("Bus Current: %.3f mA" % self.ina219.current())
+            except DeviceRangeError as e:
+                print(e)
+            return self.ina219.current
+        else:
+            print("INA219 is not connected")
+            return -1
+        
+    def read_voltage_from_INA219(self):
+        if(self.__ina219_is_Connected == True):
+            print("Bus voltage: %.3f V" % self.ina219.voltage())
+            return self.ina219.voltage
+        else:
+            print("INA219 is not connected")
+            return -1
