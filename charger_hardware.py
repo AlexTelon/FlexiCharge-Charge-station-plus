@@ -9,6 +9,7 @@ from variables.charger_variables import Charger as ChargerVariables
 from variables.reservation_variables import Reservation as ReservationVariables
 from variables.misc_variables import Misc as MiscVariables
 import platform
+import serial
 
 if platform.system() == 'Linux':
     import RPi.GPIO as GPIO
@@ -28,6 +29,7 @@ class Hardware():
     misc = MiscVariables()
     reservation = ReservationVariables()
     hardcoded_rfid_token = 330174510923
+    ser = None
 
     def meter_counter_charging(self):
         """
@@ -134,6 +136,22 @@ class Hardware():
 
         finally:
             GPIO.cleanup()
-
+            
     def calcPower(self, V: float, A: float ):
-        self.charger.charging_W = V * A        
+        self.charger.charging_W = V * A  
+
+    def init_UART(self):
+        serial_port = '/dev/ttyS0'
+        baud_rate = 115200
+        self.ser = serial.Serial(serial_port, baud_rate, timeout=1)
+        self.ser.flush()
+
+    def read_via_UART(self):
+        if self.ser.in_waiting > 0:
+            try: #incomming data need to be a string or cstring otherwise the code will crash
+                line = self.ser.readling().decode('utf-8').rstrip()
+                #split incomming string and save wanted values ex battery percentage
+                #call a helper function that updates the diffrent values
+                print(line)
+            except serial.SerialException as e:
+                print(e)
