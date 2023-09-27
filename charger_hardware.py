@@ -214,13 +214,13 @@ class Hardware():
         elif voltage == "9v":
             GPIO.output(12, GPIO.LOW)
         elif voltage == "5v":
-            GPIO.output(26, GPIO.LOW)
-        elif voltage == "6v":
-            GPIO.output(19, GPIO.LOW)
-        elif voltage == "10v":
-            GPIO.output(13, GPIO.LOW)
-        elif voltage == "11.5v":
             GPIO.output(6, GPIO.LOW)
+        elif voltage == "6v":
+            GPIO.output(13, GPIO.LOW)
+        elif voltage == "10v":
+            GPIO.output(19, GPIO.LOW)
+        elif voltage == "11.5v":
+            GPIO.output(26, GPIO.LOW)
         else:
             print("Invalid voltage")
             return -1
