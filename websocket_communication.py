@@ -69,7 +69,6 @@ class WebSocket():
             print("connect failed")
             print(str(e))
 
-
     async def send_message(self, json_formatted_message):
         """
         It sends a message to the websocket
@@ -203,7 +202,7 @@ class WebSocket():
         except Exception as e:
             print(str(e))
 
-        print("message sent" + str(CHARGER_VARIABLES.current_state))
+        print("message sent " + str(CHARGER_VARIABLES.current_state))
         await self.send_message(conf_send)
 
 
