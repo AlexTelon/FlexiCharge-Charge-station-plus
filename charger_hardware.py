@@ -196,3 +196,32 @@ class Hardware():
         else:
             print("INA219 is not connected")
             return -1
+            
+    def controll_output_voltage(self, voltage):
+        GPIO.setmode(GPIO.BCM)
+
+        relay_pins = [21, 20, 16, 12, 26, 19, 13, 6] 
+        
+        GPIO.setup(relay_pins, GPIO.OUT)
+        GPIO.output(relay_pins, GPIO.HIGH)
+
+        if voltage == "3.3v":
+            GPIO.output(21, GPIO.LOW)
+        elif voltage == "4.2v":
+            GPIO.output(20, GPIO.LOW)
+        elif voltage == "7.4v":
+            GPIO.output(16, GPIO.LOW)
+        elif voltage == "9v":
+            GPIO.output(12, GPIO.LOW)
+        elif voltage == "5v":
+            GPIO.output(6, GPIO.LOW)
+        elif voltage == "6v":
+            GPIO.output(13, GPIO.LOW)
+        elif voltage == "10v":
+            GPIO.output(19, GPIO.LOW)
+        elif voltage == "11.5v":
+            GPIO.output(26, GPIO.LOW)
+        else:
+            print("Invalid voltage")
+            return -1
+            
