@@ -197,7 +197,7 @@ class Hardware():
             print("INA219 is not connected")
             return -1
             
-    def controll_output_voltage(voltage):
+    def controll_output_voltage(self, voltage):
         GPIO.setmode(GPIO.BCM)
 
         relay_pins = [21, 20, 16, 12, 26, 19, 13, 6] 
