@@ -107,6 +107,7 @@ async def statemachine(webSocket: WebSocket):
             
             CHARGER_GUI.set_charge_precentage(CHARGER_VARIABLES.current_charging_percentage)
             CHARGER_GUI.set_power_charged(round((full_time - time_left)* CHARGER_VARIABLES.charging_Wh_per_second,2))
+            CHARGER_GUI.set_charging_price(CHARGER_VARIABLES.charging_price)
             try:
                 CHARGER_GUI.set_num_of_secs(time_left)
             except Exception as e:

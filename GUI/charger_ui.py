@@ -7,6 +7,7 @@ from images import Display
 from GUI.charger_gui import GUI
 import qrcode
 from GUI.charger_window import Windows
+from websocket_communication import CHARGER_VARIABLES
 
 
 
@@ -14,6 +15,7 @@ class UI():
     WINDOW_GRAPHICS = Windows()
     current_state: State = None
     last_price = 50
+    charging_price = 0
     charger_id = 000000
     percent = 0
     power_charged = 0
@@ -40,6 +42,10 @@ class UI():
         if state != self.current_state:
             self.current_state = state
             self.run_state()
+    
+    def set_charging_price(self, newPrice):
+        self.charging_price = newPrice
+        
 
     #TODO - Needs to be troubleshooted of how to display the charger_id in the most efficient way
     def set_charger_id(self, id):
@@ -133,6 +139,7 @@ class UI():
         self.WINDOW_GRAPHICS._time_window['ID2'].update(str(s))
         self.WINDOW_GRAPHICS._charging_percent_window['PERCENT'].update(str(self.percent))
         self.WINDOW_GRAPHICS._power_window['POWERTEST'].update(str(self.power_charged))
+        self.WINDOW_GRAPHICS._charging_price_window['PRICE'].update(str(self.charging_price))
         
         if self.percent >= 10 and self.percent < 100:
             self.WINDOW_GRAPHICS._charging_percent_mark_window.move(350,350)
@@ -182,7 +189,6 @@ class UI():
 
         elif self.current_state == States.S_PLUGINCABLE:
             self.WINDOW_GRAPHICS._background_window['IMAGE'].update(data=Display.plug_cable())
-            self.WINDOW_GRAPHICS._charging_price_window.finalize()
             self.WINDOW_GRAPHICS._background_window.refresh()
 
 
@@ -193,12 +199,14 @@ class UI():
 
         elif self.current_state == States.S_CHARGING:
             self.charging_is_done = False
-            self.WINDOW_GRAPHICS._qr_code_window.hide()
+            #self.WINDOW_GRAPHICS._qr_code_window.hide()
             self.WINDOW_GRAPHICS._background_window['IMAGE'].update(data=Display.charging())
             self.WINDOW_GRAPHICS._charging_percent_window.finalize()
             self.WINDOW_GRAPHICS._charging_percent_mark_window.finalize()
             self.WINDOW_GRAPHICS._time_window.finalize()
             self.WINDOW_GRAPHICS._power_window.finalize()
+            self.WINDOW_GRAPHICS._charging_price_window.finalize()
+            self.WINDOW_GRAPHICS._charging_price_window['PRICE'].update(str(CHARGER_VARIABLES.charging_price))
             self.WINDOW_GRAPHICS._charging_percent_window['PERCENT'].update(str(self.percent))
             self.WINDOW_GRAPHICS._power_window['POWERTEST'].update(str(self.power_charged))
 

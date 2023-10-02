@@ -74,7 +74,7 @@ boot_message_conf = [3, '0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v', 'BootNotificatio
     'interval': 86400}]
 
 data_transfer_req = [2, '100009DataTransfer1664971239072', 'DataTransfer', {
-    'vendorId': 'com.flexicharge', 'messageId': 'BootData', 'data': '{"chargerId":100009,"chargingPrice":"7500.00"}'}]
+    'vendorId': 'com.flexicharge', 'messageId': 'BootData', 'data': '{"chargerId":100009,"chargingPrice":"5.25"}'}]
 
 start_remote_transaction_request = [2,
                                     "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v",
@@ -146,6 +146,7 @@ async def ocpp_server(websocket):
         elif message_json[2] == "StopTransaction":
             await websocket.send(json.dumps(stop_transaction_conf))
         
+
 
 
 start_server = websockets.serve(ocpp_server, "127.0.0.1", 60003) #set server ip and port
