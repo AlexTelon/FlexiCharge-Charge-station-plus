@@ -32,7 +32,7 @@ jobs:
         run: pip install -r requirement.txt
       
       - name: start tests
-        run: python -m pytest --junit-xml=report.xml
+        run: python -m pytest -v --junit-xml=report.xml
         
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v3
