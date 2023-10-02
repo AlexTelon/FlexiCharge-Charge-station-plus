@@ -186,7 +186,7 @@ class Hardware():
             try: #incomming data need to be a string or cstring otherwise the code will crash
                 line = self.__ser.readline().decode('utf-8').rstrip()
                 #print(line)
-                if line == "connect":
+                if line == "connect" and self.charger.is_connected == False and self.charger.charge == False:
                     self.charger.is_connected = True
                     self.__ser.write(b"ok\n")
 
@@ -196,7 +196,7 @@ class Hardware():
                     #controll_output_voltage("off")
                     self.__ser.write(b"ok\n")
 
-                elif line == "begin" and self.charger.is_connected == True:
+                elif line == "begin" and self.charger.is_connected == True and self.charger.charge == False:
                     self.charger.charge = True
                     self.__start_time = time.time()
                     self.__ser.write(b"ok\n")
@@ -211,11 +211,14 @@ class Hardware():
                         value = parts[1]
                         if key == "voltage":
                             self.charger.requsted_voltage = value
+                            self.__start_time = time.time()
                             #controll_output_voltage(value)
                         elif key == "charge":
                             self.charger.current_charging_percentage = int(value)
+                            self.__start_time = time.time()
                         elif key == "temp":
                             self.charger.battrey_temp = int(value)
+                            self.__start_time = time.time()
                     except:
                         pass
             except serial.SerialException as e:
