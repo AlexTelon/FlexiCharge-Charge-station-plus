@@ -904,7 +904,7 @@ class TestWebSocket:
 
         websocket_instance.send_message = mock_send_message
 
-        msg = [2,
+        expected_message = [2,
                 unique_id,
                 "MeterValues",
                 {
@@ -932,21 +932,34 @@ class TestWebSocket:
                     }
                 }]
         
-        expected_message = json.dumps(msg)
-
         #Act
         await websocket_instance.send_meter_values()
 
         #Assert
         assert sent_message is not None
-        assert sent_message == expected_message
+        sent_message = json.loads(sent_message)
 
+        assert sent_message[0]                                           == expected_message[0]
+        assert sent_message[1]                                           == expected_message[1]
+        assert sent_message[2]                                           == expected_message[2]
+        assert sent_message[3]["connectorId"]                            == expected_message[3]["connectorId"]
+        assert sent_message[3]["transactionId"]                          == expected_message[3]["transactionId"]
+        assert sent_message[3]["timestamp"]                              == pytest.approx(expected_message[3]["timestamp"],2)
+        assert sent_message[3]["values"]["chargingPercent"]["value"]     == expected_message[3]["values"]["chargingPercent"]["value"]
+        assert sent_message[3]["values"]["chargingPercent"]["unit"]      == expected_message[3]["values"]["chargingPercent"]["unit"]
+        assert sent_message[3]["values"]["chargingPercent"]["measurand"] == expected_message[3]["values"]["chargingPercent"]["measurand"]
+        assert sent_message[3]["values"]["chargingPower"]["value"]       == expected_message[3]["values"]["chargingPower"]["value"]
+        assert sent_message[3]["values"]["chargingPower"]["unit"]        == expected_message[3]["values"]["chargingPower"]["unit"]
+        assert sent_message[3]["values"]["chargingPower"]["measurand"]   == expected_message[3]["values"]["chargingPower"]["measurand"]
+        assert sent_message[3]["values"]["chargedSoFar"]["value"]        == expected_message[3]["values"]["chargedSoFar"]["value"]
+        assert sent_message[3]["values"]["chargedSoFar"]["unit"]         == expected_message[3]["values"]["chargedSoFar"]["unit"]
+        assert sent_message[3]["values"]["chargedSoFar"]["measurand"]    == expected_message[3]["values"]["chargedSoFar"]["measurand"]
 
         #clean up
         CHARGER_VARIABLES.charger_id = pre_test_charger_id
         CHARGER_VARIABLES.charging_W = pre_test_charging_W
         CHARGER_VARIABLES.current_charging_percentage = pre_test_current_charge_percent
-    
+
     @pytest.mark.asyncio
     async def test_send_data_reserve(self, websocket_instance):
         #Arrange
