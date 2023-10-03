@@ -6,7 +6,7 @@ class Charger():
 
     def __init__(self):
         # Charger variables
-        self._charge = False
+        self._is_charging = False
         self._charging_id_tag = None
         self._charging_connector = None
         self._charger_id = 000000
@@ -45,8 +45,8 @@ class Charger():
         return self._charging_price
 
     @property
-    def charge(self):
-        return self._charge
+    def is_charging(self):
+        return self._is_charging
 
     @property
     def charging_id_tag(self):
@@ -98,9 +98,9 @@ class Charger():
     def charging_price(self, price: float):
         self._charging_price = price
 
-    @charge.setter
-    def charge(self, boolean: bool):
-        self._charge = boolean
+    @is_charging.setter
+    def is_charging(self, boolean: bool):
+        self._is_charging = boolean
 
     @current_state.setter
     def current_state(self, state: States):

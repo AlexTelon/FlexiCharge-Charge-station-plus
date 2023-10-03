@@ -52,7 +52,7 @@ class Hardware():
 
         #self.send_data_transfer is now in the web socket communication file. Should be removed from this file.
 
-        if self.charger.charge == True:
+        if self.charger.is_charging == True:
             self.misc.increment_meter_value_total_by(1)
             self.charger.increment_current_charging_percentage_by(1)
             asyncio.run(self.send_data_transfer(
@@ -75,7 +75,7 @@ class Hardware():
         """
         It resets the charging status of the car
         """
-        self.charger.charge = False
+        self.charger.is_charging = False
         self.charger.charging_id_tag = None
         self.charger.charging_connector = None
         print("Hard reset charging")
@@ -85,7 +85,7 @@ class Hardware():
         The function starts charging the EV, sets the charging_id_tag to the reservation_id_tag, and
         sets the charging_connector to the reserved_connector
         """
-        self.charger.charge = True
+        self.charger.is_charging = True
         self.charger.charging_id_tag = self.reservation.reservation_id_tag
         self.charger.charging_connector = self.reservation.reserved_connector
 
@@ -120,7 +120,7 @@ class Hardware():
         :param connector_id: The connector ID of the connector that is being used for charging
         :param id_tag: The id_tag of the user who is charging
         """
-        self.charger.charge = True
+        self.charger.is_charging = True
         self.charger.charging_id_tag = id_tag
         self.charger.charging_connector = connector_id
         threading.Timer(1, self.meter_counter_charging).start()
@@ -186,18 +186,18 @@ class Hardware():
             try: #incomming data need to be a string or cstring otherwise the code will crash
                 line = self.__ser.readline().decode('utf-8').rstrip()
                 #print(line)
-                if line == "connect" and self.charger.is_connected == False and self.charger.charge == False:
+                if line == "connect" and self.charger.is_connected == False and self.charger.is_charging == False:
                     self.charger.is_connected = True
                     self.__ser.write(b"ok\n")
 
                 elif line == "end":
                     self.charger.is_connected = False
-                    self.charger.charge = False
+                    self.charger.is_charging = False
                     #controll_output_voltage("off")
                     self.__ser.write(b"ok\n")
 
-                elif line == "begin" and self.charger.is_connected == True and self.charger.charge == False:
-                    self.charger.charge = True
+                elif line == "begin" and self.charger.is_connected == True and self.charger.is_charging == False:
+                    self.charger.is_charging = True
                     self.__start_time = time.time()
                     self.__ser.write(b"ok\n")
 
@@ -224,9 +224,9 @@ class Hardware():
             except serial.SerialException as e:
                 print(e)
 
-        if time.time() - self.__start_time >= 1 and self.charger.is_connected and self.charger.charge: # Check if 1 seconds passed and got no beep, cut power
+        if time.time() - self.__start_time >= 1 and self.charger.is_connected and self.charger.is_charging: # Check if 1 seconds passed and got no beep, cut power
             self.charger.is_connected = False
-            self.charger.charge = False
+            self.charger.is_charging = False
             #controll_output_voltage("off")
 
 
