@@ -534,7 +534,7 @@ class WebSocket():
 
                            },
                            "chargingPower": {
-                               "value": "chargingPower",
+                               "value": "chargingPower ",
                                "unit": "W",
                                "measurand": "Power.Active,Import"
                            },

@@ -918,7 +918,7 @@ class TestWebSocket:
 
                         },
                         "chargingPower": {
-                            "value": 0,
+                            "value": "chargingPower ",
                             "unit": "W",
                             "measurand": "Power.Active,Import"
                         },
