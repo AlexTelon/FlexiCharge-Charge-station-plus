@@ -890,7 +890,8 @@ class TestWebSocket:
         #Arrange
         pre_test_charger_id             = CHARGER_VARIABLES.charger_id
         pre_test_current_charge_percent = CHARGER_VARIABLES.current_charging_percentage
-        pre_test_meter_value_total      = CHARGER_VARIABLES.meter_value_total
+
+        assert CHARGER_VARIABLES.meter_value_total == 0
 
         timestamp = int(time.time() * 1000)
         unique_id = str(CHARGER_VARIABLES.charger_id) + "MeterValues" + str(timestamp)
@@ -903,32 +904,32 @@ class TestWebSocket:
         websocket_instance.send_message = mock_send_message
 
         msg = [2,
-            unique_id,
-            "MeterValues",
-            {
-                "connectorId": 1,
-                "transactionId": 1,
-                "timestamp": timestamp,
-                "values": {
-                    "chargingPercent": {
-                        "value": CHARGER_VARIABLES.current_charging_percentage,
-                        "unit": "%",
-                        "measurand": "SoC"
+                unique_id,
+                "MeterValues",
+                {
+                    "connectorId": 1,
+                    "transactionId": 1,
+                    "timestamp": timestamp,
+                    "values": {
+                        "chargingPercent": {
+                            "value": CHARGER_VARIABLES.current_charging_percentage,
+                            "unit": "%",
+                            "measurand": "SoC"
 
-                    },
-                    "chargingPower": {
-                        "value": "chargingPower",
-                        "unit": "W",
-                        "measurand": "Power.Active,Import"
-                    },
-                    "chargedSoFar": {
-                        "value": CHARGER_VARIABLES.meter_value_total,
-                        "unit": "Wh",
-                        "measurand": "Energy.Active.Import"
+                        },
+                        "chargingPower": {
+                            "value": 0,
+                            "unit": "W",
+                            "measurand": "Power.Active,Import"
+                        },
+                        "chargedSoFar": {
+                            "value": CHARGER_VARIABLES.meter_value_total,
+                            "unit": "Wh",
+                            "measurand": "Energy.Active.Import"
+                        }
+
                     }
-
-                }
-            }]
+                }]
         
         expected_message = json.dumps(msg)
 
