@@ -193,7 +193,6 @@ class Hardware():
                 elif line == "end":
                     self.charger.is_connected = False
                     self.charger.is_charging = False
-                    #controll_output_voltage("off")
                     self.__ser.write(b"ok\n")
 
                 elif line == "begin" and self.charger.is_connected == True and self.charger.is_charging == False:
@@ -212,7 +211,7 @@ class Hardware():
                         if key == "voltage":
                             self.charger.requsted_voltage = value
                             self.__start_time = time.time()
-                            #controll_output_voltage(value)
+                            self.__ser.write(b"ok\n")
                         elif key == "charge":
                             self.charger.current_charging_percentage = int(value)
                             self.__start_time = time.time()
@@ -224,10 +223,9 @@ class Hardware():
             except serial.SerialException as e:
                 print(e)
 
-        if time.time() - self.__start_time >= 1 and self.charger.is_connected and self.charger.is_charging: # Check if 1 seconds passed and got no beep, cut power
+        if time.time() - self.__start_time >= 1 and self.charger.is_connected and self.charger.is_charging and self.charger.requsted_voltage != "": # Check if 1 seconds passed and got no beep, cut power
             self.charger.is_connected = False
             self.charger.is_charging = False
-            #controll_output_voltage("off")
 
 
     def init_INA219(self):
