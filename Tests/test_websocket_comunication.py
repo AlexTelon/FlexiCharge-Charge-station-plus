@@ -889,6 +889,7 @@ class TestWebSocket:
     async def test_send_meter_values(self, websocket_instance):
         #Arrange
         pre_test_charger_id             = CHARGER_VARIABLES.charger_id
+        pre_test_charging_W             = CHARGER_VARIABLES.charging_W
         pre_test_current_charge_percent = CHARGER_VARIABLES.current_charging_percentage
 
         assert CHARGER_VARIABLES.meter_value_total == 0
@@ -918,7 +919,7 @@ class TestWebSocket:
 
                         },
                         "chargingPower": {
-                            "value": "chargingPower ",
+                            "value": CHARGER_VARIABLES.charging_W,
                             "unit": "W",
                             "measurand": "Power.Active,Import"
                         },
@@ -943,6 +944,7 @@ class TestWebSocket:
 
         #clean up
         CHARGER_VARIABLES.charger_id = pre_test_charger_id
+        CHARGER_VARIABLES.charging_W = pre_test_charging_W
         CHARGER_VARIABLES.current_charging_percentage = pre_test_current_charge_percent
     
     @pytest.mark.asyncio
