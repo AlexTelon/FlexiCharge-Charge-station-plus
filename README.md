@@ -64,3 +64,7 @@ After this, when you start the state machine and connect to the "server" the ter
 ### Development Requirements:
 Python 3.9 <br />
 Visual Studio Code
+
+2023 Team
+![CS_squad](https://github.com/AlexTelon/FlexiCharge-Charge-station-plus/assets/102788760/a7dd75b9-42ab-44ec-a20d-acb14e1414b1)
+
