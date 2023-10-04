@@ -307,4 +307,4 @@ class Hardware():
         else:
             print("Invalid voltage")
             return -1
-            
+        return 0   
