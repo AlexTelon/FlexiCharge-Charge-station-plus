@@ -2,8 +2,6 @@ from sre_parse import State
 from StateHandler import States
 class Charger():
 
-    CHARGE_TIME_MAX = 101
-
     def __init__(self):
         # Charger variables
         self._is_charging = False
@@ -14,7 +12,7 @@ class Charger():
         self._charging_Wh_per_second = 0.3
         self._charging_price = 0.0
         self._current_charging_percentage = 0
-        self._current_charge_time_left = self.CHARGE_TIME_MAX
+        self._current_charge_time_left = 0
         self._meter_value_total = 0 
         self._status = "Available"
         self._state = States.S_STARTUP

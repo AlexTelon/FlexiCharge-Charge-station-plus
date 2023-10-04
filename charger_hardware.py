@@ -9,15 +9,17 @@ from variables.charger_variables import Charger as ChargerVariables
 from variables.reservation_variables import Reservation as ReservationVariables
 from variables.misc_variables import Misc as MiscVariables
 import platform
-from ina219 import INA219
-from ina219 import DeviceRangeError
-import serial
 
 
 if platform.system() == 'Linux':
     import RPi.GPIO as GPIO
     from mfrc522 import SimpleMFRC522
     import smbus2
+    import serial
+    from ina219 import INA219
+    from ina219 import DeviceRangeError
+
+
 
 
 
@@ -149,11 +151,12 @@ class Hardware():
         finally:
             GPIO.cleanup()
 
-    def calcPowerHour(self, W: float, T: float ):
-        self.charger.charging_Wh = W * T               
+    def calc_power_hour(self, W: float, T: float ):
+        self.charger.charging_Wh = self.charger.charging_Wh + (W * (T/3600))               
             
-    def calcPower(self, V: float, A: float ):
+    def calc_power(self, V: float, A: float ):
         self.charger.charging_W = V * A  
+        return self.charger.charging_W
 
     def init_UART(self):
         """
@@ -193,7 +196,9 @@ class Hardware():
                 elif line == "end":
                     self.charger.is_connected = False
                     self.charger.is_charging = False
+                    self.charger.requsted_voltage = ""
                     self.__ser.write(b"ok\n")
+                    self.__ser.flushInput()
 
                 elif line == "begin" and self.charger.is_connected == True and self.charger.is_charging == False:
                     self.charger.is_charging = True
@@ -202,6 +207,7 @@ class Hardware():
 
                 elif line == "beep":
                     self.__start_time = time.time()
+                    self.__ser.flushInput()
 
                 elif self.charger.is_connected == True:
                     try:
@@ -223,9 +229,12 @@ class Hardware():
             except serial.SerialException as e:
                 print(e)
 
-        if time.time() - self.__start_time >= 1 and self.charger.is_connected and self.charger.is_charging and self.charger.requsted_voltage != "": # Check if 1 seconds passed and got no beep, cut power
+        if time.time() - self.__start_time >= 0.6 and self.charger.is_connected and self.charger.is_charging and self.charger.requsted_voltage != "": # Check if 1 seconds passed and got no beep, cut power
             self.charger.is_connected = False
             self.charger.is_charging = False
+            self.charger.requsted_voltage = ""
+            self.__ser.flushInput()
+
 
 
     def init_INA219(self):
@@ -260,7 +269,7 @@ class Hardware():
             #    print("Bus Current: %.3f mA" % self.ina219.current())
             #except DeviceRangeError as e:
             #    print(e)
-            return self.ina219.current
+            return self.ina219.current()
         else:
             #print("INA219 is not connected")
             return -1
@@ -275,7 +284,7 @@ class Hardware():
         """
         if(self.__ina219_is_Connected == True):
             #print("Bus voltage: %.3f V" % self.ina219.voltage())
-            return self.ina219.voltage
+            return self.ina219.voltage()
         else:
             #print("INA219 is not connected")
             return -1
@@ -288,7 +297,9 @@ class Hardware():
         GPIO.setup(relay_pins, GPIO.OUT)
         GPIO.output(relay_pins, GPIO.HIGH)
 
-        if voltage == "3.3v":
+        if voltage == "off":
+            pass
+        elif voltage == "3.3v":
             GPIO.output(21, GPIO.LOW)
         elif voltage == "4.2v":
             GPIO.output(20, GPIO.LOW)
@@ -307,4 +318,15 @@ class Hardware():
         else:
             print("Invalid voltage")
             return -1
-            
+
+    def get_charger_variables(self):
+        return self.charger
+    
+    def set_charger_variables(self, new_variables):
+        self.charger = new_variables
+    
+    def is_connected(self):
+        if self.charger.is_charging == False or self.charger.is_connected == False:
+            return False
+        else:   
+            return True

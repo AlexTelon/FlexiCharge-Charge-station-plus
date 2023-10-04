@@ -147,8 +147,12 @@ class WebSocket():
             print(e)
             pass
 
-    def update_charger_variables(self):
+    def get_charger_variables(self):
         return CHARGER_VARIABLES
+    
+    def set_charger_variables(self, new_variables):
+        global CHARGER_VARIABLES
+        CHARGER_VARIABLES= new_variables
 
     async def get_reservation_info(self):
         return RESERVATION_VARIABLES.is_reserved, CHARGER_VARIABLES.status, RESERVATION_VARIABLES.reservation_id_tag, RESERVATION_VARIABLES.reservation_id, RESERVATION_VARIABLES.reserved_connector
@@ -367,7 +371,7 @@ class WebSocket():
             await self.send_status_notification()
             print("STATUS NOTIFICATION SENT")
             print("Charge should be started")
-            CHARGER_VARIABLES.current_state = States.S_CHARGING
+            CHARGER_VARIABLES.current_state = States.S_PLUGINCABLE
 
         else:  # A non reserved tag tries to use the connector
             print("This tag does not have a reservation")

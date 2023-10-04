@@ -110,7 +110,7 @@ class UI():
         self.update_charging()
 
 
-    def generate_qr_code(chargerID):
+    def generate_qr_code(self,chargerID):
         """
         It takes a string and generates a QR code image from it
         
