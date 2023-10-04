@@ -19,7 +19,23 @@ class Charger():
         self._status = "Available"
         self._state = States.S_STARTUP
         self._charging_W = 0 
+        self._requsted_voltage = ""
+        self._is_connected = False 
+        self._battrey_temp = 0
+
+
     # Get for charging variables
+    @property
+    def battrey_temp(self):
+        return self._battrey_temp
+    
+    @property
+    def is_connected(self):
+        return self._is_connected
+
+    @property
+    def requsted_voltage(self):
+        return self._requsted_voltage
 
     @property
     def charging_Wh(self):
@@ -62,9 +78,22 @@ class Charger():
 
      # Set for charging variables
 
+    @battrey_temp.setter
+    def battrey_temp(self, temp: int):
+        self._battrey_temp = temp
+
+    @is_connected.setter
+    def is_connected(self, boolean: bool):
+        self._is_connected = boolean
+    
+    @requsted_voltage.setter
+    def requsted_voltage(self, voltage: str):
+        self._requsted_voltage = voltage
+
     @charging_Wh.setter
     def charging_Wh(self, Wh: int):
         self._charging_Wh = Wh
+
     @charging_price.setter
     def charging_price(self, price: float):
         self._charging_price = price
