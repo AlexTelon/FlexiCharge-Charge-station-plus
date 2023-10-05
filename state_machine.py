@@ -43,6 +43,7 @@ async def statemachine(webSocket: WebSocket):
             Reservation.reserved_connector = await webSocket.get_reservation_info
 
         if state == States.S_STARTUP:
+            CHARGER_GUI.generate_qr_code(CHARGER_VARIABLES.charger_id)
             CHARGER_GUI.change_state(state)
         
         elif state == States.S_NOTAVAILABLE:
@@ -50,7 +51,6 @@ async def statemachine(webSocket: WebSocket):
 
         elif state == States.S_AVAILABLE:
             CHARGER_GUI.set_charger_id(CHARGER_VARIABLES.charger_id)
-            CHARGER_GUI.generate_qr_code(CHARGER_VARIABLES.charger_id)
             CHARGER.update_timeout()
             CHARGER_GUI.change_state(state)
 
