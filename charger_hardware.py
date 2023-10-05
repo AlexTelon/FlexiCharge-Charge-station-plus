@@ -184,7 +184,7 @@ class Hardware():
         - "beep": Heart beat from BMS. Updates the start time.
         - If none of the above commands and the charger is connected, it parses commands in the format "key:value" and updates charger parameters accordingly.
 
-        If no "beep" command is received within 1 second after the last action, the charger is marked as disconnected and charging is stopped.
+        If no "beep" command is received within 0.6 second after the last action, the charger is marked as disconnected and charging is stopped.
         """
         if self.__ser.in_waiting > 0:
             try: #incomming data need to be a string or cstring otherwise the code will crash
