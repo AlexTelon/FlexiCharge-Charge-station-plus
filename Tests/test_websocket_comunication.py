@@ -1,4 +1,5 @@
 import time, json, uuid, pytest, asyncio
+from config import Configurations as Config
 from unittest import mock
 from datetime import datetime
 from StateHandler import States
@@ -88,6 +89,12 @@ class TestWebSocket:
         Test that the WebSocket connection is started correctly.
         """
         #Arrange
+
+        server_address = Config().getServerAddress()
+        subprotocols=Config().getProtocol()
+        ping_interval=Config().getWebSocketPingInterval()
+        timeout=Config().getWebSocketTimeout()
+
         with mock.patch('websocket_communication.ws.connect') as mock_connect:
             mock_connect.return_value = asyncio.Future()
             mock_connect.return_value.set_result(None)
@@ -95,7 +102,7 @@ class TestWebSocket:
             await websocket_instance.start_websocket()
             #Assert
             mock_connect.assert_called_once_with(
-                'ws://127.0.0.1:60003', subprotocols=['ocpp1.6'], ping_interval=5, timeout=None
+                server_address, subprotocols=subprotocols, ping_interval=ping_interval, timeout=timeout
             )
 
     @pytest.mark.asyncio
@@ -648,6 +655,7 @@ class TestWebSocket:
 
         #set up reservation id
         RESERVATION_VARIABLES.reservation_id_tag = test_reservation_id_tag
+        CHARGER_VARIABLES.status = "Available"
 
         #Act
         await websocket_instance.remote_start_transaction(test_message)
@@ -660,12 +668,12 @@ class TestWebSocket:
             assert sent_message_start_transaktion == True
             assert sent_message_status_notification == True
             assert CHARGER_VARIABLES.status == "Charging"
-            assert CHARGER_VARIABLES.current_state == States.S_CHARGING
+            assert CHARGER_VARIABLES.current_state == States.S_PLUGINCABLE
         else:
             assert sent_message_start_transaktion == None
             assert sent_message_status_notification == False
             assert CHARGER_VARIABLES.status != "Charging"
-            assert CHARGER_VARIABLES.current_state != States.S_CHARGING
+            assert CHARGER_VARIABLES.current_state != States.S_PLUGINCABLE
 
         #clean up
         CHARGER_VARIABLES.status                 = pre_test_charger_status
