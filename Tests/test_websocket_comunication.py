@@ -33,7 +33,7 @@ TEST_DATA_TRANSFER_MESSAGES = [
 ]
 
 class TestWebSocket:
-
+     
     @pytest.fixture
     def websocket_instance(self):
         return WebSocket()
@@ -261,7 +261,7 @@ class TestWebSocket:
         else:
             assert False, "if this is reached then the test_message contains a unknown command for the funktion"
     
-    @pytest.mark.parametrize("test_data_is_charging,test_data_charging_id_tag,test_data_charging_connector,test_data_charger_id,test_data_charging_Wh,test_data_charging_Wh_per_second,test_data_charging_price,test_data_current_charging_percentage,test_data_current_charge_time_left,test_data_meter_value_total,test_data_status, test_data_state",[
+    @pytest.mark.parametrize("test_data_is_charging, test_data_charging_id_tag, test_data_charging_connector, test_data_charger_id, test_data_charging_Wh, test_data_charging_Wh_per_second, test_data_charging_price, test_data_current_charging_percentage, test_data_current_charge_time_left, test_data_meter_value_total, test_data_status, test_data_state",[
                                     [
                                         False,
                                         None, 
@@ -271,7 +271,7 @@ class TestWebSocket:
                                         0.3, 
                                         0.0, 
                                         0, 
-                                        CHARGER_VARIABLES.CHARGE_TIME_MAX, 
+                                        CHARGER_VARIABLES._current_charge_time_left, 
                                         0, 
                                         "Available",
                                         States.S_STARTUP],
@@ -284,13 +284,13 @@ class TestWebSocket:
                                         0.3, 
                                         0.0, 
                                         0, 
-                                        CHARGER_VARIABLES.CHARGE_TIME_MAX, 
+                                        CHARGER_VARIABLES._current_charge_time_left, 
                                         0, 
                                         "Missing",
                                         States.S_CHARGING
                                     ]
                              ])
-    def test_update_charger_variables(self,websocket_instance,test_data_is_charging,test_data_charging_id_tag,test_data_charging_connector,test_data_charger_id,test_data_charging_Wh,test_data_charging_Wh_per_second,test_data_charging_price,test_data_current_charging_percentage,test_data_current_charge_time_left,test_data_meter_value_total,test_data_status,test_data_state):
+    def test_get_charger_variables(self,websocket_instance,test_data_is_charging,test_data_charging_id_tag,test_data_charging_connector,test_data_charger_id,test_data_charging_Wh,test_data_charging_Wh_per_second,test_data_charging_price,test_data_current_charging_percentage,test_data_current_charge_time_left,test_data_meter_value_total,test_data_status,test_data_state):
         #Arrange
         #save pre test values 
         pre_test_is_charging                 = CHARGER_VARIABLES._is_charging 
@@ -321,7 +321,7 @@ class TestWebSocket:
         CHARGER_VARIABLES._state                       = test_data_state
         
         #Act
-        Uppdateted_charger_variables = websocket_instance.update_charger_variables()
+        Uppdateted_charger_variables = websocket_instance.get_charger_variables()
         
         #Assert
         assert Uppdateted_charger_variables is CHARGER_VARIABLES 
