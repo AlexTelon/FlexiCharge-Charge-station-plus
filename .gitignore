@@ -1,6 +1,4 @@
 
-Tests/__pycache__/test_websocket_comunication.cpython-310-pytest-7.1.3.pyc
-variables/__pycache__/__init__.cpython-310.pyc
-variables/__pycache__/charger_variables.cpython-310.pyc
-variables/__pycache__/misc_variables.cpython-310.pyc
-variables/__pycache__/reservation_variables.cpython-310.pyc
+Tests/__pycache__/
+variables/__pycache__/
+GUI/__pycache__/
