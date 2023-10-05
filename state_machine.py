@@ -29,12 +29,12 @@ async def statemachine(webSocket: WebSocket):
     charing_start_time = 0
     while True:
 
-        await asyncio.sleep(0.5)      #Make the state machine sleep in some time to give the background task a chance to run.
+        await asyncio.sleep(1)      #Make the state machine sleep in some time to give the background task a chance to run.
         
         CHARGER_VARIABLES = webSocket.get_charger_variables()
         CHARGER.set_charger_variables(CHARGER_VARIABLES)
 
-        state = CHARGER_VARIABLES.current_state #Do not change 'state' after this
+        state = CHARGER_VARIABLES.current_state 
 
         if CHARGER_VARIABLES.status == "ReserveNow":
             Reservation.is_reserved, CHARGER_VARIABLES.status,
@@ -51,36 +51,50 @@ async def statemachine(webSocket: WebSocket):
         elif state == States.S_AVAILABLE:
             CHARGER_GUI.set_charger_id(CHARGER_VARIABLES.charger_id)
             CHARGER_GUI.generate_qr_code(CHARGER_VARIABLES.charger_id)
+            CHARGER.update_timeout()
             CHARGER_GUI.change_state(state)
 
         elif state == States.S_PLUGINCABLE:
             CHARGER_GUI.change_state(state)
             CHARGER.read_via_UART()
             CHARGER_VARIABLES = CHARGER.get_charger_variables()
-            #add a timeout/return to avalibe
+
+            if CHARGER.timeout_passed_and_not_connected():
+                CHARGER_VARIABLES.reset_variables()
+                CHARGER_VARIABLES.current_state = States.S_AVAILABLE
+                CHARGER.set_charger_variables(CHARGER_VARIABLES)
+
             if CHARGER_VARIABLES.is_connected:
                 CHARGER_VARIABLES.current_state = States.S_CONNECTING
+
             webSocket.set_charger_variables(CHARGER_VARIABLES)
 
         elif state == States.S_CONNECTING:
             CHARGER_GUI.change_state(state)
             CHARGER.read_via_UART()
             CHARGER_VARIABLES = CHARGER.get_charger_variables()
-            #add a timeout/return to avalibe
+
+            if CHARGER.timeout_passed_and_not_connected():
+                CHARGER_VARIABLES.reset_variables()
+                CHARGER_VARIABLES.current_state = States.S_AVAILABLE
+                CHARGER.set_charger_variables(CHARGER_VARIABLES)
+
             if(CHARGER_VARIABLES.is_connected and CHARGER_VARIABLES.is_charging and CHARGER_VARIABLES.requsted_voltage != ""):
                 CHARGER.controll_output_voltage(CHARGER_VARIABLES.requsted_voltage)
                 CHARGER_VARIABLES.current_state = States.S_CHARGING
+
             webSocket.set_charger_variables(CHARGER_VARIABLES)
 
         elif state == States.S_CHARGING:
             CHARGER_GUI.change_state(state)
             CHARGER.read_via_UART()
             CHARGER_VARIABLES = CHARGER.get_charger_variables()
+
             if not CHARGER.is_connected():
                 CHARGER.controll_output_voltage("off")
                 await asyncio.gather(webSocket.stop_transaction(True))
-                #CHARGER_VARIABLES.current_state = States.S_Error/show an error occured while charging
-                #resert variables/voltage etc
+                CHARGER_VARIABLES.reset_variables()
+
             webSocket.set_charger_variables(CHARGER_VARIABLES)
             
             try:

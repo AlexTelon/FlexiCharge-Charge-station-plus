@@ -21,6 +21,21 @@ class Charger():
         self._is_connected = False 
         self._battrey_temp = 0
 
+    
+    def reset_variables(self):
+        self._is_charging = False
+        self._charging_id_tag = None
+        self._charging_connector = None
+        self._charging_Wh = 0 
+        self._charging_Wh_per_second = 0.3
+        self._current_charging_percentage = 0
+        self._current_charge_time_left = 0
+        self._meter_value_total = 0 
+        self._charging_W = 0 
+        self._requsted_voltage = ""
+        self._is_connected = False 
+        self._battrey_temp = 0
+
 
     # Get for charging variables
     @property

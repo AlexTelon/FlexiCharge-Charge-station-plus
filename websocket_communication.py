@@ -262,6 +262,7 @@ class WebSocket():
         current_time = datetime.now()
         timestamp = current_time.timestamp()
         CHARGER_VARIABLES.status = "Available"
+        CHARGER_VARIABLES.current_state = States.S_AVAILABLE
         await asyncio.gather(self.send_status_notification())
         if is_remote == True:
             msg = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "StopTransaction", {

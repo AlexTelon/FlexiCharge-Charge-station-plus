@@ -41,6 +41,7 @@ class Hardware():
     __ina219_is_Connected = False
     __ser = None
     __start_time = 0
+    __timeout = 0
 
     def __init__(self):
         self.init_INA219()
@@ -191,7 +192,9 @@ class Hardware():
                 #print(line)
                 if line == "connect" and self.charger.is_connected == False and self.charger.is_charging == False:
                     self.charger.is_connected = True
+                    self.update_timeout()
                     self.__ser.write(b"ok\n")
+                    self.__ser.flushInput()
 
                 elif line == "end":
                     self.charger.is_connected = False
@@ -204,6 +207,7 @@ class Hardware():
                     self.charger.is_charging = True
                     self.__start_time = time.time()
                     self.__ser.write(b"ok\n")
+                    self.__ser.flushInput()
 
                 elif line == "beep":
                     self.__start_time = time.time()
@@ -224,12 +228,13 @@ class Hardware():
                         elif key == "temp":
                             self.charger.battrey_temp = int(value)
                             self.__start_time = time.time()
+                        self.__ser.flushInput()
                     except:
                         pass
             except serial.SerialException as e:
                 print(e)
 
-        if time.time() - self.__start_time >= 0.6 and self.charger.is_connected and self.charger.is_charging and self.charger.requsted_voltage != "": # Check if 1 seconds passed and got no beep, cut power
+        if time.time() - self.__start_time >= 0.6 and self.charger.is_connected and self.charger.is_charging and self.charger.requsted_voltage != "": # Check if 0.6 seconds passed and got no beep, cut power
             self.charger.is_connected = False
             self.charger.is_charging = False
             self.charger.requsted_voltage = ""
@@ -290,6 +295,12 @@ class Hardware():
             return -1
             
     def controll_output_voltage(self, voltage):
+        """
+        Control the output voltage by toggling GPIO pins for relays.
+
+        :param voltage: The desired voltage level ("off", "3.3v", "4.2v", "7.4v", "9v", "5v", "6v", "10v", "11.5v").
+        :return: -1 if an invalid voltage is provided.
+        """
         GPIO.setmode(GPIO.BCM)
 
         relay_pins = [21, 20, 16, 12, 26, 19, 13, 6] 
@@ -319,14 +330,41 @@ class Hardware():
             print("Invalid voltage")
             return -1
 
-    def get_charger_variables(self):
+    def get_charger_variables(self):    
+        """
+        Get the current charger variables.
+        :return: The current charger variables.
+        """
         return self.charger
     
     def set_charger_variables(self, new_variables):
+        """
+        Set the charger variables to a new set of variables.
+        """
         self.charger = new_variables
     
     def is_connected(self):
+        """
+        This function checks if the charger is connected to a vehicle.
+        :return: True if connected and charging, False otherwise.
+        """
         if self.charger.is_charging == False or self.charger.is_connected == False:
             return False
         else:   
             return True
+        
+    def timeout_passed_and_not_connected(self):
+        """
+        This function checks if the timeout(15sec) has passed and the charger is not connected to a vehicle or not charging.
+        :return: True if the timeout has passed, False otherwise.
+        """
+        if time.time() - self.__timeout >= 15 and (self.charger.is_charging == False or self.charger.is_connected == False or self.charger.requsted_voltage == ""):
+            return True
+        else:
+            return False
+        
+    def update_timeout(self):
+        """
+        Update the timeout value to the current time.
+        """
+        self.__timeout = time.time()

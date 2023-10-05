@@ -188,6 +188,7 @@ class UI():
 
 
         elif self.current_state == States.S_PLUGINCABLE:
+            self.WINDOW_GRAPHICS._qr_code_window.hide()
             self.WINDOW_GRAPHICS._background_window['IMAGE'].update(data=Display.plug_cable())
             self.WINDOW_GRAPHICS._background_window.refresh()
 
