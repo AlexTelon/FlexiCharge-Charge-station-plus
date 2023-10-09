@@ -1,0 +1,34 @@
+import unittest
+from charger_hardware import Hardware
+
+class TestHardwareMethods(unittest.TestCase):
+
+    def test_controll_output_voltage_valid_voltages(self):
+        hardware = Hardware()  
+        voltages = ["3.3v", "4.2v", "7.4v", "9v", "5v", "6v", "10v", "11.5v"]
+        for voltage in voltages:
+            result = hardware.controll_output_voltage(voltage)  
+            self.assertEqual(result, 0, "Should be 0")  # Expected result if voltage is valid
+
+
+    def test_controll_output_voltage_invalid_voltage(self):
+        hardware = Hardware()  
+        invalid_voltage = "Invalid_voltage"
+        result = hardware.controll_output_voltage(invalid_voltage)  
+        self.assertEqual(result, -1, "Should be -1")  # Expected result if voltage is invalid
+
+
+    def test_calc_power_hour(self):
+        hardware = Hardware()  
+        hardware.calcPowerHour(100, 2) # Example values for power and time
+        self.assertEqual(hardware.charger.charging_Wh, 200, "Should be 200")  # Expected result
+
+
+    def test_calc_power(self):
+        hardware = Hardware()  
+        hardware.calcPower(10, 5)  # Example values for voltage and current
+        self.assertEqual(hardware.charger.charging_W, 50, "Should be 50")  # Expected result
+
+
+if __name__ == '__main__':
+    unittest.main()

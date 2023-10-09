@@ -329,6 +329,8 @@ class Hardware():
         else:
             print("Invalid voltage")
             return -1
+        return 0   
+
 
     def get_charger_variables(self):    
         """
@@ -368,3 +370,4 @@ class Hardware():
         Update the timeout value to the current time.
         """
         self.__timeout = time.time()
+
