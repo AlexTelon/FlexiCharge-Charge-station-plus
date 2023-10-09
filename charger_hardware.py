@@ -9,15 +9,17 @@ from variables.charger_variables import Charger as ChargerVariables
 from variables.reservation_variables import Reservation as ReservationVariables
 from variables.misc_variables import Misc as MiscVariables
 import platform
-from ina219 import INA219
-from ina219 import DeviceRangeError
-import serial
 
 
 if platform.system() == 'Linux':
     import RPi.GPIO as GPIO
     from mfrc522 import SimpleMFRC522
     import smbus2
+    import serial
+    from ina219 import INA219
+    from ina219 import DeviceRangeError
+
+
 
 
 
@@ -39,6 +41,7 @@ class Hardware():
     __ina219_is_Connected = False
     __ser = None
     __start_time = 0
+    __timeout = 0
 
     def __init__(self):
         self.init_INA219()
@@ -149,11 +152,12 @@ class Hardware():
         finally:
             GPIO.cleanup()
 
-    def calcPowerHour(self, W: float, T: float ):
-        self.charger.charging_Wh = W * T               
+    def calc_power_hour(self, W: float, T: float ):
+        self.charger.charging_Wh = self.charger.charging_Wh + (W * (T/3600))               
             
-    def calcPower(self, V: float, A: float ):
+    def calc_power(self, V: float, A: float ):
         self.charger.charging_W = V * A  
+        return self.charger.charging_W
 
     def init_UART(self):
         """
@@ -180,7 +184,7 @@ class Hardware():
         - "beep": Heart beat from BMS. Updates the start time.
         - If none of the above commands and the charger is connected, it parses commands in the format "key:value" and updates charger parameters accordingly.
 
-        If no "beep" command is received within 1 second after the last action, the charger is marked as disconnected and charging is stopped.
+        If no "beep" command is received within 0.6 second after the last action, the charger is marked as disconnected and charging is stopped.
         """
         if self.__ser.in_waiting > 0:
             try: #incomming data need to be a string or cstring otherwise the code will crash
@@ -188,20 +192,26 @@ class Hardware():
                 #print(line)
                 if line == "connect" and self.charger.is_connected == False and self.charger.is_charging == False:
                     self.charger.is_connected = True
+                    self.update_timeout()
                     self.__ser.write(b"ok\n")
+                    self.__ser.flushInput()
 
                 elif line == "end":
                     self.charger.is_connected = False
                     self.charger.is_charging = False
+                    self.charger.requsted_voltage = ""
                     self.__ser.write(b"ok\n")
+                    self.__ser.flushInput()
 
                 elif line == "begin" and self.charger.is_connected == True and self.charger.is_charging == False:
                     self.charger.is_charging = True
                     self.__start_time = time.time()
                     self.__ser.write(b"ok\n")
+                    self.__ser.flushInput()
 
                 elif line == "beep":
                     self.__start_time = time.time()
+                    self.__ser.flushInput()
 
                 elif self.charger.is_connected == True:
                     try:
@@ -218,14 +228,18 @@ class Hardware():
                         elif key == "temp":
                             self.charger.battrey_temp = int(value)
                             self.__start_time = time.time()
+                        self.__ser.flushInput()
                     except:
                         pass
             except serial.SerialException as e:
                 print(e)
 
-        if time.time() - self.__start_time >= 1 and self.charger.is_connected and self.charger.is_charging and self.charger.requsted_voltage != "": # Check if 1 seconds passed and got no beep, cut power
+        if time.time() - self.__start_time >= 0.6 and self.charger.is_connected and self.charger.is_charging and self.charger.requsted_voltage != "": # Check if 0.6 seconds passed and got no beep, cut power
             self.charger.is_connected = False
             self.charger.is_charging = False
+            self.charger.requsted_voltage = ""
+            self.__ser.flushInput()
+
 
 
     def init_INA219(self):
@@ -260,7 +274,7 @@ class Hardware():
             #    print("Bus Current: %.3f mA" % self.ina219.current())
             #except DeviceRangeError as e:
             #    print(e)
-            return self.ina219.current
+            return self.ina219.current()
         else:
             #print("INA219 is not connected")
             return -1
@@ -275,12 +289,18 @@ class Hardware():
         """
         if(self.__ina219_is_Connected == True):
             #print("Bus voltage: %.3f V" % self.ina219.voltage())
-            return self.ina219.voltage
+            return self.ina219.voltage()
         else:
             #print("INA219 is not connected")
             return -1
             
     def controll_output_voltage(self, voltage):
+        """
+        Control the output voltage by toggling GPIO pins for relays.
+
+        :param voltage: The desired voltage level ("off", "3.3v", "4.2v", "7.4v", "9v", "5v", "6v", "10v", "11.5v").
+        :return: -1 if an invalid voltage is provided.
+        """
         GPIO.setmode(GPIO.BCM)
 
         relay_pins = [21, 20, 16, 12, 26, 19, 13, 6] 
@@ -288,7 +308,9 @@ class Hardware():
         GPIO.setup(relay_pins, GPIO.OUT)
         GPIO.output(relay_pins, GPIO.HIGH)
 
-        if voltage == "3.3v":
+        if voltage == "off":
+            pass
+        elif voltage == "3.3v":
             GPIO.output(21, GPIO.LOW)
         elif voltage == "4.2v":
             GPIO.output(20, GPIO.LOW)
@@ -307,4 +329,42 @@ class Hardware():
         else:
             print("Invalid voltage")
             return -1
-            
+
+    def get_charger_variables(self):    
+        """
+        Get the current charger variables.
+        :return: The current charger variables.
+        """
+        return self.charger
+    
+    def set_charger_variables(self, new_variables):
+        """
+        Set the charger variables to a new set of variables.
+        """
+        self.charger = new_variables
+    
+    def is_connected(self):
+        """
+        This function checks if the charger is connected to a vehicle.
+        :return: True if connected and charging, False otherwise.
+        """
+        if self.charger.is_charging == False or self.charger.is_connected == False:
+            return False
+        else:   
+            return True
+        
+    def timeout_passed_and_not_connected(self):
+        """
+        This function checks if the timeout(15sec) has passed and the charger is not connected to a vehicle or not charging.
+        :return: True if the timeout has passed, False otherwise.
+        """
+        if time.time() - self.__timeout >= 15 and (self.charger.is_charging == False or self.charger.is_connected == False or self.charger.requsted_voltage == ""):
+            return True
+        else:
+            return False
+        
+    def update_timeout(self):
+        """
+        Update the timeout value to the current time.
+        """
+        self.__timeout = time.time()

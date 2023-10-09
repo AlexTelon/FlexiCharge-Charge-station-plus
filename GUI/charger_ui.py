@@ -110,7 +110,7 @@ class UI():
         self.update_charging()
 
 
-    def generate_qr_code(chargerID):
+    def generate_qr_code(self,chargerID):
         """
         It takes a string and generates a QR code image from it
         
@@ -188,6 +188,7 @@ class UI():
 
 
         elif self.current_state == States.S_PLUGINCABLE:
+            self.WINDOW_GRAPHICS._qr_code_window.hide()
             self.WINDOW_GRAPHICS._background_window['IMAGE'].update(data=Display.plug_cable())
             self.WINDOW_GRAPHICS._background_window.refresh()
 
