@@ -184,7 +184,7 @@ class WebSocket():
         try:
             if message[3]["vendorId"] == "com.flexicharge" and message[3]["messageId"] == "BootData":
                 parsed_data = json.loads(message[3]["data"])
-                CHARGER_VARIABLES.charger_id = parsed_data["connectorID"]
+                CHARGER_VARIABLES.charger_id = parsed_data["chargerId"]
                 CHARGER_VARIABLES.charging_price = float(parsed_data["chargingPrice"])
                 print("Charger ID is set to: " +
                       str(CHARGER_VARIABLES.charger_id))
