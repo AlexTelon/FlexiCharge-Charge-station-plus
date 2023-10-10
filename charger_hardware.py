@@ -44,8 +44,11 @@ class Hardware():
     __timeout = 0
 
     def __init__(self):
-        self.init_INA219()
-        self.init_UART()
+        if platform.system() == 'Linux':
+            self.init_INA219()
+            self.init_UART()
+        else:
+            pass
 
     def meter_counter_charging(self):
         """
