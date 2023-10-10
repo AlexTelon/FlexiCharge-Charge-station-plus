@@ -203,7 +203,7 @@ class Hardware():
                     self.__ser.write(b"ok\n")
                     self.__ser.flushInput()
 
-                elif line == "begin" and self.charger.is_connected == True and self.charger.is_charging == False:
+                elif line == "begin" and self.charger.is_connected == True and self.charger.is_charging == False and self.charger.requsted_voltage != "":
                     self.charger.is_charging = True
                     self.__start_time = time.time()
                     self.__ser.write(b"ok\n")
@@ -310,21 +310,21 @@ class Hardware():
 
         if voltage == "off":
             pass
-        elif voltage == "3.3v":
+        elif voltage == "3.3":
             GPIO.output(21, GPIO.LOW)
-        elif voltage == "4.2v":
+        elif voltage == "4.2":
             GPIO.output(20, GPIO.LOW)
-        elif voltage == "7.4v":
+        elif voltage == "7.4":
             GPIO.output(16, GPIO.LOW)
-        elif voltage == "9v":
+        elif voltage == "9":
             GPIO.output(12, GPIO.LOW)
-        elif voltage == "5v":
+        elif voltage == "5":
             GPIO.output(6, GPIO.LOW)
-        elif voltage == "6v":
+        elif voltage == "6":
             GPIO.output(13, GPIO.LOW)
-        elif voltage == "10v":
+        elif voltage == "10":
             GPIO.output(19, GPIO.LOW)
-        elif voltage == "11.5v":
+        elif voltage == "11.5":
             GPIO.output(26, GPIO.LOW)
         else:
             print("Invalid voltage")

@@ -5,7 +5,7 @@ class Configurations():
         self._mockServerIP = 'ws://127.0.0.1:60003'
 
         self._iPAddress = "ws://18.202.253.30:1337/charger/"
-        self._chargerSerialNumber = "testnumber13"
+        self._chargerSerialNumber = "abc111"
 
         self._protocols = ['ocpp1.6']
         self._pingInterval = 5  # Websocket ping interval in seconds.
