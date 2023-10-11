@@ -15,12 +15,12 @@ async def handle_startup_state(state):
     CHARGER_GUI.generate_qr_code(CHARGER_VARIABLES.charger_id)
     CHARGER_GUI.change_state(state)
 
-async def handle_availbable_state(state):
+async def handle_available_state(state):
     CHARGER_GUI.set_charger_id(CHARGER_VARIABLES.charger_id)
     CHARGER.update_timeout()
     CHARGER_GUI.change_state(state)
 
-async def handle_not_availbable_state(state):
+async def handle_not_available_state(state):
     CHARGER_GUI.change_state(state)
 
 async def handle_plug_in_cable_state(state,webSocket):
@@ -119,10 +119,10 @@ async def statemachine(webSocket: WebSocket):
             await handle_startup_state(state)
         
         elif state == States.S_NOTAVAILABLE:
-            await handle_not_availbable_state(state)
+            await handle_not_available_state(state)
 
         elif state == States.S_AVAILABLE:
-            await handle_availbable_state(state)
+            await handle_available_state(state)
 
         elif state == States.S_PLUGINCABLE:
             await handle_plug_in_cable_state(state, webSocket)
