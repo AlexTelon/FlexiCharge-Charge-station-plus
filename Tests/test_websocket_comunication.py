@@ -6,7 +6,7 @@ from StateHandler import States
 from websocket_communication import WebSocket , CHARGER_VARIABLES, RESERVATION_VARIABLES
 from variables.charger_variables import Charger
 
-TEST_CHARGER_STATUS = ["Available","Missing"] #Add the correct states
+TEST_CHARGER_STATUS = ["Available","Missing","Reserved"] #Add all the correct states
 
 TEST_RECIEVED_MESSAGES = [
     [2, '100009DataTransfer1664971239072', 'ReserveNow'],
@@ -34,13 +34,19 @@ TEST_DATA_TRANSFER_MESSAGES = [
 ]
 
 class TestWebSocket:
-     
+
     @pytest.fixture
     def websocket_instance(self):
-        return WebSocket()
+        return WebSocket() #this is a call to create a uniqe websocet instance for each test that needs it.
 
     @pytest.mark.parametrize("charger_test_status",TEST_CHARGER_STATUS)
     def test_get_status(self,charger_test_status,websocket_instance):
+        """
+        Tests the get_status funkton of a websocket object fetches the correct value.
+        
+        :param charger_test_status: What status is expected to be fetched defined in the global list TEST_CHARGER_STATUS.
+        :param websocktet_instanse: Tells Pytest that the fixture websocktet_instanse is used in this test.  
+        """
         #Arrange
         pre_test_state = CHARGER_VARIABLES.status
 
@@ -57,6 +63,13 @@ class TestWebSocket:
 
     @pytest.mark.parametrize("state",[[True],[False]])
     def test_is_closed(self, state, websocket_instance):
+        
+        """
+        Tests the is_closed funkton of a websocket object returns the correct value.
+        
+        :param state: What is the expected return value, Definde in the list.
+        :param websocktet_instanse: Tells Pytest that the fixture websocktet_instanse is used in this test.  
+        """
         #Arrange
         test_state = state
         def mock_is_closed():
@@ -65,6 +78,7 @@ class TestWebSocket:
 
         websocket_instance._webSocket = mock.Mock()
         websocket_instance._webSocket.closed = mock_is_closed()
+
         #Act
         result = websocket_instance.is_closed()
         
@@ -72,6 +86,12 @@ class TestWebSocket:
         assert test_state == result
         
     def test_set_websocket(self, websocket_instance):
+
+        """
+        Tests the set_websocket funkton of a websocket object sets the correct value.
+        
+        :param websocktet_instanse: Tells Pytest that the fixture websocktet_instanse is used in this test.  
+        """
         #Arrange
         websocket_instance._webSocket = mock.Mock()
         
@@ -86,10 +106,11 @@ class TestWebSocket:
     @pytest.mark.asyncio
     async def test_start_websocket(self, websocket_instance):
         """
-        Test that the WebSocket connection is started correctly.
+        Test that the WebSocket connection is created with the correct data.
+
+        :param websocktet_instanse: Tells Pytest that the fixture websocktet_instanse is used in this test.
         """
         #Arrange
-
         server_address = Config().getServerAddress()
         subprotocols=Config().getProtocol()
         ping_interval=Config().getWebSocketPingInterval()
@@ -98,8 +119,10 @@ class TestWebSocket:
         with mock.patch('websocket_communication.ws.connect') as mock_connect:
             mock_connect.return_value = asyncio.Future()
             mock_connect.return_value.set_result(None)
+            
             #Act
             await websocket_instance.start_websocket()
+            
             #Assert
             mock_connect.assert_called_once_with(
                 server_address, subprotocols=subprotocols, ping_interval=ping_interval, timeout=timeout
@@ -108,7 +131,9 @@ class TestWebSocket:
     @pytest.mark.asyncio
     async def test_send_message(self, websocket_instance):
         """
-        Test to check that the Send Message funktion forwards messages acordingaly
+        Tests the send_message funktion to check if it sends the expected message
+
+        :param websocktet_instanse: Tells Pytest that the fixture websocktet_instanse is used in this test.
         """
         #Arrange
         message_sent = None
@@ -131,6 +156,12 @@ class TestWebSocket:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("charger_status",TEST_CHARGER_STATUS)
     async def test_send_status_notification(self,charger_status,websocket_instance):
+        """
+        Tests the send_status_notification funktion to check if it sends the expected message.
+
+        :param charger_status: sets the expected response status, defined in the Global list TEST_CHARGER_STATUS.
+        :param websocktet_instanse: Tells Pytest that the fixture websocktet_instanse is used in this test.
+        """
         #Arrenge
         pre_test_state = CHARGER_VARIABLES.status
 
@@ -146,7 +177,6 @@ class TestWebSocket:
         websocket_instance._webSocket = mock.Mock()
         websocket_instance._webSocket.send = mock_send
         
-
         msg = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "StatusNotification", {
             "connectorId": "1",
             "errorCode": "",
@@ -166,6 +196,11 @@ class TestWebSocket:
     
     @pytest.mark.asyncio
     async def test_listen_for_response(self,websocket_instance):
+        """
+        Tests the listen_for_response funktion to check if it can recive the expected message after some delay.
+
+        :param websocktet_instanse: Tells Pytest that the fixture websocktet_instanse is used in this test.
+        """
         #Arrange
         sent_message = {
             "key":"value"
@@ -190,6 +225,13 @@ class TestWebSocket:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("test_message",TEST_RECIEVED_MESSAGES)
     async def test_handle_message(self,test_message,websocket_instance,capsys):
+        """
+        Tests the handle_message funktion to check if it can handle the expected message.
+
+        :param test_message: is the message to test set in the global list TEST_RECIEVED_MESSAGES.
+        :param websocktet_instanse: Tells Pytest that the fixture websocktet_instanse is used in this test.
+        :param capsys: Tells Pytest that the test uses the pytest capsys fixture to capture print calls
+        """
         #Arrange
         was_reserv_now = False
         was_RemoteStartTransaction = False
@@ -298,6 +340,22 @@ class TestWebSocket:
                                     ]
                              ])
     def test_get_charger_variables(self,websocket_instance,test_data_is_charging,test_data_charging_id_tag,test_data_charging_connector,test_data_charger_id,test_data_charging_Wh,test_data_charging_Wh_per_second,test_data_charging_price,test_data_current_charging_percentage,test_data_current_charge_time_left,test_data_meter_value_total,test_data_status,test_data_state):
+        """
+        Tests the get_charger_variables funktion to check if it can fetch the expected valuse.
+
+        :param websocktet_instanse: Tells Pytest that the fixture websocktet_instanse is used in this test.
+        :param test_data_is_charging: this is a bool value.
+        :param test_data_charging_id_tag: this is ... does not know what type it is suposed to be. initiated as NONE used as idTag in calls retaining to transactions.
+        :param test_data_charging_connector: this is ... does not know what type it is suposed to be. initiated as NONE used as connectorId in calls retaining to transactions.
+        :param test_data_charging_Wh: this is a positive numeric value telling how mutch power has been used to charge.
+        :param test_data_charging_Wh_per_second: this is a flote value. 
+        :param test_data_charging_price: this is a flote value,  
+        :param test_data_current_charging_percentage: this is a numeric value
+        :param test_data_current_charge_time_left: this value is from the global CHARGER_VARIABLES.current_charge_time_left.
+        :param test_data_meter_value_total: This value is a numeric value that symbolizez a built in power meter.
+        :param test_data_status: this value is a string that contains the status of the charger needs to be a permited state in backend.
+        :param test_data_state: this is a state object that tells the charger whar state it is in.
+        """
         #Arrange
         #save pre test values 
         pre_test_is_charging                 = CHARGER_VARIABLES._is_charging 
@@ -366,6 +424,16 @@ class TestWebSocket:
         [True, 'Missing', 10, None, None]
         ])
     async def test_get_reservation_info(self,websocket_instance,test_data_is_reserved,test_data_status,test_data_reservation_id_tag,test_data_reservation_id,test_data_reserved_connector):
+        """
+        Tests the get_reservation_info funktion to check if it can return the expected data.
+
+        :param websocktet_instanse: Tells Pytest that the fixture websocktet_instanse is used in this test.
+        :param test_data_is_reserved: this value is a bool, showing if the charger have been reserved.
+        :param test_data_status: this value is a string containging the one word status.
+        :param test_data_reservation_id_tag: this value is a int containing the transaction id tag use in authenticating start and stop of transaktions.
+        :param test_data_reservation_id: this value is used when checking a reservation request and shuld be a numeric value or false/None
+        :param test_data_reserved_connector: this value is a numeric value or False/None
+        """
         #Arrange
         pre_test_reservation_is_reserved = RESERVATION_VARIABLES.is_reserved
         pre_test_charger_status = CHARGER_VARIABLES.status
@@ -381,12 +449,14 @@ class TestWebSocket:
 
         #Act
         reservation_info = await websocket_instance.get_reservation_info()
+
         #Assert
         assert test_data_is_reserved == reservation_info[0]
         assert test_data_status == reservation_info[1]
         assert test_data_reservation_id_tag == reservation_info[2]
         assert test_data_reservation_id == reservation_info[3]
         assert test_data_reserved_connector == reservation_info[4]
+        
         #clean up
         RESERVATION_VARIABLES.is_reserved = pre_test_reservation_is_reserved
         CHARGER_VARIABLES.status = pre_test_charger_status
@@ -401,7 +471,12 @@ class TestWebSocket:
         ])
     async def test_data_transfer_request(self,websocket_instance,message_id,message_data,test_transaction_id):
         """
-        Test that the data transfer request is sent correctly
+        Tests the get_reservation_info funktion to check if it can return the expected data.
+
+        :param websocktet_instanse: Tells Pytest that the fixture websocktet_instanse is used in this test.
+        :param message_id: id of the preciding message
+        :param message_data: "Suposed to be latest meter value" from the BMS se send_meter_values for more in dept breakdown
+        :param test_transaction_id: a numeric value that symbolizes the transaktion id
         """
         #Arrenge
         test_data = (f"{{\"transactionID\":{test_transaction_id},\"latestMeterValue\":{message_data},\"CurrentChargePercentage\":{message_data}}}")
@@ -431,6 +506,13 @@ class TestWebSocket:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("data_transfer_message,expected_status",TEST_DATA_TRANSFER_MESSAGES)
     async def test_data_transfer_response(self, websocket_instance,data_transfer_message,expected_status):
+        """
+        Tests the data_transfer_response funktion to check if it can send the expected message.
+
+        :param websocktet_instanse: Tells Pytest that the fixture websocktet_instanse is used in this test.
+        :param data_transfer_message: this is a data_transfer_request message.
+        :param expected_status: this is the expected response from the funktion based of the data_transfer_message.
+        """
         #Arrange
         message_sent = None
         async def mock_send(message):
@@ -453,6 +535,15 @@ class TestWebSocket:
     @pytest.mark.parametrize("test_is_remote,test_charging_connector,charging_id_tag,reservation_id",[
                             [True, "1", 23, 23123]])
     async def test_start_transaction(self, websocket_instance, test_is_remote, test_charging_connector, charging_id_tag, reservation_id):
+        """
+        Tests the start_transaction funktion to check if it sends the expected message.
+
+        :param websocktet_instanse: Tells Pytest that the fixture websocktet_instanse is used in this test.
+        :param test_is_remote: this value is a bool if it is false the funktion will return with None as the transactione id else the transaction id is is a numeral 
+        :param test_charging_connector: this is ... does not know what type it is suposed to be. initiated as NONE used as connectorId in calls retaining to transactions.
+        :param charging_id_tag: this is ... does not know what type it is suposed to be. initiated as NONE used as idTag in calls retaining to transactions.
+        :param reservation_id: this value is used when checking a reservation request and shuld be a numeric value or false/None 
+        """
         #Arrange
         message_sent = None
         async def mock_send(message):
@@ -508,7 +599,16 @@ class TestWebSocket:
     @pytest.mark.parametrize("test_is_remote,test_charging_id_tag,test_transaction_id",[
                             [True, 23, 1],
                             [True, 23, 1]])
-    async def test_stop_transaction(self, test_is_remote, websocket_instance,test_charging_id_tag,test_transaction_id):
+    async def test_stop_transaction(self, websocket_instance,test_is_remote,test_charging_id_tag,test_transaction_id):
+        """
+        Tests the stop_transaction funktion to check if it sends the expected message.
+
+        :param websocket_instance: Tells Pytest that the fixture websocktet_instanse is used in this test.
+        :param test_is_remote: this value is a bool if it is false the funktion will fail on acount of the code block 
+        using a nonexisting class variable. if true will return the respons message with transaktion id 1.
+        :param test_charging_id_tag: this is ... does not know what type it is suposed to be. initiated as NONE used as idTag in calls retaining to transactions.
+        :param test_transaction_id: this value is used when checking a transaktion end and shuld be a numeric value currently shuld be 1 for is_remote = true.
+        """
         #Arrange
         test_timestamp = datetime.now().timestamp()
 
@@ -568,6 +668,14 @@ class TestWebSocket:
         ["Rejected",False,"1"]
         ])
     async def test_remote_stop_transaction(self, test_status, charger_is_charging, test_transaction_id, websocket_instance):
+        """
+        Tests the remote_stop_transaction funktion to check if it sends the expected message.
+
+        :param test_status: this is a string that shuld contain the expected return status after the test
+        :param charger_is_charging: This is a bool signaling if a charging sesion is still in progress or not 
+        :param test_transaction_id: a numeric value that symbolizes the transaction id
+        :param websocktet_instanse: Tells Pytest that the fixture websocktet_instanse is used in this test.
+        """
         #Arrange
         pre_test_charger_is_charging = CHARGER_VARIABLES.is_charging
 
@@ -615,6 +723,14 @@ class TestWebSocket:
         ["Rejected", "12345", 54321]
         ])
     async def test_remote_start_transaction(self, test_status, test_id_tag, test_reservation_id_tag, websocket_instance):
+        """
+        Tests the remote_start_transaction funktion to check if it sends the expected message.
+
+        :param test_status: this is a string that shulde contain the expected return status after the test.
+        :param test_id_tag: This is a numeral used to set the caller reservation id to needs to be the same as test_reservation_id_tag to get a approved responce.
+        :param test_reservation_id_tag: a numeric value used to set the charger reservation id.
+        :param websocktet_instanse: Tells Pytest that the fixture websocktet_instanse is used in this test.
+        """
         #Arrange
         #save the global valuse for clean up
         pre_test_charger_status         = CHARGER_VARIABLES.status
@@ -682,18 +798,27 @@ class TestWebSocket:
     
     @pytest.mark.asyncio
     @pytest.mark.parametrize("test_status, test_local_reservation_id, test_reservation_id, test_reserved_connector, test_local_connector_id, test_expiry_date, test_id_tag",[
-        ["Rejected", None, None, None, 0, 1234567890, "10111213"],
-        ["Occupied", None, "12345", None, 0, 1234567890, "10111213"],
-        ["Rejected", "12345", "12345", None, 0, 1234567890, "10111213"],
+        ["Rejected", None, None, None, "0", 1234567890, "10111213"],
+        ["Occupied", None, "12345", None, "0", 1234567890, "10111213"],
+        ["Rejected", "12345", "12345", None, "0", 1234567890, "10111213"],
         ["Accepted", "12345", "12345", "67890", "67890", 1234567890, "10111213"],
         ["Accepted", "12345", None, "67890", "67890", 1234567890, "10111213"],
         ["Occupied", "54321", "12345", "67890", "67890", 1234567890, "10111213"]
     ])
     async def test_reserve_now(self, test_status, test_local_reservation_id, test_reserved_connector, test_reservation_id, test_local_connector_id, test_expiry_date, test_id_tag, websocket_instance):
-        #Arrange
-        #test_status = ["Rejected", "Accepted", "Occupied"]
-        #test_reservation_id = [None,test_local_reservation_id]
+        """
+        Tests the reserve_now funktion to check if it sends the expected message.
 
+        :param test_status: this is a string that shulde contain the expected return status after the test.
+        :param test_local_reservation_id: this is a numeric string or None sent to the charger.
+        :param test_reserved_connector: this is a numeric string this sets the global variable reserved_connector.
+        :param test_reservation_id: this is a numeric string or None this sets the global variable reservation_id.
+        :param test_local_connector_id: this is a numeric string or None sent to the charger.
+        :param test_expiry_date: this is a timestamp Given in ms since epoch currently does not do anything.
+        :param test_id_tag: this is a numeric string or None sent to the charger.
+        :param websocktet_instanse: Tells Pytest that the fixture websocktet_instanse is used in this test.
+        """
+        #Arrange
         pre_test_charger_status         = CHARGER_VARIABLES.status
         pre_test_charger_state          = CHARGER_VARIABLES.current_state
         pre_test_is_reserved            = RESERVATION_VARIABLES.is_reserved
@@ -778,6 +903,8 @@ class TestWebSocket:
     async def test_send_boot_notification_req(self, websocket_instance):
         """
         Test that the boot notification request is sent correctly
+
+        :param websocktet_instanse: Tells Pytest that the fixture websocktet_instanse is used in this test.
         """
         #Arrenge
         message_sent = None
@@ -797,6 +924,11 @@ class TestWebSocket:
     
     @pytest.mark.asyncio
     async def test_send_boot_notification_conf(self, websocket_instance):
+        """
+        Test that the boot notification conf is sent correctly
+
+        :param websocktet_instanse: Tells Pytest that the fixture websocktet_instanse is used in this test.
+        """
         #Arrange
         test_UUID = str(uuid.uuid4())
         
@@ -835,6 +967,11 @@ class TestWebSocket:
     @pytest.mark.skip("Not Implemented in code base")
     @pytest.mark.asyncio
     async def test_start_charging_from_reservation(self):
+        """
+        Test that the start_charging_from_reservation
+
+        :param :
+        """
         #Arrange
         #Act
         #Assert
@@ -843,6 +980,11 @@ class TestWebSocket:
     @pytest.mark.skip("Not Implemented in code base")
     @pytest.mark.asyncio
     async def test_hard_reset_charging(self):
+        """
+        Test that the hard_reset_charging funktion works se Charger_hardware
+
+        :param :
+        """
         #Arrange
         #Act
         #Assert
@@ -851,6 +993,11 @@ class TestWebSocket:
     @pytest.mark.skip("Not Implemented in code base")
     @pytest.mark.asyncio
     async def test_hard_reset_reservation(self):
+        """
+        Test that the hard_reset_reservation funktion works se Charger_hardware
+
+        :param :
+        """
         #Arrange
         #Act
         #Assert
@@ -859,6 +1006,11 @@ class TestWebSocket:
     @pytest.mark.skip("Not Implemented in code base")
     @pytest.mark.asyncio
     async def test_send_periodic_meter_values(self):
+        """
+        Test that the send_periodic_meter_values funktion works se Charger_hardware
+
+        :param :
+        """
         #Arrange
         #Act
         #Assert
@@ -866,6 +1018,11 @@ class TestWebSocket:
     
     @pytest.mark.asyncio
     async def test_send_heartbeat(self,websocket_instance):
+        """
+        Test that the send_heartbeat funktion sends the correct message. (this funktion is currently not used as of 2023-10-11)
+
+        :param websocktet_instanse: Tells Pytest that the fixture websocktet_instanse is used in this test.
+        """
         #Arrange
         message_sent = None
         async def mock_send(message):
@@ -888,6 +1045,11 @@ class TestWebSocket:
     @pytest.mark.skip("Not working in code base")
     @pytest.mark.asyncio
     async def test_check_if_time_for_heartbeat(self):
+        """
+        Test that the check_if_time_for_heartbeat funktion. (this funktion is currently not used as of 2023-10-11)
+
+        :param :
+        """
         #Arrange
         #Act
         #Assert
@@ -895,6 +1057,11 @@ class TestWebSocket:
     
     @pytest.mark.asyncio
     async def test_send_meter_values(self, websocket_instance):
+        """
+        Test that the send_meter_values funktion sends the correct message.
+
+        :param websocktet_instanse: Tells Pytest that the fixture websocktet_instanse is used in this test.
+        """
         #Arrange
         pre_test_charger_id             = CHARGER_VARIABLES.charger_id
         pre_test_charging_W             = CHARGER_VARIABLES.charging_W
@@ -970,6 +1137,11 @@ class TestWebSocket:
 
     @pytest.mark.asyncio
     async def test_send_data_reserve(self, websocket_instance):
+        """
+        Test that the send_data_reserve funktion sends the correct message.
+
+        :param websocktet_instanse: Tells Pytest that the fixture websocktet_instanse is used in this test.
+        """
         #Arrange
         sent_message = None
         async def mock_send_message(message):
@@ -989,6 +1161,11 @@ class TestWebSocket:
     
     @pytest.mark.asyncio
     async def test_send_data_remote_start(self, websocket_instance):
+        """
+        Test that the send_data_remote_start funktion sends the correct message. (this funktion is currently not used as of 2023-10-11)
+
+        :param websocktet_instanse: Tells Pytest that the fixture websocktet_instanse is used in this test.
+        """
         #Arrange
         sent_message = None
         async def mock_send_message(message):
@@ -1008,6 +1185,11 @@ class TestWebSocket:
     
     @pytest.mark.asyncio
     async def test_send_data_remote_stop(self, websocket_instance):
+        """
+        Test that the send_data_remote_stop funktion sends the correct message. (this funktion is currently not used as of 2023-10-11)
+
+        :param websocktet_instanse: Tells Pytest that the fixture websocktet_instanse is used in this test.
+        """
         #Arrange
         sent_message = None
         async def mock_send_message(message):
