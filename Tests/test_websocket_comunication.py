@@ -157,7 +157,7 @@ class TestWebSocket:
     @pytest.mark.parametrize("charger_status",TEST_CHARGER_STATUS)
     async def test_send_status_notification(self,charger_status,websocket_instance):
         """
-        Tests the send_message funktion to check if it sends the expected message.
+        Tests the send_status_notification funktion to check if it sends the expected message.
 
         :param charger_status: sets the expected response status, defined in the Global list TEST_CHARGER_STATUS.
         :param websocktet_instanse: Tells Pytest that the fixture websocktet_instanse is used in this test.
@@ -507,12 +507,11 @@ class TestWebSocket:
     @pytest.mark.parametrize("data_transfer_message,expected_status",TEST_DATA_TRANSFER_MESSAGES)
     async def test_data_transfer_response(self, websocket_instance,data_transfer_message,expected_status):
         """
-        Tests the get_reservation_info funktion to check if it can return the expected data.
+        Tests the data_transfer_response funktion to check if it can send the expected message.
 
         :param websocktet_instanse: Tells Pytest that the fixture websocktet_instanse is used in this test.
-        :param message_id: id of the preciding message
-        :param message_data: "Suposed to be latest meter value" from the BMS se send_meter_values for more in dept breakdown
-        :param test_transaction_id: a numeric value that symbolizes the transaktion id
+        :param data_transfer_message: this is a data_transfer_request message.
+        :param expected_status: this is the expected response from the funktion based of the data_transfer_message.
         """
         #Arrange
         message_sent = None
@@ -542,7 +541,7 @@ class TestWebSocket:
         :param websocktet_instanse: Tells Pytest that the fixture websocktet_instanse is used in this test.
         :param test_is_remote: this value is a bool if it is false the funktion will return with None as the transactione id else the transaction id is is a numeral 
         :param test_charging_connector: this is ... does not know what type it is suposed to be. initiated as NONE used as connectorId in calls retaining to transactions.
-        :param charging_id_tag: test_data_charging_id_tag: this is ... does not know what type it is suposed to be. initiated as NONE used as idTag in calls retaining to transactions.
+        :param charging_id_tag: this is ... does not know what type it is suposed to be. initiated as NONE used as idTag in calls retaining to transactions.
         :param reservation_id: this value is used when checking a reservation request and shuld be a numeric value or false/None 
         """
         #Arrange
@@ -600,15 +599,15 @@ class TestWebSocket:
     @pytest.mark.parametrize("test_is_remote,test_charging_id_tag,test_transaction_id",[
                             [True, 23, 1],
                             [True, 23, 1]])
-    async def test_stop_transaction(self, test_is_remote, websocket_instance,test_charging_id_tag,test_transaction_id):
+    async def test_stop_transaction(self, websocket_instance,test_is_remote,test_charging_id_tag,test_transaction_id):
         """
-        Tests the start_transaction funktion to check if it sends the expected message.
+        Tests the stop_transaction funktion to check if it sends the expected message.
 
-        :param websocktet_instanse: Tells Pytest that the fixture websocktet_instanse is used in this test.
-        :param test_is_remote: this value is a bool if it is false the funktion will return with None as the transactione id else the transaction id is is a numeral 
-        :param test_charging_connector: this is ... does not know what type it is suposed to be. initiated as NONE used as connectorId in calls retaining to transactions.
-        :param charging_id_tag: test_data_charging_id_tag: this is ... does not know what type it is suposed to be. initiated as NONE used as idTag in calls retaining to transactions.
-        :param reservation_id: this value is used when checking a reservation request and shuld be a numeric value or false/None 
+        :param websocket_instance: Tells Pytest that the fixture websocktet_instanse is used in this test.
+        :param test_is_remote: this value is a bool if it is false the funktion will fail on acount of the code block 
+        using a nonexisting class variable. if true will return the respons message with transaktion id 1.
+        :param test_charging_id_tag: this is ... does not know what type it is suposed to be. initiated as NONE used as idTag in calls retaining to transactions.
+        :param test_transaction_id: this value is used when checking a transaktion end and shuld be a numeric value currently shuld be 1 for is_remote = true.
         """
         #Arrange
         test_timestamp = datetime.now().timestamp()
@@ -725,7 +724,7 @@ class TestWebSocket:
         ])
     async def test_remote_start_transaction(self, test_status, test_id_tag, test_reservation_id_tag, websocket_instance):
         """
-        Tests the remote_stop_transaction funktion to check if it sends the expected message.
+        Tests the remote_start_transaction funktion to check if it sends the expected message.
 
         :param test_status: this is a string that shulde contain the expected return status after the test.
         :param test_id_tag: This is a numeral used to set the caller reservation id to needs to be the same as test_reservation_id_tag to get a approved responce.
@@ -808,7 +807,7 @@ class TestWebSocket:
     ])
     async def test_reserve_now(self, test_status, test_local_reservation_id, test_reserved_connector, test_reservation_id, test_local_connector_id, test_expiry_date, test_id_tag, websocket_instance):
         """
-        Tests the remote_stop_transaction funktion to check if it sends the expected message.
+        Tests the reserve_now funktion to check if it sends the expected message.
 
         :param test_status: this is a string that shulde contain the expected return status after the test.
         :param test_local_reservation_id: this is a numeric string or None sent to the charger.
@@ -1008,7 +1007,7 @@ class TestWebSocket:
     @pytest.mark.asyncio
     async def test_send_periodic_meter_values(self):
         """
-        Test that the hard_reset_reservation funktion works se Charger_hardware
+        Test that the send_periodic_meter_values funktion works se Charger_hardware
 
         :param :
         """
