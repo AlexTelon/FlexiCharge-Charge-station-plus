@@ -10,27 +10,28 @@ from variables.reservation_variables import Reservation
 CHARGER_GUI = UI()
 CHARGER_VARIABLES = Charger()
 CHARGER = Hardware()
-webSocket = WebSocket()
+WEBSOCKET = WebSocket()
 
 async def websocketTask():
-    webSocket.start_websocket()
+    WEBSOCKET.start_websocket()
     while True:    
         await asyncio.sleep(1)
 
-async def statemachineTask():
-
+async def statemachine():
     """
-    The function is a state machine that changes the state of the charge point and displays the relevant
-    image on the screen
-    :param webSocket: The WebSocket object that is used to communicate with the OCPP server
+    This function represents the charging station state machine.
+    It continuously checks for updates from a WebSocket connection and updates the charging station's state accordingly.
+    The code handles various states, such as startup, not available, available, plugin cable, connecting, and charging.
+    It also calculates and sends meter values during charging.
 
-    All states are not implemented. This is a todo for the next group
+    Note: Not all states have been fully implemented; this remains a task for future development.
+
     """
     charing_start_time = 0
     while True:
         await asyncio.sleep(0.2)
-        if(webSocket != None):
-            CHARGER_VARIABLES = webSocket.get_charger_variables()
+        if(WEBSOCKET != None):
+            CHARGER_VARIABLES = WEBSOCKET.get_charger_variables()
             CHARGER.set_charger_variables(CHARGER_VARIABLES)
 
             state = CHARGER_VARIABLES.current_state 
@@ -39,7 +40,7 @@ async def statemachineTask():
                 Reservation.is_reserved, CHARGER_VARIABLES.status,
                 Reservation.reservation_id_tag,
                 Reservation.reservation_id,
-                Reservation.reserved_connector = await webSocket.get_reservation_info
+                Reservation.reserved_connector = await WEBSOCKET.get_reservation_info
 
             if state == States.S_STARTUP:
                 CHARGER_GUI.change_state(state)
@@ -66,7 +67,7 @@ async def statemachineTask():
                 if CHARGER_VARIABLES.is_connected:
                     CHARGER_VARIABLES.current_state = States.S_CONNECTING
 
-                webSocket.set_charger_variables(CHARGER_VARIABLES)
+                WEBSOCKET.set_charger_variables(CHARGER_VARIABLES)
 
             elif state == States.S_CONNECTING:
                 CHARGER_GUI.change_state(state)
@@ -87,7 +88,7 @@ async def statemachineTask():
                         CHARGER_VARIABLES.current_state = States.S_AVAILABLE
                         CHARGER.set_charger_variables(CHARGER_VARIABLES)
 
-                webSocket.set_charger_variables(CHARGER_VARIABLES)
+                WEBSOCKET.set_charger_variables(CHARGER_VARIABLES)
 
             elif state == States.S_CHARGING:
                 CHARGER_GUI.change_state(state)
@@ -96,10 +97,10 @@ async def statemachineTask():
 
                 if not CHARGER.is_connected():
                     CHARGER.controll_output_voltage("off")
-                    await asyncio.gather(webSocket.stop_transaction(True))
+                    await asyncio.gather(WEBSOCKET.stop_transaction(True))
                     CHARGER_VARIABLES.reset_variables()
 
-                webSocket.set_charger_variables(CHARGER_VARIABLES)
+                WEBSOCKET.set_charger_variables(CHARGER_VARIABLES)
                 
                 try:
                     if (time.time() - charing_start_time) >= 1:
@@ -108,8 +109,8 @@ async def statemachineTask():
                         power = CHARGER.calc_power(voltage, (current/1000))
                         CHARGER.calc_power_hour(power, 1)
                         CHARGER_VARIABLES = CHARGER.get_charger_variables()
-                        webSocket.set_charger_variables(CHARGER_VARIABLES)
-                        await asyncio.gather(webSocket.send_meter_values())
+                        WEBSOCKET.set_charger_variables(CHARGER_VARIABLES)
+                        await asyncio.gather(WEBSOCKET.send_meter_values())
                         charing_start_time = time.time()
                 except Exception as e:
                     print(str(e))
@@ -124,8 +125,8 @@ async def main():
     It initiates a WebSocket-object (from websocket_communication) and runs the state machine
     """
     try:
-        statemachine_task = asyncio.create_task(statemachineTask()) 
-        websocket_task = asyncio.create_task(webSocket.start_websocket())
+        statemachine_task = asyncio.create_task(statemachine()) 
+        websocket_task = asyncio.create_task(WEBSOCKET.start_websocket())
 
         await asyncio.gather(statemachine_task, websocket_task)
     except Exception as e:
