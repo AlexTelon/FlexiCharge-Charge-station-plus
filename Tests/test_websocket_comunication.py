@@ -26,7 +26,7 @@ TEST_DATA_TRANSFER_MESSAGES = [
     [[2, '100009DataTransfer1664971239072', 'DataTransfer', {
         'vendorId': 'com.flexicharge', 
         'messageId': 'BootData', 
-        'data': '{"chargerId":100009,"chargingPrice":"5.25"}'}],"Accepted"],
+        'data': '{"connectorID":100009,"chargingPrice":"5.25"}'}],"Accepted"],
     [[2, '100009DataTransfer1664971239072', 'DataTransfer', {
         'vendorId': 'com.flexicharge', 
         'messageId': 'DataTransfer', 
