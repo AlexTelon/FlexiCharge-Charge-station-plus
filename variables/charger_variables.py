@@ -13,13 +13,14 @@ class Charger():
         self._charging_price = 0.0
         self._current_charging_percentage = 0
         self._current_charge_time_left = 0
-        self._meter_value_total = 0 
+        self._meter_value_total = 0
         self._status = "Available"
         self._state = States.S_STARTUP
         self._charging_W = 0 
         self._requsted_voltage = ""
         self._is_connected = False 
         self._battrey_temp = 0
+        self._transaction_id = 0
 
     
     def reset_variables(self):
@@ -38,6 +39,10 @@ class Charger():
 
 
     # Get for charging variables
+    @property
+    def transaction_id(self):
+        return self._transaction_id
+
     @property
     def battrey_temp(self):
         return self._battrey_temp
@@ -90,6 +95,10 @@ class Charger():
         return self._charging_Wh_per_second
 
      # Set for charging variables
+
+    @transaction_id.setter
+    def transaction_id(self, id):
+        self._transaction_id = id
 
     @battrey_temp.setter
     def battrey_temp(self, temp: int):
@@ -158,7 +167,7 @@ class Charger():
 
     # Set for misc variables
     @meter_value_total.setter
-    def increment_meter_value_total_by(self, value: int):  # increment variable
+    def increment_meter_value_total_by(self, value):  # increment variable
         self._meter_value_total += value
 
     @property

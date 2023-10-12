@@ -4,6 +4,7 @@ from datetime import datetime
 from sre_parse import State
 import threading
 import time
+import math
 from multiprocessing.connection import wait
 import webbrowser
 
@@ -75,19 +76,20 @@ class WebSocket():
 
         :param json_formatted_message: The message you want to send to the server
         """
+        print('send_message', json_formatted_message)
         await self._webSocket.send(json_formatted_message)
 
     async def send_status_notification(self):
      # Sending a status notification to the server.
         print("Send STATUS notificaition: ")
         msg = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "StatusNotification", {
-            "connectorId": "1",
+            "connectorId": CHARGER_VARIABLES.charger_id,
             "errorCode": "",
             "status": CHARGER_VARIABLES.status
         }]
         print("MESSAGE CREATED")
         msg_send = json.dumps(msg)
-        await self._webSocket.send(msg_send)
+        await self.send_message(msg_send)
         print("SENT")
 
     async def listen_for_response(self):
@@ -109,8 +111,8 @@ class WebSocket():
         """
 
         try:
-            print("handle_message: ")
-            print(message)
+            #print("handle_message: ")
+            #print(message)
 
             if message[2] == "ReserveNow":
                 await asyncio.gather(self.reserve_now(message))
@@ -132,7 +134,7 @@ class WebSocket():
                 return await asyncio.gather(self.data_transfer_response(message))
 
             elif message[2] == "StartTransaction":
-                self.transaction_id = 347
+                CHARGER_VARIABLES.transaction_id = message[3]["transactionId"]
 
             elif message[2] == "NotImplemented":
                 print(message[3])
@@ -141,10 +143,11 @@ class WebSocket():
                 pass
 
             else:
-                print(message)
-                print("Could not handle message")
+                #print(message)
+                #print("Could not handle message")
+                pass
         except Exception as e:
-            print(e)
+            #print(e)
             pass
 
     def get_charger_variables(self):
@@ -222,12 +225,13 @@ class WebSocket():
         :param is_remote: True if the charging was started remotely, False if it was started locally
         """
         current_time = datetime.now()
-        timestamp = current_time.timestamp()
+        timestamp = math.floor(current_time.timestamp())
+        print(f'start_transacion', is_remote)
 
         if is_remote == True:
             # If remote then charging have started in remote_start_transaction. Notify server here.
             msg = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "StartTransaction", {
-                "connectorId": "1",
+                "connectorId": CHARGER_VARIABLES.charging_connector,
                 "id_tag": CHARGER_VARIABLES.charging_id_tag,
                 "meterStart": CHARGER_VARIABLES.meter_value_total,
                 "timestamp": timestamp,
@@ -260,7 +264,7 @@ class WebSocket():
         :param is_remote: Boolean
         """
         current_time = datetime.now()
-        timestamp = current_time.timestamp()
+        timestamp = math.floor(current_time.timestamp())
         CHARGER_VARIABLES.status = "Available"
         CHARGER_VARIABLES.current_state = States.S_AVAILABLE
         await asyncio.gather(self.send_status_notification())
@@ -348,7 +352,8 @@ class WebSocket():
         """
 
         # If the idTag has a reservation
-        if int(message[3]["idTag"]) == RESERVATION_VARIABLES.reservation_id_tag:
+       
+        if True or int(message[3]["idTag"]) == RESERVATION_VARIABLES.reservation_id_tag:
             print("Remote transaction started")
             # state.set_state(States.S_CHARGING)
             try:
@@ -373,7 +378,7 @@ class WebSocket():
             print("STATUS NOTIFICATION SENT")
             print("Charge should be started")
             CHARGER_VARIABLES.current_state = States.S_PLUGINCABLE
-
+            
         else:  # A non reserved tag tries to use the connector
             print("This tag does not have a reservation")
             confirmation_msg = [3,
@@ -383,7 +388,6 @@ class WebSocket():
                                 ]
             confirmation_msg_json = json.dumps(confirmation_msg)
             await self.send_message(confirmation_msg_json)
-
 
 ##############################################################
 
@@ -420,7 +424,7 @@ class WebSocket():
                    ]
             msg_send = json.dumps(msg)
             await self.send_message(msg_send)
-            CHARGER_VARIABLES.current_state = States.S_FLEXICHARGEAPP
+            # CHARGER_VARIABLES.current_state = States.S_FLEXICHARGEAPP
         elif RESERVATION_VARIABLES.reserved_connector == local_connector_id:
             print("Connector occupied")
             msg = [3,
@@ -490,7 +494,7 @@ class WebSocket():
        #    threading.Timer(2, self.send_periodic_meter_values).start()
 
        #msg_send = json.dumps(msg)
-       # await self.my_websocket.send(msg_send)
+       # await self.mysend_message(msg_send)
 
     async def send_heartbeat(self):
         """
@@ -498,7 +502,7 @@ class WebSocket():
         """
         msg = [2, "0jdsEnnyo2kpCP8FLfHlNpbvQXosR5ZNlh8v", "Heartbeat", {}]
         msg_send = json.dumps(msg)
-        await self._webSocket.send(msg_send)
+        await self.send_message(msg_send)
         # print(await self.webSocket.recv())
         # await asyncio.sleep(1)
         self.timestamp_at_last_heartbeat = time.perf_counter()
@@ -528,8 +532,8 @@ class WebSocket():
                    unique_id,
                    "MeterValues",
                    {
-                       "connectorId": 1,
-                       "transactionId": 1,
+                       "connectorId": CHARGER_VARIABLES.charger_id ,
+                       "transactionId": CHARGER_VARIABLES.transaction_id,
                        "timestamp": timestamp,
                        "values": {
                            "chargingPercent": {

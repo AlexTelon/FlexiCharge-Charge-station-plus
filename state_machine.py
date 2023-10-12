@@ -24,10 +24,22 @@ async def handle_not_available_state(state):
     CHARGER_GUI.change_state(state)
 
 async def handle_available_state(state):
+    CHARGER_VARIABLES = WEBSOCKET.get_charger_variables()
+    CHARGER.set_charger_variables(CHARGER_VARIABLES)
+    CHARGER.controll_output_voltage('off')
+    #print('sm-has_0')
     CHARGER_GUI.generate_qr_code(CHARGER_VARIABLES.charger_id)
+    #print('sm-has_1')
     CHARGER_GUI.set_charger_id(CHARGER_VARIABLES.charger_id)
+    #print('sm-has_2')
     CHARGER.update_timeout()
+    #print('sm-has_3')
     CHARGER_GUI.change_state(state)
+    #print('sm-has_4')
+    #CHARGER_VARIABLES.current_state = States.S_PLUGINCABLE
+    #CHARGER.set_charger_variables(CHARGER_VARIABLES)
+
+    #WEBSOCKET.set_charger_variables(CHARGER_VARIABLES)
 
 async def handle_plug_in_cable_state(state):
     CHARGER_GUI.change_state(state)
@@ -107,12 +119,15 @@ async def statemachine():
     """
     charing_start_time = 0
     while True:
+        #print('sm-sm_0')
         await asyncio.sleep(0.2)
         if(WEBSOCKET != None):
+            #print('sm-sm_1')
             CHARGER_VARIABLES = WEBSOCKET.get_charger_variables()
             CHARGER.set_charger_variables(CHARGER_VARIABLES)
-
-            state = CHARGER_VARIABLES.current_state 
+            state = CHARGER_VARIABLES.current_state
+            
+            #print('sm-sm_2')
 
             if CHARGER_VARIABLES.status == "ReserveNow":
                 Reservation.is_reserved, CHARGER_VARIABLES.status,
@@ -121,22 +136,33 @@ async def statemachine():
                 Reservation.reserved_connector = await WEBSOCKET.get_reservation_info
                 
             if state == States.S_STARTUP:
+                #print('sm-3', 'S_STARTUP')
                 await handle_startup_state(state)
 
             elif state == States.S_NOTAVAILABLE:
+                #print('sm-3', 'S_NOTAVAILABLE')
                 await handle_not_available_state(state)
 
             elif state == States.S_AVAILABLE:
+                #print('sm-3', 'S_AVAILABLE')
                 await handle_available_state(state)
 
             elif state == States.S_PLUGINCABLE:
+                #print('sm-3', 'S_PLUGINCABLE')
                 await handle_plug_in_cable_state(state)
 
             elif state == States.S_CONNECTING:
+                #print('sm-3', 'S_CONNECTING')
                 await handle_connecting_state(state)
 
             elif state == States.S_CHARGING:
-                await handle_charging_state(state,charing_start_time)            
+                #print('sm-3', 'S_CHARGING')
+                await handle_charging_state(state,charing_start_time)       
+
+            #else:
+                #print('UNKNOWN STATE!', state)
+
+            #print('sm-4')
 
 async def main():
     """

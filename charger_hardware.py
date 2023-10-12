@@ -9,6 +9,7 @@ from variables.charger_variables import Charger as ChargerVariables
 from variables.reservation_variables import Reservation as ReservationVariables
 from variables.misc_variables import Misc as MiscVariables
 import platform
+from StateHandler import States
 
 
 if platform.system() == 'Linux':
@@ -156,7 +157,9 @@ class Hardware():
             GPIO.cleanup()
 
     def calc_power_hour(self, W: float, T: float ):
-        self.charger.charging_Wh = self.charger.charging_Wh + (W * (T/3600))               
+        self.charger.charging_Wh = self.charger.charging_Wh + (W * (T/3600))
+        self.charger.increment_meter_value_total_by = (self.charger.charging_Wh * 10000000)
+        print('cph-', self.charger.meter_value_total)      
             
     def calc_power(self, V: float, A: float ):
         self.charger.charging_W = V * A  
@@ -192,7 +195,7 @@ class Hardware():
         if self.__ser.in_waiting > 0:
             try: #incomming data need to be a string or cstring otherwise the code will crash
                 line = self.__ser.readline().decode('utf-8').rstrip()
-                #print(line)
+                print(line + '\n')
                 if line == "connect" and self.charger.is_connected == False and self.charger.is_charging == False:
                     self.charger.is_connected = True
                     self.update_timeout()
@@ -210,6 +213,7 @@ class Hardware():
                     self.charger.is_charging = True
                     self.__start_time = time.time()
                     self.__ser.write(b"ok\n")
+                    print("ok from begin")
                     self.__ser.flushInput()
 
                 elif line == "beep":
@@ -224,7 +228,7 @@ class Hardware():
                         if key == "voltage":
                             self.charger.requsted_voltage = value
                             self.__start_time = time.time()
-                            self.__ser.write(b"ok\n")
+                            #self.__ser.write(b"ok\n")
                         elif key == "charge":
                             self.charger.current_charging_percentage = int(value)
                             self.__start_time = time.time()
@@ -242,6 +246,8 @@ class Hardware():
             self.charger.is_charging = False
             self.charger.requsted_voltage = ""
             self.__ser.flushInput()
+   
+
 
 
 
@@ -319,13 +325,13 @@ class Hardware():
             GPIO.output(20, GPIO.LOW)
         elif voltage == "7.4":
             GPIO.output(16, GPIO.LOW)
-        elif voltage == "9":
+        elif voltage == "9.0":
             GPIO.output(12, GPIO.LOW)
-        elif voltage == "5":
+        elif voltage == "5.0":
             GPIO.output(6, GPIO.LOW)
-        elif voltage == "6":
+        elif voltage == "6.0":
             GPIO.output(13, GPIO.LOW)
-        elif voltage == "10":
+        elif voltage == "10.0":
             GPIO.output(19, GPIO.LOW)
         elif voltage == "11.5":
             GPIO.output(26, GPIO.LOW)
