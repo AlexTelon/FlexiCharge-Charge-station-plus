@@ -143,11 +143,11 @@ class WebSocket():
                 pass
 
             else:
-                #print(message)
-                #print("Could not handle message")
+                print(message)
+                print("Could not handle message")
                 pass
         except Exception as e:
-            #print(e)
+            print(e)
             pass
 
     def get_charger_variables(self):
